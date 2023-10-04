@@ -6,7 +6,10 @@ Monitor Pro 是一个全面的资源监控工具，旨在帮助您实时跟踪�
 
 ## 屏幕截图
 
+![screenshot0](assets/screenshot0.png)
+
 ![screenshot1](assets/screenshot1.png)
+
 ![screenshot2](assets/screenshot2.png)
 
 ## 功能特点

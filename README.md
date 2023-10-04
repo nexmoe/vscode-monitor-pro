@@ -6,7 +6,10 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you kee
 
 ## Screenshots
 
+![screenshot0](assets/screenshot0.png)
+
 ![screenshot1](assets/screenshot1.png)
+
 ![screenshot2](assets/screenshot2.png)
 
 ## Features
