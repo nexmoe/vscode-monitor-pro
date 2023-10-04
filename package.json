@@ -1,0 +1,94 @@
+{
+	"name": "monitor-pro",
+	"displayName": "Monitor Pro",
+	"description": "Monitor all the resources you care about.",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.82.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./dist/extension.js",
+	"scripts": {
+		"vscode:prepublish": "pnpm run package",
+		"compile": "webpack",
+		"watch": "webpack --watch",
+		"package": "webpack --mode production --devtool hidden-source-map",
+		"compile-tests": "tsc -p . --outDir out",
+		"watch-tests": "tsc -p . -w --outDir out",
+		"pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/mocha": "^10.0.2",
+		"@types/node": "18.x",
+		"@types/vscode": "^1.82.0",
+		"@typescript-eslint/eslint-plugin": "^6.7.3",
+		"@typescript-eslint/parser": "^6.7.3",
+		"@vscode/test-electron": "^2.3.4",
+		"eslint": "^8.50.0",
+		"glob": "^10.3.3",
+		"mocha": "^10.2.0",
+		"ts-loader": "^9.4.4",
+		"typescript": "^5.2.2",
+		"webpack": "^5.88.2",
+		"webpack-cli": "^5.1.4"
+	},
+	"dependencies": {
+		"pretty-bytes": "^6.1.1",
+		"systeminformation": "^5.21.9"
+	},
+	"contributes": {
+		"configuration": {
+			"title": "Resource Monitor",
+			"properties": {
+				"monitor-pro.order.cpu": {
+					"type": "number",
+					"order": 0,
+					"default": 1,
+					"description": "Order of the CPU usage. 0 to hide."
+				},
+				"monitor-pro.order.memory": {
+					"type": "number",
+					"order": 1,
+					"default": 2,
+					"description": "Order of the memory usage. 0 to hide."
+				},
+				"monitor-pro.order.network": {
+					"type": "number",
+					"order": 2,
+					"default": 3,
+					"description": "Order of the network usage. 0 to hide."
+				},
+				"monitor-pro.order.fileSystem": {
+					"type": "number",
+					"order": 3,
+					"default": 4,
+					"description": "Order of the file system usage. 0 to hide."
+				},
+				"monitor-pro.order.battery": {
+					"type": "number",
+					"order": 4,
+					"default": 5,
+					"description": "Order of the battery status. 0 to hide."
+				},
+				"monitor-pro.order.cpuTemp": {
+					"type": "number",
+					"order": 5,
+					"default": 6,
+					"description": "Order of the file cpu temperature. 0 to hide."
+				},
+				"monitor-pro.refresh-interval": {
+					"type": "number",
+					"default": 3000,
+					"description": "Refresh interval in milliseconds."
+				}
+			}
+		}
+	}
+}
