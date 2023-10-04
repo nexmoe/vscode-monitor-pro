@@ -27,3 +27,7 @@ Monitor Pro 是一个全面的资源监控工具，旨在帮助您实时跟踪�
 
 - <https://github.com/chneau/vscode-resource-monitor>
 - <https://github.com/Njanderson/resmon>
+
+## 为什么要开发这款插件？
+
+参考：<https://juejin.cn/post/7284885060338155539>

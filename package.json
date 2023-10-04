@@ -2,6 +2,7 @@
 	"name": "monitor-pro",
 	"displayName": "Monitor Pro",
 	"description": "Monitor all the resources you care about.",
+	"publisher": "nexmoe",
 	"keywords": [
 		"performance",
 		"resource",
