@@ -4,6 +4,11 @@ English | [简体中文](./README_ZH.md)
 
 Monitor Pro 是一个全面的资源监控工具，旨在帮助您实时跟踪重要的系统指标。无论您是开发人员、系统管理员还是只想了解计算机性能的用户，该扩展都能满足您的需求。
 
+## 屏幕截图
+
+![screenshot1](assets/screenshot1.png)
+![screenshot2](assets/screenshot2.png)
+
 ## 功能特点
 
 - [ ] 资源监控

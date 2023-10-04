@@ -2,6 +2,23 @@
 	"name": "monitor-pro",
 	"displayName": "Monitor Pro",
 	"description": "Monitor all the resources you care about.",
+	"keywords": [
+		"performance",
+		"resource",
+		"resources",
+		"monitor",
+		"memory",
+		"cpu",
+		"io",
+		"network",
+		"disk",
+		"storage"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nexmoe/vscode-monitor-pro"
+	},
+	"icon": "assets/icon.png",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.82.0"
