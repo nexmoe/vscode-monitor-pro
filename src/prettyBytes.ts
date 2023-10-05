@@ -10,7 +10,7 @@ const BYTE_UNITS: string[] = [
 	"YB",
 ];
 
-const BIBYTE_UNITS: string[] = [
+const BI_BYTE_UNITS: string[] = [
 	"B",
 	"KiB",
 	"MiB",
@@ -34,7 +34,7 @@ const BIT_UNITS: string[] = [
 	"Ybit",
 ];
 
-const BIBIT_UNITS: string[] = [
+const BI_BIT_UNITS: string[] = [
 	"b",
 	"kibit",
 	"Mibit",
@@ -72,16 +72,19 @@ export default function prettyBytes(
 		bits = false,
 		binary = false,
 		space = true,
+		single = false,
 		locale,
 		signed,
+		...option2
 	}: {
 		bits?: boolean;
 		binary?: boolean;
 		space?: boolean;
+		single?: boolean;
 		locale?: string | string[] | boolean;
 		signed?: boolean;
-	},
-	option2: any
+		option2?: Intl.NumberFormatOptions;
+	}
 ): string {
 	if (!Number.isFinite(number)) {
 		throw new TypeError(
@@ -91,10 +94,10 @@ export default function prettyBytes(
 
 	const UNITS = bits
 		? binary
-			? BIBIT_UNITS
+			? BI_BIT_UNITS
 			: BIT_UNITS
 		: binary
-		? BIBYTE_UNITS
+		? BI_BYTE_UNITS
 		: BYTE_UNITS;
 
 	const separator = space ? " " : "";
@@ -129,7 +132,7 @@ export default function prettyBytes(
 
 	const numberString = toLocaleString(number, locale, option2);
 
-	const unit = UNITS[exponent];
+	const unit = single ? UNITS[exponent][0] : UNITS[exponent];
 
 	return prefix + numberString + separator + unit;
 }

@@ -1,20 +1,18 @@
-import prettyBytes from "./prettyBytes";
 import * as SI from "systeminformation";
+import prettyBytes from "./prettyBytes";
 import { MetricCtrProps } from "./constants";
 
 const pretty = (bytes: number, option: any = {}): string => {
-	return prettyBytes(
-		bytes,
-		{
-			binary: true,
-			space: false,
-		},
-		{
-			minimumSignificantDigits: 3,
-			maximumSignificantDigits: 3,
-			...option,
-		}
-	);
+	return prettyBytes(bytes, {
+		binary: true,
+		space: false,
+		single: true,
+		minimumFractionDigits: 1,
+		minimumIntegerDigits: 1,
+		minimumSignificantDigits: 4,
+		maximumSignificantDigits: 4,
+		...option,
+	});
 };
 
 const cpuText = async () => {
@@ -24,8 +22,11 @@ const cpuText = async () => {
 
 const memText = async () => {
 	const m = await SI.mem();
-	const active = pretty(m.active).replace(/[a-zA-Z\s]+/, "");
+	const active = pretty(m.active);
 	const total = pretty(m.total);
+	if (active.slice(-1) === total.slice(-1)) {
+		return `$(server)${active.slice(0, -1)}/${total}`;
+	}
 	return `$(server)${active}/${total}`;
 };
 
