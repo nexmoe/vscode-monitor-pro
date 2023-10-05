@@ -2,10 +2,15 @@ import prettyBytes from "pretty-bytes";
 import * as SI from "systeminformation";
 import { MetricCtrProps } from "./constants";
 
-const pretty = (bytes: number) =>
-	prettyBytes(bytes, {
+const pretty = (bytes: number, option: any = {}): string => {
+	return prettyBytes(bytes, {
 		binary: true,
+		space: false,
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+		...option,
 	});
+};
 
 const cpuText = async () => {
 	const cl = await SI.currentLoad();
@@ -14,9 +19,15 @@ const cpuText = async () => {
 
 const memText = async () => {
 	const m = await SI.mem();
-	return `$(server)${pretty(m.active).replace(/[a-zA-Z\s]+/, "")}/${pretty(
-		m.total
-	)}`;
+	const active = pretty(m.active, {
+		minimumFractionDigits: 1,
+		maximumFractionDigits: 1,
+	}).replace(/[a-zA-Z\s]+/, "");
+	const total = pretty(m.total, {
+		minimumFractionDigits: 1,
+		maximumFractionDigits: 1,
+	});
+	return `$(server)${active}/${total}`;
 };
 
 const netText = async () => {
@@ -35,6 +46,9 @@ const fsText = async () => {
 
 const batteryText = async () => {
 	const b = await SI.battery();
+	if (!b.hasBattery) {
+		return "";
+	}
 	return `$(plug)${b.percent}%${b.isCharging ? "(Charging)" : ""}`;
 };
 
