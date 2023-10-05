@@ -1,4 +1,4 @@
-import prettyBytes from "pretty-bytes";
+import prettyBytes from "./prettyBytes";
 import * as SI from "systeminformation";
 import { MetricCtrProps } from "./constants";
 
