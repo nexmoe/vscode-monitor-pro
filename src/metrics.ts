@@ -3,13 +3,18 @@ import * as SI from "systeminformation";
 import { MetricCtrProps } from "./constants";
 
 const pretty = (bytes: number, option: any = {}): string => {
-	return prettyBytes(bytes, {
-		binary: true,
-		space: false,
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
-		...option,
-	});
+	return prettyBytes(
+		bytes,
+		{
+			binary: true,
+			space: false,
+		},
+		{
+			minimumSignificantDigits: 3,
+			maximumSignificantDigits: 3,
+			...option,
+		}
+	);
 };
 
 const cpuText = async () => {
@@ -19,14 +24,8 @@ const cpuText = async () => {
 
 const memText = async () => {
 	const m = await SI.mem();
-	const active = pretty(m.active, {
-		minimumFractionDigits: 1,
-		maximumFractionDigits: 1,
-	}).replace(/[a-zA-Z\s]+/, "");
-	const total = pretty(m.total, {
-		minimumFractionDigits: 1,
-		maximumFractionDigits: 1,
-	});
+	const active = pretty(m.active).replace(/[a-zA-Z\s]+/, "");
+	const total = pretty(m.total);
 	return `$(server)${active}/${total}`;
 };
 

@@ -48,7 +48,7 @@ const BIBIT_UNITS: string[] = [
 
 /**
  * Converts a number to a localized string representation.
- * 
+ *
  * @param number - The number to convert.
  * @param locale - The locale or locales to use for formatting. Can be a string, an array of strings, or a boolean.
  * @param options - The formatting options.
@@ -57,7 +57,7 @@ const BIBIT_UNITS: string[] = [
 const toLocaleString = (
 	number: number,
 	locale: string | string[] | boolean | undefined,
-	options?: Intl.NumberFormatOptions
+	options?: any
 ): string => {
 	return typeof locale === "string" || Array.isArray(locale)
 		? number.toLocaleString(locale, options)
@@ -74,17 +74,14 @@ export default function prettyBytes(
 		space = true,
 		locale,
 		signed,
-		minimumFractionDigits,
-		maximumFractionDigits,
 	}: {
 		bits?: boolean;
 		binary?: boolean;
 		space?: boolean;
 		locale?: string | string[] | boolean;
 		signed?: boolean;
-		minimumFractionDigits?: number;
-		maximumFractionDigits?: number;
-	} = {}
+	},
+	option2: any
 ): string {
 	if (!Number.isFinite(number)) {
 		throw new TypeError(
@@ -113,15 +110,8 @@ export default function prettyBytes(
 		number = -number;
 	}
 
-	const localeOptions = {
-		minimumFractionDigits,
-		maximumFractionDigits,
-		...(minimumFractionDigits !== undefined && { minimumFractionDigits }),
-		...(maximumFractionDigits !== undefined && { maximumFractionDigits }),
-	};
-
 	if (number < 1) {
-		const numberString = toLocaleString(number, locale, localeOptions);
+		const numberString = toLocaleString(number, locale, option2);
 		return prefix + numberString + separator + UNITS[0];
 	}
 
@@ -133,11 +123,11 @@ export default function prettyBytes(
 	);
 	number /= (binary ? 1024 : 1000) ** exponent;
 
-	if (!localeOptions) {
-		number = number.toPrecision(3) as unknown as number;
+	if (!option2) {
+		number = Number(number.toPrecision(3));
 	}
 
-	const numberString = toLocaleString(Number(number), locale, localeOptions);
+	const numberString = toLocaleString(number, locale, option2);
 
 	const unit = UNITS[exponent];
 
