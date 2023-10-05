@@ -17,7 +17,10 @@ const pretty = (bytes: number, option: any = {}): string => {
 
 const cpuText = async () => {
 	const cl = await SI.currentLoad();
-	return `$(pulse)${cl.currentLoad.toFixed(2)}%`;
+	return `$(pulse)${cl.currentLoad.toLocaleString(undefined, {
+		maximumSignificantDigits: 3,
+		minimumSignificantDigits: 3,
+	})}%`;
 };
 
 const memText = async () => {
