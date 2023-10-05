@@ -36,3 +36,7 @@ Monitor Pro 是一个全面的资源监控工具，旨在帮助您实时跟踪�
 ## 为什么要开发这款插件？
 
 参考：<https://juejin.cn/post/7284885060338155539>
+
+## 支持我
+
+来 [Github](https://github.com/nexmoe/vscode-monitor-pro) 点个 star 或是来 [VS Code 市场](https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro&ssr=false#review-details)给个五星好评吧！

@@ -32,3 +32,7 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you kee
 
 - <https://github.com/chneau/vscode-resource-monitor>
 - <https://github.com/Njanderson/resmon>
+
+## Support Me
+
+Please give a star on [Github](https://github.com/nexmoe/vscode-monitor-pro) or leave a five-star review on [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro&ssr=false#review-details)!
