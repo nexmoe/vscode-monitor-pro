@@ -25,6 +25,8 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you kee
 - [ ] **High Occupancy Alert**: Receive alerts when any of the monitored resources reach a high occupancy level.
 - [x] **Order**: Customize the order in which the monitored resources are displayed to you, making it convenient to monitor them at a glance.
 - [x] **Refresh Interval**: Set the refresh interval for updating the resource metrics.
+- [x] **No Layout Shift**: Ensures that the position and size of elements in the StatusBar do not unexpectedly change.
+- [x] **Remote SSH Resources Monitor**: You can keep track of important system metrics on a remote SSH-connected device.
 
 ## Inspired by
 
