@@ -14,15 +14,16 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you kee
 
 ## Features
 
-- [ ] Resources Monitor
+- [ ] **Resources Monitor**
   - [x] **CPU Usage**: Monitor the percentage of CPU utilization to understand how much processing power is being utilized by your system.
+  - [x] **CPU Frequency**: Keep track of the current CPU frequency to understand how your system is dynamically adjusting its processing power.
   - [x] **CPU Temperature**: Monitor the temperature if it can.
   - [x] **Memory Usage**: Keep an eye on the memory consumption of your computer.
-  - [x] **Network Usage**: Track the network activity on your machine, including incoming and outgoing data transfer rates, to monitor network performance.
-  - [x] **File-system Usage** (Linux, macOS): Monitor the usage of your file system, provides the read/write rate of the disk
-  - [x] **Battery Percentage and Charging Status**: If you're using a laptop or a portable device, this feature allows you to monitor the battery level and charging status, so you can plan accordingly.
-  - [ ] **CPU Frequency**: Keep track of the current CPU frequency to understand how your system is dynamically adjusting its processing power.
-  - [ ] **Disk Usage**: Monitor the disk usage of your system to ensure you have sufficient storage space.
+  - [x] **Network Usage**: Track the network activity on your machine, including incoming and outgoing data transfer rates.
+  - [x] **File-system Usage** (Linux, macOS): Provides the read/write rate of the disk
+  - [x] **Battery Percentage and Charging Status**: If you're using a laptop or a portable device, this feature allows you to monitor the battery level and charging status.
+  - [x] **OS Distro**
+  - [ ] **Disk Usage**
 - [x] **Order**: Customize the order in which the monitored resources are displayed to you, making it convenient to monitor them at a glance.
 - [x] **Refresh Interval**: Set the refresh interval for updating the resource metrics.
 - [x] **No Layout Shift**: Ensures that the position and size of elements in the StatusBar do not unexpectedly change.
