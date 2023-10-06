@@ -5,6 +5,8 @@ export const orderConfigurationKeys = <const>[
 	"monitor-pro.order.fileSystem",
 	"monitor-pro.order.battery",
 	"monitor-pro.order.cpuTemp",
+	"monitor-pro.order.cpuSpeed",
+	"monitor-pro.order.os",
 ];
 
 export type OrderConfigurationKey = (typeof orderConfigurationKeys)[number];

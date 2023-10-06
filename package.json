@@ -100,6 +100,18 @@
 					"default": 6,
 					"description": "Order of the file cpu temperature. 0 to hide."
 				},
+				"monitor-pro.order.cpuSpeed": {
+					"type": "number",
+					"order": 6,
+					"default": 7,
+					"description": "Order of the file cpu speed. 0 to hide."
+				},
+				"monitor-pro.order.os": {
+					"type": "number",
+					"order": 7,
+					"default": 8,
+					"description": "Order of the file cpu speed. 0 to hide."
+				},
 				"monitor-pro.refresh-interval": {
 					"type": "number",
 					"default": 3000,

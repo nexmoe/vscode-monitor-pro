@@ -37,14 +37,14 @@ const netText = async () => {
 	const ns = await SI.networkStats();
 	return `$(cloud-download)${pretty(
 		ns?.[0]?.rx_sec ?? 0
-	)} $(cloud-upload)${pretty(ns?.[0]?.tx_sec ?? 0)}`;
+	)}/s $(cloud-upload)${pretty(ns?.[0]?.tx_sec ?? 0)}/s`;
 };
 
 const fsText = async () => {
 	const fs = await SI.fsStats();
-	return `$(log-in)${pretty(fs.wx_sec ?? 0)}$(log-out)${pretty(
+	return `$(log-in)${pretty(fs.wx_sec ?? 0)}/s $(log-out)${pretty(
 		fs.rx_sec ?? 0
-	)}`;
+	)}/s`;
 };
 
 const batteryText = async () => {
@@ -55,12 +55,22 @@ const batteryText = async () => {
 	return `$(plug)${b.percent}%${b.isCharging ? "(Charging)" : ""}`;
 };
 
+const cpuSpeedText = async () => {
+	let cpuCurrentSpeed = await SI.cpuCurrentSpeed();
+	return `$(dashboard) ${cpuCurrentSpeed.avg}GHz`;
+};
+
 const cpuTempText = async () => {
 	const cl = await SI.cpuTemperature();
 	if (!cl.main) {
 		return "";
 	}
 	return `$(thermometer)${cl.main}°C`;
+};
+
+const osDistroText = async () => {
+	const os = await SI.osInfo();
+	return `${os.distro}`;
 };
 
 const metrics: MetricCtrProps[] = [
@@ -93,6 +103,16 @@ const metrics: MetricCtrProps[] = [
 		func: cpuTempText,
 		name: "CPU Temperature",
 		section: "monitor-pro.order.cpuTemp",
+	},
+	{
+		func: cpuSpeedText,
+		name: "CPU Speed",
+		section: "monitor-pro.order.cpuSpeed",
+	},
+	{
+		func: osDistroText,
+		name: "OS Distro",
+		section: "monitor-pro.order.os",
 	},
 ];
 

@@ -16,6 +16,7 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you kee
 
 - [ ] Resources Monitor
   - [x] **CPU Usage**: Monitor the percentage of CPU utilization to understand how much processing power is being utilized by your system.
+  - [x] **CPU Temperature**: Monitor the temperature if it can.
   - [x] **Memory Usage**: Keep an eye on the memory consumption of your computer.
   - [x] **Network Usage**: Track the network activity on your machine, including incoming and outgoing data transfer rates, to monitor network performance.
   - [x] **File-system Usage** (Linux, macOS): Monitor the usage of your file system, provides the read/write rate of the disk
