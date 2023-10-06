@@ -22,11 +22,12 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you kee
   - [x] **Battery Percentage and Charging Status**: If you're using a laptop or a portable device, this feature allows you to monitor the battery level and charging status, so you can plan accordingly.
   - [ ] **CPU Frequency**: Keep track of the current CPU frequency to understand how your system is dynamically adjusting its processing power.
   - [ ] **Disk Usage**: Monitor the disk usage of your system to ensure you have sufficient storage space.
-- [ ] **High Occupancy Alert**: Receive alerts when any of the monitored resources reach a high occupancy level.
 - [x] **Order**: Customize the order in which the monitored resources are displayed to you, making it convenient to monitor them at a glance.
 - [x] **Refresh Interval**: Set the refresh interval for updating the resource metrics.
 - [x] **No Layout Shift**: Ensures that the position and size of elements in the StatusBar do not unexpectedly change.
 - [x] **Remote SSH Resources Monitor**: You can keep track of important system metrics on a remote SSH-connected device.
+- [ ] **High Occupancy Alert**: Receive alerts when any of the monitored resources reach a high occupancy level.
+- [ ] **Dashboard**: I want to display information all you care about in a page with abundant charts.
 
 ## Inspired by
 
