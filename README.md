@@ -1,6 +1,6 @@
 # Monitor Pro
 
-English | [简体中文](./README_ZH.md)
+[English](./README.md) | 简体中文
 
 Monitor Pro is a comprehensive resource monitoring tool designed to help you keep track of important system metrics in real-time. Whether you're a developer, system administrator, or simply someone who wants to stay informed about their computer's performance, this extension has you covered.
 
