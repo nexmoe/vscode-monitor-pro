@@ -1,9 +1,9 @@
 import * as SI from "systeminformation";
-import prettyBytes from "./prettyBytes";
+import byteFormat from "./byteFormat";
 import { MetricCtrProps } from "./constants";
 
 const pretty = (bytes: number, option: any = {}): string => {
-	return prettyBytes(bytes, {
+	return byteFormat(bytes, {
 		binary: true,
 		space: false,
 		single: true,
@@ -25,8 +25,21 @@ const cpuText = async () => {
 
 const memText = async () => {
 	const m = await SI.mem();
-	const active = pretty(m.active);
-	const total = pretty(m.total);
+	let active, total;
+	if (Number(pretty(m.total, { suffix: false })) < 100) {
+		active = pretty(m.active, {
+			minimumSignificantDigits: 3,
+			maximumSignificantDigits: 3,
+		});
+		total = pretty(m.total, {
+			minimumSignificantDigits: 3,
+			maximumSignificantDigits: 3,
+		});
+	} else {
+		active = pretty(m.active);
+		total = pretty(m.total);
+	}
+
 	if (active.slice(-1) === total.slice(-1)) {
 		return `$(server)${active.slice(0, -1)}/${total}`;
 	}
@@ -81,17 +94,17 @@ const metrics: MetricCtrProps[] = [
 	},
 	{
 		func: memText,
-		name: "Memory Usage",
+		name: "Memory Usage (excl. buffers/cache)",
 		section: "monitor-pro.order.memory",
 	},
 	{
 		func: netText,
-		name: "Network Usage",
+		name: "Network Usage (Down/Up)",
 		section: "monitor-pro.order.network",
 	},
 	{
 		func: fsText,
-		name: "File System Usage",
+		name: "File System Usage (Write/Read)",
 		section: "monitor-pro.order.fileSystem",
 	},
 	{

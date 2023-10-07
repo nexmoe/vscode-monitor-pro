@@ -1,8 +1,8 @@
 # Monitor Pro
 
-[English](./README.md) | 简体中文
+English | [简体中文](./README_ZH.md)
 
-Monitor Pro is a comprehensive resource monitoring tool designed to help you keep track of important system metrics in real-time. Whether you're a developer, system administrator, or simply someone who wants to stay informed about their computer's performance, this extension has you covered.
+Monitor Pro is a comprehensive resource monitoring tool designed to help you track important system metrics in real-time and provide intuitive visualizations. Regardless of your profession, if you use VS Code, don't miss out on it.
 
 ## Screenshots
 
@@ -31,10 +31,26 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you kee
 - [ ] **High Occupancy Alert**: Receive alerts when any of the monitored resources reach a high occupancy level.
 - [ ] **Dashboard**: I want to display information all you care about in a page with abundant charts.
 
+## Vision
+
+I am well aware of the importance of monitoring information, so my goal is to create the most comprehensive and intuitive monitoring tool that allows you to easily grasp the system's status. The development of Monitor Pro is driven by the aim to meet everyone's various system monitoring needs.
+
+Furthermore, in the future, I also intend to integrate chart designs to make the data even more intuitive and easy to understand. Through these charts, you will be able to clearly visualize the changing trends and interrelationships of system metrics. This way, you can effortlessly comprehend the system's performance and make informed decisions based on these indicators.
+
 ## Inspired by
 
 - <https://github.com/chneau/vscode-resource-monitor>
 - <https://github.com/Njanderson/resmon>
+  
+## Why develop this plugin?
+
+To provide a comprehensive resource monitoring tool for better management and monitoring of server status while using VS Code's Remote SSH.
+
+## Issue
+
+I highly value user feedback and opinions, as they are crucial for me to improve and enhance the product. If you have any suggestions or encounter any bugs, please feel free to provide feedback:
+
+<https://github.com/nexmoe/vscode-monitor-pro/issues>
 
 ## Support Me
 

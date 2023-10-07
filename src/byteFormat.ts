@@ -66,13 +66,14 @@ const toLocaleString = (
 		: number.toString();
 };
 
-export default function prettyBytes(
+export default function byteFormat(
 	number: number,
 	{
 		bits = false,
 		binary = false,
 		space = true,
 		single = false,
+		suffix = true,
 		locale,
 		signed,
 		...option2
@@ -81,6 +82,7 @@ export default function prettyBytes(
 		binary?: boolean;
 		space?: boolean;
 		single?: boolean;
+		suffix?: boolean;
 		locale?: string | string[] | boolean;
 		signed?: boolean;
 		option2?: Intl.NumberFormatOptions;
@@ -134,5 +136,5 @@ export default function prettyBytes(
 
 	const unit = single ? UNITS[exponent][0] : UNITS[exponent];
 
-	return prefix + numberString + separator + unit;
+	return prefix + numberString + (suffix ? separator + unit : "");
 }
