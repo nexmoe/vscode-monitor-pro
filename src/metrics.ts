@@ -23,7 +23,7 @@ const cpuText = async () => {
 	})}%`;
 };
 
-const memText = async () => {
+const memActiveText = async () => {
 	const m = await SI.mem();
 	let active, total;
 	if (Number(pretty(m.total, { suffix: false })) < 100) {
@@ -46,13 +46,35 @@ const memText = async () => {
 	return `$(server)${active}/${total}`;
 };
 
+const memUsedText = async () => {
+	const m = await SI.mem();
+	let used, total;
+	if (Number(pretty(m.total, { suffix: false })) < 100) {
+		used = pretty(m.used, {
+			minimumSignificantDigits: 3,
+			maximumSignificantDigits: 3,
+		});
+		total = pretty(m.total, {
+			minimumSignificantDigits: 3,
+			maximumSignificantDigits: 3,
+		});
+	} else {
+		used = pretty(m.used);
+		total = pretty(m.total);
+	}
+
+	if (used.slice(-1) === total.slice(-1)) {
+		return `$(server)${used.slice(0, -1)}/${total}`;
+	}
+	return `$(server)${used}/${total}`;
+};
+
 const netText = async () => {
 	const ns = await SI.networkStats();
 	return `$(cloud-download)${pretty(
 		ns?.[0]?.rx_sec ?? 0
 	)}/s $(cloud-upload)${pretty(ns?.[0]?.tx_sec ?? 0)}/s`;
 };
-
 
 const fsText = async () => {
 	const fs = await SI.fsStats();
@@ -94,42 +116,47 @@ const metrics: MetricCtrProps[] = [
 	{
 		func: cpuText,
 		name: "CPU Usage",
-		section: "monitor-pro.order.cpu",
+		section: "cpu",
 	},
 	{
-		func: memText,
-		name: "Memory Usage (excl. buffers/cache)",
-		section: "monitor-pro.order.memory",
+		func: memActiveText,
+		name: "Memory Active (excl. buffers/cache)",
+		section: "memoryActive",
+	},
+	{
+		func: memUsedText,
+		name: "Memory Used (incl. buffers/cache)",
+		section: "memoryUsed",
 	},
 	{
 		func: netText,
 		name: "Network Usage (Down/Up)",
-		section: "monitor-pro.order.network",
+		section: "network",
 	},
 	{
 		func: fsText,
 		name: "File System Usage (Write/Read)",
-		section: "monitor-pro.order.fileSystem",
+		section: "fileSystem",
 	},
 	{
 		func: batteryText,
 		name: "Battery Status",
-		section: "monitor-pro.order.battery",
+		section: "battery",
 	},
 	{
 		func: cpuTempText,
 		name: "CPU Temperature",
-		section: "monitor-pro.order.cpuTemp",
+		section: "cpuTemp",
 	},
 	{
 		func: cpuSpeedText,
 		name: "CPU Speed",
-		section: "monitor-pro.order.cpuSpeed",
+		section: "cpuSpeed",
 	},
 	{
 		func: osDistroText,
 		name: "OS Distro",
-		section: "monitor-pro.order.os",
+		section: "os",
 	},
 ];
 
