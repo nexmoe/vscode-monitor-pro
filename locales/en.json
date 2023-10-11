@@ -1,0 +1,4 @@
+{
+	"config.metrics": "Metrics you want to use",
+	"config.refresh-interval": "Refresh interval"
+}

@@ -156,7 +156,7 @@ const metrics: MetricCtrProps[] = [
 	{
 		func: osDistroText,
 		name: "OS Distro",
-		section: "os",
+		section: "osDistro",
 	},
 ];
 

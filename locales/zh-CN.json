@@ -1,0 +1,4 @@
+{
+	"config.metrics": "你想启用的监控资源，可以排序",
+	"config.refresh-interval": "资源信息刷新间隔"
+}

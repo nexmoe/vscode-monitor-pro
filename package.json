@@ -35,12 +35,13 @@
 		"vscode:prepublish": "pnpm run package",
 		"compile": "webpack",
 		"watch": "webpack --watch",
-		"package": "webpack --mode production --devtool hidden-source-map",
+		"package": "pnpm run build:i18n && webpack --mode production --devtool hidden-source-map",
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
 		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"build:i18n": "node scripts/build-i18n.js"
 	},
 	"devDependencies": {
 		"@types/mocha": "^10.0.2",
@@ -64,58 +65,39 @@
 		"configuration": {
 			"title": "Resource Monitor",
 			"properties": {
-				"monitor-pro.order.cpu": {
-					"type": "number",
-					"order": 0,
-					"default": 1,
-					"description": "Order of the CPU usage. 0 to hide."
-				},
-				"monitor-pro.order.memory": {
-					"type": "number",
-					"order": 1,
-					"default": 2,
-					"description": "Order of the memory usage. 0 to hide."
-				},
-				"monitor-pro.order.network": {
-					"type": "number",
-					"order": 2,
-					"default": 3,
-					"description": "Order of the network usage. 0 to hide."
-				},
-				"monitor-pro.order.fileSystem": {
-					"type": "number",
-					"order": 3,
-					"default": 4,
-					"description": "Order of the file system usage. 0 to hide."
-				},
-				"monitor-pro.order.battery": {
-					"type": "number",
-					"order": 4,
-					"default": 5,
-					"description": "Order of the battery status. 0 to hide."
-				},
-				"monitor-pro.order.cpuTemp": {
-					"type": "number",
-					"order": 5,
-					"default": 6,
-					"description": "Order of the file cpu temperature. 0 to hide."
-				},
-				"monitor-pro.order.cpuSpeed": {
-					"type": "number",
-					"order": 6,
-					"default": 7,
-					"description": "Order of the file cpu speed. 0 to hide."
-				},
-				"monitor-pro.order.os": {
-					"type": "number",
-					"order": 7,
-					"default": 8,
-					"description": "Order of the file cpu speed. 0 to hide."
+				"monitor-pro.metrics": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"enum": [
+							"cpu",
+							"memoryActive",
+							"memoryUsed",
+							"network",
+							"fileSystem",
+							"battery",
+							"cpuTemp",
+							"cpuSpeed",
+							"osDistro"
+						]
+					},
+					"default": [
+						"cpu",
+						"memoryActive",
+						"memoryUsed",
+						"network",
+						"fileSystem",
+						"battery",
+						"cpuTemp",
+						"cpuSpeed",
+						"osDistro"
+					],
+					"description": "%config.metrics%"
 				},
 				"monitor-pro.refresh-interval": {
 					"type": "number",
 					"default": 3000,
-					"description": "Refresh interval in milliseconds."
+					"description": "%config.refresh-interval%"
 				}
 			}
 		}
