@@ -53,8 +53,12 @@ const netText = async () => {
 	)}/s $(cloud-upload)${pretty(ns?.[0]?.tx_sec ?? 0)}/s`;
 };
 
+
 const fsText = async () => {
 	const fs = await SI.fsStats();
+	if (!fs || !fs.wx_sec) {
+		return "";
+	}
 	return `$(log-in)${pretty(fs.wx_sec ?? 0)}/s $(log-out)${pretty(
 		fs.rx_sec ?? 0
 	)}/s`;
