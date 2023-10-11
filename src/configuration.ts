@@ -1,18 +1,9 @@
 import { workspace } from "vscode";
-
+import { MetricsExist } from "./constants";
 export const getRefreshInterval = () =>
-	workspace
-		.getConfiguration()
-		.get<number>("resource-monitor.refresh-interval") ?? 1000;
+	workspace.getConfiguration().get<number>("monitor-pro.refresh-interval") ??
+	1000;
 
-export const getMetrics = <const>[
-	"cpu",
-	"memory",
-	"memoryUsed",
-	"network",
-	"fileSystem",
-	"battery",
-	"cpuTemp",
-	"cpuSpeed",
-	"os",
-];
+export const getMetrics = workspace
+	.getConfiguration()
+	.get("monitor-pro.metrics") as MetricsExist[];
