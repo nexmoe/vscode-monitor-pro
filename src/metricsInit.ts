@@ -1,26 +1,20 @@
 import * as vscode from "vscode";
 import metrics from "./metrics";
-import { getOrder } from "./configuration";
-import { MetricCtrProps, OrderConfigurationKey } from "./constants";
+import { getMetrics } from "./configuration";
+import { MetricCtrProps } from "./constants";
 
 export class Metric {
 	#func: () => Promise<string>;
 	#name: string;
-	#section: OrderConfigurationKey;
 	#bar: vscode.StatusBarItem | null = null;
 
-	constructor({ func, name, section }: MetricCtrProps) {
+	constructor({ func, name }: MetricCtrProps) {
 		this.#func = func;
 		this.#name = name;
-		this.#section = section;
 	}
 
-	init() {
-		const order = getOrder(this.#section);
-		if (!order) {
-			return;
-		}
-		this.#bar = newBarItem({ name: this.#name, priority: -1e3 - order });
+	init(index: number) {
+		this.#bar = newBarItem({ name: this.#name, priority: -1e3 - index });
 		this.update();
 		return this;
 	}
@@ -49,6 +43,13 @@ const newBarItem = ({ name, priority }: { name: string; priority: number }) => {
 	return sbi;
 };
 
-const allMetrics = metrics.map((x) => new Metric(x));
+const allMetrics = getMetrics.flatMap((x) => {
+	const metric = metrics.find((m) => m.section === x);
+	if(metric) {
+		return new Metric(metric);
+	} else {
+		return [];
+	}
+});
 export const getEnabledMetrics = () =>
-	allMetrics.flatMap((x) => x.init() || []);
+	allMetrics.flatMap((x, index) => x.init(index) || []);
