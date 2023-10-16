@@ -1,4 +1,13 @@
 {
 	"config.metrics": "Metrics you want to use",
-	"config.refresh-interval": "Refresh interval"
+	"config.refresh-interval": "Refresh interval",
+	"metric.cpu.name": "CPU Usage",
+	"metric.memoryActive.name": "Memory Active (excl. buffers/cache)",
+	"metric.memoryUsed.name": "Memory Used (incl. buffers/cache)",
+	"metric.network.name": "Network Usage (Down/Up)",
+	"metric.fileSystem.name": "File System Usage (Write/Read)",
+	"metric.battery.name": "Battery Status",
+	"metric.cpuTemp.name": "CPU Temperature",
+	"metric.cpuSpeed.name": "CPU Speed",
+	"metric.osDistro.name": "OS Distribution"
 }

@@ -20,7 +20,7 @@
 		"url": "https://github.com/nexmoe/vscode-monitor-pro"
 	},
 	"icon": "assets/icon.png",
-	"version": "0.4.1",
+	"version": "0.5.0",
 	"engines": {
 		"vscode": "^1.60.0"
 	},
@@ -63,7 +63,7 @@
 	},
 	"contributes": {
 		"configuration": {
-			"title": "Resource Monitor",
+			"title": "Monitor Pro",
 			"properties": {
 				"monitor-pro.metrics": {
 					"type": "array",

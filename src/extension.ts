@@ -1,23 +1,24 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from "vscode";
+import { workspace, ExtensionContext } from "vscode";
 import { powerShellRelease, powerShellStart } from "systeminformation";
 import { getRefreshInterval } from "./configuration";
 import { Metric, getEnabledMetrics } from "./metricsInit";
+import I18n from "./i18n";
 
 let intervalIds: NodeJS.Timeout;
 let metrics: Metric[] = [];
 
-vscode.workspace.onDidChangeConfiguration(() => {
-	deactivate();
-	activate();
-});
+// workspace.onDidChangeConfiguration(() => {
+// 	deactivate();
+// 	activate();
+// });
 
-
-export const activate = async () => {
+export const activate = async (ctx: ExtensionContext) => {
 	if (process.platform === "win32") {
 		powerShellStart();
 	}
+	I18n.init(ctx.extensionPath);
 	metrics.forEach((x) => x.dispose());
 	metrics = getEnabledMetrics();
 	const updateBarsText = async () =>

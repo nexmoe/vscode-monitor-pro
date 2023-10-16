@@ -1,20 +1,21 @@
 import * as vscode from "vscode";
 import metrics from "./metrics";
-import { getMetrics } from "./configuration";
+import { getMetrics, MetricsExist } from "./configuration";
 import { MetricCtrProps } from "./constants";
+import i18n from './i18n';
 
 export class Metric {
 	#func: () => Promise<string>;
-	#name: string;
 	#bar: vscode.StatusBarItem | null = null;
+	#section: MetricsExist;
 
-	constructor({ func, name }: MetricCtrProps) {
+	constructor({ func, name, section }: MetricCtrProps) {
 		this.#func = func;
-		this.#name = name;
+		this.#section = section;
 	}
 
 	init(index: number) {
-		this.#bar = newBarItem({ name: this.#name, priority: -1e3 - index });
+		this.#bar = newBarItem({ priority: -1e3 - index, section: this.#section });
 		this.update();
 		return this;
 	}
@@ -31,14 +32,17 @@ export class Metric {
 	}
 }
 
-const newBarItem = ({ name, priority }: { name: string; priority: number }) => {
+const newBarItem = ({ priority,section }: { priority: number, section: MetricsExist }) => {
+	const title = i18n.t(`metric.${section}.name`);
+
 	const sbi = vscode.window.createStatusBarItem(
-		`Monitor Pro: ${name}`,
+		`Monitor Pro: ${title}`,
 		vscode.StatusBarAlignment.Left,
 		priority
 	);
+	
 	sbi.show();
-	sbi.tooltip = name;
+	sbi.tooltip = title;
 	sbi.name = sbi.id;
 	return sbi;
 };

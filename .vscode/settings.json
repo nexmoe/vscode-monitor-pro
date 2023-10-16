@@ -13,5 +13,9 @@
     "nuxt.isNuxtApp": false,
     "i18n-ally.localesPaths": [
         "locales"
-    ]
+    ],
+    "i18n-ally.keystyle": "flat",
+    "i18n-ally.tabStyle": "tab",
+    "i18n-ally.indent": 4,
+    "i18n-ally.sortKeys": true
 }
