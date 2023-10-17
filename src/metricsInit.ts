@@ -9,7 +9,7 @@ export class Metric {
 	#bar: vscode.StatusBarItem | null = null;
 	#section: MetricsExist;
 
-	constructor({ func, name, section }: MetricCtrProps) {
+	constructor({ func, section }: MetricCtrProps) {
 		this.#func = func;
 		this.#section = section;
 	}
