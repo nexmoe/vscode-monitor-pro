@@ -37,6 +37,10 @@ I am well aware of the importance of monitoring information, so my goal is to cr
 
 Furthermore, in the future, I also intend to integrate chart designs to make the data even more intuitive and easy to understand. Through these charts, you will be able to clearly visualize the changing trends and interrelationships of system metrics. This way, you can effortlessly comprehend the system's performance and make informed decisions based on these indicators.
 
+## Develop
+
+[Document](./CONTRIBUTING.md)
+
 ## Inspired by
 
 - <https://github.com/chneau/vscode-resource-monitor>

@@ -6,6 +6,5 @@ export type MetricsExist = (typeof metricsExist)[number];
 
 export interface MetricCtrProps {
 	func: () => Promise<string>;
-	name: string;
 	section: MetricsExist;
 }

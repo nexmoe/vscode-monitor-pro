@@ -115,47 +115,38 @@ const osDistroText = async () => {
 const metrics: MetricCtrProps[] = [
 	{
 		func: cpuText,
-		name: "CPU Usage",
 		section: "cpu",
 	},
 	{
 		func: memActiveText,
-		name: "Memory Active (excl. buffers/cache)",
 		section: "memoryActive",
 	},
 	{
 		func: memUsedText,
-		name: "Memory Used (incl. buffers/cache)",
 		section: "memoryUsed",
 	},
 	{
 		func: netText,
-		name: "Network Usage (Down/Up)",
 		section: "network",
 	},
 	{
 		func: fsText,
-		name: "File System Usage (Write/Read)",
 		section: "fileSystem",
 	},
 	{
 		func: batteryText,
-		name: "Battery Status",
 		section: "battery",
 	},
 	{
 		func: cpuTempText,
-		name: "CPU Temperature",
 		section: "cpuTemp",
 	},
 	{
 		func: cpuSpeedText,
-		name: "CPU Speed",
 		section: "cpuSpeed",
 	},
 	{
 		func: osDistroText,
-		name: "OS Distro",
 		section: "osDistro",
 	},
 ];
