@@ -1,3 +1,11 @@
+[github-shield]: https://img.shields.io/github/stars/nexmoe/vscode-monitor-pro?style=social
+[github-url]: https://github.com/nexmoe/vscode-monitor-pro
+[vscode-shield]: https://img.shields.io/visual-studio-marketplace/r/nexmoe.monitor-pro?logo=visual-studio-code&style=social
+[vscode-url]: https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro
+
+[![Github Repo][github-shield]][github-url]
+[![VSCode Plugin][vscode-shield]][vscode-url]
+
 # Monitor Pro
 
 English | [简体中文](./README_ZH.md)
