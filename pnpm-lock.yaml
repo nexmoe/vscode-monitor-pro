@@ -5,9 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  osx-temperature-sensor:
-    specifier: ^1.0.8
-    version: 1.0.8
   systeminformation:
     specifier: ^5.21.9
     version: 5.21.9
@@ -1991,13 +1988,6 @@ packages:
       prelude-ls: 1.2.1
       type-check: 0.4.0
     dev: true
-
-  /osx-temperature-sensor@1.0.8:
-    resolution: {integrity: sha512-Gl3b+bn7+oDDnqPa+4v/cg3yg9lnE8ppS7ivL3opBZh4i7h99JNmkm6zWmo0m2a83UUJu+C9D7lGP0OS8IlehA==}
-    engines: {node: '>=4.0.0'}
-    os: [darwin]
-    requiresBuild: true
-    dev: false
 
   /p-limit@2.3.0:
     resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}
