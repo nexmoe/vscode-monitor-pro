@@ -20,7 +20,7 @@
 		"url": "https://github.com/nexmoe/vscode-monitor-pro"
 	},
 	"icon": "assets/icon.png",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"engines": {
 		"vscode": "^1.60.0"
 	},
