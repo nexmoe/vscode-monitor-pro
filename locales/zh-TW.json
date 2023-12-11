@@ -1,0 +1,13 @@
+{
+	"config.metrics": "你想啟用的監控資源，可以排序",
+	"config.refresh-interval": "資源資訊刷新間隔",
+	"metric.battery.name": "電池狀態",
+	"metric.cpu.name": "CPU 使用情況",
+	"metric.cpuSpeed.name": "處理器速度",
+	"metric.cpuTemp.name": "CPU 溫度",
+	"metric.fileSystem.name": "檔案系統使用情況（寫入/讀取）",
+	"metric.memoryActive.name": "活動記憶體（不包括緩衝區/快取）",
+	"metric.memoryUsed.name": "使用的記憶體（包括緩衝區/快取）",
+	"metric.network.name": "網路使用率（下行/上行）",
+	"metric.osDistro.name": "作業系統分發"
+}
