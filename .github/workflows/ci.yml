@@ -17,5 +17,5 @@ jobs:
       with:
         node-version: 16.x
     - run: npm install
-    - run: npm lint
-    - run: npm package
+    - run: npm run lint
+    - run: npm run package
