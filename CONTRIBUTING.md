@@ -25,7 +25,7 @@ const metrics: MetricCtrProps[] = [
 
 ### 2. Edit `locales/en.json` and others
 
-```json
+```json5
 //……
 "metric.cpuTemp.name": "CPU Temperature",
 "metric.cpuSpeed.name": "CPU Speed",
@@ -36,7 +36,7 @@ const metrics: MetricCtrProps[] = [
 
 ### 3. Edit `package.json`
 
-```json
+```json5
 //……
 "monitor-pro.metrics": {
   "type": "array",
