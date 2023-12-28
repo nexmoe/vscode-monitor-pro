@@ -38,7 +38,7 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you tra
 - [x] **Remote SSH Resources Monitor**: You can keep track of important system metrics on a remote SSH-connected device.
 - [ ] **High Occupancy Alert**: Receive alerts when any of the monitored resources reach a high occupancy level.
 - [ ] **Dashboard**: I want to display information all you care about in a page with abundant charts.
-- [x] **Multiple Languages**: English、简体中文、繁體中文
+- [x] **Multiple Languages**: English、简体中文、繁體中文、日本語
 
 ## Vision
 
