@@ -5,6 +5,7 @@
 
 [![Github Repo][github-shield]][github-url]
 [![VSCode Plugin][vscode-shield]][vscode-url]
+![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/nexmoe.monitor-pro)
 
 # Monitor Pro
 
