@@ -11,19 +11,19 @@ dependencies:
 
 devDependencies:
   '@types/mocha':
-    specifier: ^10.0.2
+    specifier: 10.0.2
     version: 10.0.2
   '@types/node':
-    specifier: 18.x
+    specifier: 18.18.3
     version: 18.18.3
   '@types/vscode':
-    specifier: ^1.60.0
+    specifier: 1.82.0
     version: 1.82.0
   '@typescript-eslint/eslint-plugin':
-    specifier: ^6.7.3
+    specifier: 6.7.4
     version: 6.7.4(@typescript-eslint/parser@6.7.4)(eslint@8.50.0)(typescript@5.2.2)
   '@typescript-eslint/parser':
-    specifier: ^6.7.3
+    specifier: 6.7.4
     version: 6.7.4(eslint@8.50.0)(typescript@5.2.2)
   '@vscode/test-electron':
     specifier: ^2.3.4
@@ -44,7 +44,7 @@ devDependencies:
     specifier: ^9.4.4
     version: 9.4.4(typescript@5.2.2)(webpack@5.88.2)
   typescript:
-    specifier: ^5.2.2
+    specifier: 5.2.2
     version: 5.2.2
   webpack:
     specifier: ^5.88.2
