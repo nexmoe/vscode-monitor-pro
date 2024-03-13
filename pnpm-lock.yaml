@@ -6,7 +6,7 @@ settings:
 
 dependencies:
   systeminformation:
-    specifier: ^5.21.9
+    specifier: 5.21.9
     version: 5.21.9
 
 devDependencies:
@@ -26,31 +26,31 @@ devDependencies:
     specifier: ^6.7.3
     version: 6.7.4(eslint@8.50.0)(typescript@5.2.2)
   '@vscode/test-electron':
-    specifier: ^2.3.4
+    specifier: 2.3.4
     version: 2.3.4
   eslint:
     specifier: ^8.50.0
     version: 8.50.0
   glob:
-    specifier: ^10.3.3
+    specifier: 10.3.10
     version: 10.3.10
   mocha:
-    specifier: ^10.2.0
+    specifier: 10.2.0
     version: 10.2.0
   npm-run-all:
-    specifier: ^4.1.5
+    specifier: 4.1.5
     version: 4.1.5
   ts-loader:
-    specifier: ^9.4.4
+    specifier: 9.4.4
     version: 9.4.4(typescript@5.2.2)(webpack@5.88.2)
   typescript:
     specifier: ^5.2.2
     version: 5.2.2
   webpack:
-    specifier: ^5.88.2
+    specifier: 5.88.2
     version: 5.88.2(webpack-cli@5.1.4)
   webpack-cli:
-    specifier: ^5.1.4
+    specifier: 5.1.4
     version: 5.1.4(webpack@5.88.2)
 
 packages:
