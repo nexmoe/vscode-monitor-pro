@@ -29,7 +29,7 @@ devDependencies:
     specifier: 2.3.4
     version: 2.3.4
   eslint:
-    specifier: ^8.50.0
+    specifier: 8.50.0
     version: 8.50.0
   glob:
     specifier: 10.3.10
