@@ -2,16 +2,24 @@ import * as SI from "systeminformation";
 import byteFormat from "./byteFormat";
 import { MetricCtrProps } from "./constants";
 
+/**
+ * Converts a byte value into a nicely formatted string.
+ * @param bytes The number of bytes to format.
+ * @param option An optional options object to customize formatting behavior. By default, it uses binary units, no space,
+ * a single unit suffix, and sets the minimum and maximum significant digits to 1 and 4. This object can override these defaults.
+ * @returns The formatted byte size as a string.
+ */
 const pretty = (bytes: number, option: any = {}): string => {
+	// Format the bytes using the byteFormat function, merging default options with user-provided ones
 	return byteFormat(bytes, {
-		binary: true,
-		space: false,
-		single: true,
-		minimumFractionDigits: 1,
-		minimumIntegerDigits: 1,
-		minimumSignificantDigits: 4,
-		maximumSignificantDigits: 4,
-		...option,
+		binary: true, // Use binary units
+		space: false, // Do not add a space before the unit
+		single: true, // Use a single unit, e.g., don't display both KB and MB
+		minimumFractionDigits: 1, // Minimum fraction digits
+		minimumIntegerDigits: 1, // Minimum integer digits
+		minimumSignificantDigits: 4, // Minimum significant digits
+		maximumSignificantDigits: 4, // Maximum significant digits
+		...option, // Override default options with user-provided ones
 	});
 };
 
@@ -76,11 +84,16 @@ const netText = async () => {
 	)}/s $(cloud-upload)${pretty(ns?.[0]?.tx_sec ?? 0)}/s`;
 };
 
+/**
+ * Retrieves and formats the file system read and write rate information.
+ * No parameters.
+ * @returns {Promise<string>} A promise that resolves to a formatted string of read and write rates, or an empty string if the data is unavailable or invalid.
+ */
 const fsText = async () => {
+    // Fetches file system statistics
 	const fs = await SI.fsStats();
-	if (!fs || !fs.wx_sec) {
-		return "";
-	}
+
+    // Formats and returns the read and write rate information
 	return `$(log-in)${pretty(fs.wx_sec ?? 0)}/s $(log-out)${pretty(
 		fs.rx_sec ?? 0
 	)}/s`;
