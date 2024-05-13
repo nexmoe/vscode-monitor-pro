@@ -26,8 +26,8 @@ devDependencies:
     specifier: 6.21.0
     version: 6.21.0(eslint@8.57.0)(typescript@5.4.5)
   '@vscode/test-electron':
-    specifier: 2.3.9
-    version: 2.3.9
+    specifier: 2.3.10
+    version: 2.3.10
   eslint:
     specifier: 8.57.0
     version: 8.57.0
@@ -407,8 +407,8 @@ packages:
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
     dev: true
 
-  /@vscode/test-electron@2.3.9:
-    resolution: {integrity: sha512-z3eiChaCQXMqBnk2aHHSEkobmC2VRalFQN0ApOAtydL172zXGxTwGrRtviT5HnUB+Q+G3vtEYFtuQkYqBzYgMA==}
+  /@vscode/test-electron@2.3.10:
+    resolution: {integrity: sha512-FxMqrvUm6a8S5tP4CymNJ40e6kD+wUTWTc6K32U629yrCCa+kl/rmpkC2gKpN4F4zjg1r+0Hnk9sl0+N2atsYA==}
     engines: {node: '>=16'}
     dependencies:
       http-proxy-agent: 4.0.1
