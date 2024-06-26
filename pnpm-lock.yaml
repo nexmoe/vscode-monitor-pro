@@ -35,8 +35,8 @@ devDependencies:
     specifier: 10.4.2
     version: 10.4.2
   mocha:
-    specifier: 10.5.1
-    version: 10.5.1
+    specifier: 10.5.2
+    version: 10.5.2
   npm-run-all2:
     specifier: 5.0.2
     version: 5.0.2
@@ -1666,8 +1666,8 @@ packages:
     engines: {node: '>=16 || 14 >=14.17'}
     dev: true
 
-  /mocha@10.5.1:
-    resolution: {integrity: sha512-eq5tEnaz2kM9ade8cuGJBMh5fBb9Ih/TB+ddlmPR+wLQmwLhUwa0ovqDlg7OTfKquW0BI7NUcNWX7DH8sC+3gw==}
+  /mocha@10.5.2:
+    resolution: {integrity: sha512-9btlN3JKCefPf+vKd/kcKz2SXxi12z6JswkGfaAF0saQvnsqLJk504ZmbxhSoENge08E9dsymozKgFMTl5PQsA==}
     engines: {node: '>= 14.0.0'}
     hasBin: true
     dependencies:
