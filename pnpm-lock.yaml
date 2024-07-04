@@ -17,8 +17,8 @@ devDependencies:
     specifier: 18.19.39
     version: 18.19.39
   '@types/vscode':
-    specifier: 1.90.0
-    version: 1.90.0
+    specifier: 1.91.0
+    version: 1.91.0
   '@typescript-eslint/eslint-plugin':
     specifier: 6.21.0
     version: 6.21.0(@typescript-eslint/parser@6.21.0)(eslint@8.57.0)(typescript@5.5.3)
@@ -262,8 +262,8 @@ packages:
     resolution: {integrity: sha512-OxepLK9EuNEIPxWNME+C6WwbRAOOI2o2BaQEGzz5Lu2e4Z5eDnEo+/aVEDMIXywoJitJ7xWd641wrGLZdtwRyw==}
     dev: true
 
-  /@types/vscode@1.90.0:
-    resolution: {integrity: sha512-oT+ZJL7qHS9Z8bs0+WKf/kQ27qWYR3trsXpq46YDjFqBsMLG4ygGGjPaJ2tyrH0wJzjOEmDyg9PDJBBhWg9pkQ==}
+  /@types/vscode@1.91.0:
+    resolution: {integrity: sha512-PgPr+bUODjG3y+ozWUCyzttqR9EHny9sPAfJagddQjDwdtf66y2sDKJMnFZRuzBA2YtBGASqJGPil8VDUPvO6A==}
     dev: true
 
   /@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0)(eslint@8.57.0)(typescript@5.5.3):
