@@ -14,8 +14,8 @@ devDependencies:
     specifier: 10.0.7
     version: 10.0.7
   '@types/node':
-    specifier: 18.19.39
-    version: 18.19.39
+    specifier: 18.19.40
+    version: 18.19.40
   '@types/vscode':
     specifier: 1.91.0
     version: 1.91.0
@@ -248,8 +248,8 @@ packages:
     resolution: {integrity: sha512-GN8yJ1mNTcFcah/wKEFIJckJx9iJLoMSzWcfRRuxz/Jk+U6KQNnml+etbtxFK8lPjzOw3zp4Ha/kjSst9fsHYw==}
     dev: true
 
-  /@types/node@18.19.39:
-    resolution: {integrity: sha512-nPwTRDKUctxw3di5b4TfT3I0sWDiWoPQCZjXhvdkINntwr8lcoVCKsTgnXeRubKIlfnV+eN/HYk6Jb40tbcEAQ==}
+  /@types/node@18.19.40:
+    resolution: {integrity: sha512-MIxieZHrm4Ee8XArBIc+Or9HINt2StOmCbgRcXGSJl8q14svRvkZPe7LJq9HKtTI1SK3wU8b91TjntUm7T69Pg==}
     dependencies:
       undici-types: 5.26.5
     dev: true
@@ -1485,7 +1485,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.19.39
+      '@types/node': 18.19.40
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: true
