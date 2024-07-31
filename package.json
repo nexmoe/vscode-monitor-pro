@@ -60,7 +60,7 @@
 		"webpack-cli": "5.1.4"
 	},
 	"dependencies": {
-		"systeminformation": "5.22.11"
+		"systeminformation": "5.23.1"
 	},
 	"contributes": {
 		"configuration": {
