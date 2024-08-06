@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   systeminformation:
-    specifier: 5.23.3
-    version: 5.23.3
+    specifier: 5.23.4
+    version: 5.23.4
 
 devDependencies:
   '@types/mocha':
@@ -2237,8 +2237,8 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
-  /systeminformation@5.23.3:
-    resolution: {integrity: sha512-jnj0GjvWQaMLz7eSuYjZLim+pyZ6bjClwTz+YLoOT50DSJdWSEnISOCnq35IzoEfRa2rX9wdwlaQ/LxUu6RMFQ==}
+  /systeminformation@5.23.4:
+    resolution: {integrity: sha512-mD2R9xnOzKOOmIVtxekosf/ghOE/DGLqAPmsEgQMWJK0pMKxBtX19riz1Ss0tN4omcfS2FQ2RDJ4lkxgADxIPw==}
     engines: {node: '>=8.0.0'}
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
