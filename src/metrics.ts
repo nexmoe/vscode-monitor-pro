@@ -125,6 +125,17 @@ const osDistroText = async () => {
 	return `${os.distro}`;
 };
 
+const diskSpaceText = async () => {
+    const fsSize = await SI.fsSize();
+    if (fsSize.length > 0) {
+        const total = fsSize[0].size;
+        const used = fsSize[0].used;
+        const usedPercentage = (used / total * 100).toFixed(1);
+        return `$(database)${usedPercentage}% ${pretty(used)}/${pretty(total)}`;
+    }
+    return '';
+};
+
 const metrics: MetricCtrProps[] = [
 	{
 		func: cpuText,
@@ -161,6 +172,10 @@ const metrics: MetricCtrProps[] = [
 	{
 		func: osDistroText,
 		section: "osDistro",
+	},
+	{
+		func: diskSpaceText,
+		section: "diskSpace",
 	},
 ];
 

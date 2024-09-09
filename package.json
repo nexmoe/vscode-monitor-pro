@@ -79,7 +79,8 @@
 							"battery",
 							"cpuTemp",
 							"cpuSpeed",
-							"osDistro"
+							"osDistro",
+							"diskSpace"
 						]
 					},
 					"default": [
@@ -91,7 +92,8 @@
 						"battery",
 						"cpuTemp",
 						"cpuSpeed",
-						"osDistro"
+						"osDistro",
+						"diskSpace"
 					],
 					"description": "%config.metrics%"
 				},
