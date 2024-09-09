@@ -101,6 +101,17 @@
 					"type": "number",
 					"default": 3000,
 					"description": "%config.refresh-interval%"
+				},
+				"monitor-pro.diskSpace": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [
+						"all",
+						"C:"
+					],
+					"description": "%config.diskSpace%"
 				}
 			}
 		}
