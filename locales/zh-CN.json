@@ -10,5 +10,6 @@
   "metric.cpu.name": "CPU 使用情况",
   "metric.network.name": "网络使用率（下行/上行）",
   "metric.osDistro.name": "操作系统分发",
-  "metric.diskSpace.name": "磁盘空间"
+  "metric.diskSpace.name": "磁盘空间",
+  "config.diskSpace": "要显示的磁盘空间信息"
 }

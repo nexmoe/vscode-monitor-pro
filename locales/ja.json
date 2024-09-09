@@ -1,10 +1,12 @@
 {
+	"config.diskSpace": "表示するディスク容量情報",
 	"config.metrics": "有効にしたい監視リソースを並べ替えることができます",
 	"config.refresh-interval": "リソース情報の更新間隔",
 	"metric.battery.name": "バッテリー状態",
 	"metric.cpu.name": "CPU使用率",
 	"metric.cpuSpeed.name": "プロセッサ速度",
 	"metric.cpuTemp.name": "CPU温度",
+	"metric.diskSpace.name": "ディスクスペース",
 	"metric.fileSystem.name": "ファイルシステムの使用状況 (書き込み/読み取り)",
 	"metric.memoryActive.name": "アクティブメモリ (バッファ/キャッシュを除く)",
 	"metric.memoryUsed.name": "使用メモリ (バッファ/キャッシュを含む)",

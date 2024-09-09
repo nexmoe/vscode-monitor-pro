@@ -1,6 +1,7 @@
 import * as SI from "systeminformation";
 import byteFormat from "./byteFormat";
 import { MetricCtrProps } from "./constants";
+import { getDiskSpaceConfig } from "./configuration";
 
 /**
  * Converts a byte value into a nicely formatted string.
@@ -127,13 +128,24 @@ const osDistroText = async () => {
 
 const diskSpaceText = async () => {
     const fsSize = await SI.fsSize();
-    if (fsSize.length > 0) {
-        const total = fsSize[0].size;
-        const used = fsSize[0].used;
-        const usedPercentage = (used / total * 100).toFixed(1);
-        return `$(database)${usedPercentage}% ${pretty(used)}/${pretty(total)}`;
+	const disksToShow = getDiskSpaceConfig();
+
+    if (disksToShow.includes('all') && fsSize.length > 0) {
+        return fsSize.map(disk => {
+            const total = disk.size;
+            const used = disk.used;
+            const usedPercentage = (used / total * 100).toFixed(1);
+            return `$(database)${disk.mount} ${usedPercentage}% ${pretty(used)}/${pretty(total)}`;
+        }).join(' | ');
     }
-    return '';
+    return fsSize
+        .filter(disk => disksToShow.includes(disk.mount))
+        .map(disk => {
+            const total = disk.size;
+            const used = disk.used;
+            const usedPercentage = (used / total * 100).toFixed(1);
+            return `$(database)${disk.mount} ${usedPercentage}% ${pretty(used)}/${pretty(total)}`;
+        }).join(' | ');
 };
 
 const metrics: MetricCtrProps[] = [

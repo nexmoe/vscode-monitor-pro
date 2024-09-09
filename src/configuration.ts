@@ -7,5 +7,7 @@ export const getRefreshInterval = () =>
 export const getMetrics = workspace
 	.getConfiguration()
 	.get("monitor-pro.metrics") as MetricsExist[];
+export const getDiskSpaceConfig = () =>
+	workspace.getConfiguration().get<string[]>("monitor-pro.diskSpace") ?? ["/"];
 
 export { MetricsExist };

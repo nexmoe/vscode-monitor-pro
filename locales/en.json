@@ -1,13 +1,15 @@
 {
+	"config.diskSpace": "Disk space information to display",
 	"config.metrics": "Metrics you want to use",
 	"config.refresh-interval": "Refresh interval",
+	"metric.battery.name": "Battery Status",
 	"metric.cpu.name": "CPU Usage",
+	"metric.cpuSpeed.name": "CPU Speed",
+	"metric.cpuTemp.name": "CPU Temperature",
+	"metric.diskSpace.name": "Disk Space",
+	"metric.fileSystem.name": "File System Usage (Write/Read)",
 	"metric.memoryActive.name": "Memory Active (excl. buffers/cache)",
 	"metric.memoryUsed.name": "Memory Used (incl. buffers/cache)",
 	"metric.network.name": "Network Usage (Down/Up)",
-	"metric.fileSystem.name": "File System Usage (Write/Read)",
-	"metric.battery.name": "Battery Status",
-	"metric.cpuTemp.name": "CPU Temperature",
-	"metric.cpuSpeed.name": "CPU Speed",
 	"metric.osDistro.name": "OS Distribution"
 }
