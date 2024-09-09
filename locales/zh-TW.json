@@ -11,5 +11,6 @@
 	"metric.memoryActive.name": "活動記憶體（不包括緩衝區/快取）",
 	"metric.memoryUsed.name": "使用的記憶體（包括緩衝區/快取）",
 	"metric.network.name": "網路使用率（下行/上行）",
-	"metric.osDistro.name": "作業系統分發"
+	"metric.osDistro.name": "作業系統分發",
+	"metric.uptime.name": "系統運作時間"
 }

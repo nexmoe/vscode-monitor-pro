@@ -11,5 +11,6 @@
 	"metric.memoryActive.name": "アクティブメモリ (バッファ/キャッシュを除く)",
 	"metric.memoryUsed.name": "使用メモリ (バッファ/キャッシュを含む)",
 	"metric.network.name": "ネットワーク使用量 (ダウンストリーム/アップストリーム)",
-	"metric.osDistro.name": "オペレーティング システムのディストリビューション"
+	"metric.osDistro.name": "オペレーティング システムのディストリビューション",
+	"metric.uptime.name": "システム稼働時間"
 }
