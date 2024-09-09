@@ -9,5 +9,6 @@
   "metric.memoryUsed.name": "使用的内存（包括缓冲区/缓存）",
   "metric.cpu.name": "CPU 使用情况",
   "metric.network.name": "网络使用率（下行/上行）",
-  "metric.osDistro.name": "操作系统分发"
+  "metric.osDistro.name": "操作系统分发",
+  "metric.diskSpace.name": "磁盘空间"
 }
