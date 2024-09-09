@@ -11,5 +11,6 @@
 	"metric.memoryActive.name": "Memory Active (excl. buffers/cache)",
 	"metric.memoryUsed.name": "Memory Used (incl. buffers/cache)",
 	"metric.network.name": "Network Usage (Down/Up)",
-	"metric.osDistro.name": "OS Distribution"
+	"metric.osDistro.name": "OS Distribution",
+	"metric.uptime.name": "System running time"
 }

@@ -148,6 +148,14 @@ const diskSpaceText = async () => {
         }).join(' | ');
 };
 
+const uptimeText = async () => {
+	const uptime = await SI.time();
+	const days = Math.floor(uptime.uptime / (24 * 3600));
+	const hours = Math.floor((uptime.uptime % (24 * 3600)) / 3600);
+	const minutes = Math.floor((uptime.uptime % 3600) / 60);
+	return `$(clock) ${days}d ${hours}h ${minutes}m`;
+};
+
 const metrics: MetricCtrProps[] = [
 	{
 		func: cpuText,
@@ -189,6 +197,10 @@ const metrics: MetricCtrProps[] = [
 		func: diskSpaceText,
 		section: "diskSpace",
 	},
+	{
+        func: uptimeText,
+        section: "uptime",
+    },
 ];
 
 export default metrics;

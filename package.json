@@ -80,7 +80,8 @@
 							"cpuTemp",
 							"cpuSpeed",
 							"osDistro",
-							"diskSpace"
+							"diskSpace",
+							"uptime"
 						]
 					},
 					"default": [
@@ -93,7 +94,8 @@
 						"cpuTemp",
 						"cpuSpeed",
 						"osDistro",
-						"diskSpace"
+						"diskSpace",
+						"uptime"
 					],
 					"description": "%config.metrics%"
 				},

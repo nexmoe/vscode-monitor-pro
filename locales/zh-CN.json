@@ -11,5 +11,6 @@
   "metric.network.name": "网络使用率（下行/上行）",
   "metric.osDistro.name": "操作系统分发",
   "metric.diskSpace.name": "磁盘空间",
-  "config.diskSpace": "要显示的磁盘空间信息"
+  "config.diskSpace": "要显示的磁盘空间信息",
+  "metric.uptime.name": "系统运行时间"
 }
