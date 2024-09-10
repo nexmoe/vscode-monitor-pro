@@ -1,6 +1,14 @@
 import { HomeLayout } from 'fumadocs-ui/home-layout'
 import { Button } from '@/components/ui/button'
 import { baseOptions } from './layout.config'
+
+import { Metadata } from 'next'
+export const metadata = {
+	title: 'Monitor Pro',
+	description:
+		'Monitor Pro is a VS Code extension that provides powerful system monitoring capabilities, allowing you to easily monitor CPU, memory, network, and disk usage.',
+} satisfies Metadata
+
 function CTA() {
 	return (
 		<section className="w-full py-16 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-900">
