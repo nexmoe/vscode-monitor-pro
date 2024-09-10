@@ -218,7 +218,7 @@ function MonitoredResourcesSection() {
 	)
 }
 
-function ResourceItem({ icon, title, description }) {
+function ResourceItem({ icon, title, description }: { icon: string; title: string; description: string }) {
 	return (
 		<div className="flex flex-col items-center text-center p-12 border border-gray-300 bg-white backdrop-blur-sm hover:bg-gray-100 rounded-3xl shadow-lg transition-all hover:shadow-xl hover:scale-105 ease-in-out dark:border-gray-700  dark:bg-gray-800/50 dark:hover:bg-gray-800/80">
 			<div className="w-20 h-20 mb-6 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
@@ -243,7 +243,7 @@ function ResourceItem({ icon, title, description }) {
 	)
 }
 
-function getIconPath(icon) {
+function getIconPath(icon: string) {
 	switch (icon) {
 		case 'cpu':
 			return 'M4 4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h16v12H4V6zm2 3h12M6 12h12m-9 3h6'
