@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+	font-variant-numeric: tabular-nums;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.light {
+	--background: 0 0% 100%;
+}
+
+.slider {
+	position: relative;
+	overflow: hidden;
+}
+.slider::before,
+.slider::after {
+	background: linear-gradient(to right, #fff 0%, #ffffff00 100%);
+	content: '';
+	z-index: 2;
+	position: absolute;
+	height: 100%;
+	width: 10rem;
+	pointer-events: none;
+}
+.dark .slider::before,
+.dark .slider::after {
+	background: linear-gradient(to right, #111 0%, #11111100 50%);
+	content: '';
+	z-index: 2;
+	position: absolute;
+	height: 100%;
+	width: 10rem;
+	pointer-events: none;
+	/* background:transparent; */
+}
+.slider::after {
+	right: 0;
+	top: 0;
+	transform: rotateZ(180deg);
+}
+.slider::before {
+	left: 0;
+	top: 0;
+}
+.slider .slide-track-5 {
+	animation: scroll-5 30s linear infinite;
+	display: flex;
+	width: calc(12rem * 5 * 2);
+}
+.slider .slide-track-10 {
+	animation: scroll-5 30s linear infinite;
+	display: flex;
+	width: calc(12rem * 10 * 2);
+}
+
+/* 添加新的全局样式 */
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-weight: 600;
+}
+
+a {
+	transition: all 0.3s ease;
+}
+
+.bg-gradient {
+	background: linear-gradient(90deg, #000000, #333333);
+}
+
+/* Apple 风格的按钮 */
+.apple-button {
+	background-color: #0071e3;
+	color: white;
+	border-radius: 980px;
+	padding: 12px 24px;
+	font-size: 17px;
+	font-weight: 400;
+	text-align: center;
+	transition: all 0.3s ease;
+}
+
+.apple-button:hover {
+	background-color: #0077ED;
+}
+
+/* 添加平滑滚动 */
+html {
+	scroll-behavior: smooth;
+}
