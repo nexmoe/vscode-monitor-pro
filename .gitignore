@@ -5,3 +5,32 @@ node_modules
 *.vsix
 
 package.nls.*
+
+# deps
+/node_modules
+
+# generated content
+.contentlayer
+.content-collections
+.source
+
+# test & build
+docs/coverage
+docs/.next/
+docs/out/
+docs/build
+*.tsbuildinfo
+
+# misc
+.DS_Store
+*.pem
+docs/.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# others
+.env*.local
+.vercel
+next-env.d.ts

@@ -33,7 +33,8 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you tra
   - [x] **File-system Usage** (Linux, macOS): Provides the read/write rate of the disk
   - [x] **Battery Percentage and Charging Status**: If you're using a laptop or a portable device, this feature allows you to monitor the battery level and charging status.
   - [x] **OS Distro**
-  - [ ] **Disk Usage**
+  - [x] **Disk Usage**
+  - [x] **Uptime**
 - [x] **Order**: Customize the order in which the monitored resources are displayed to you, making it convenient to monitor them at a glance.
 - [x] **Refresh Interval**: Set the refresh interval for updating the resource metrics.
 - [x] **No Layout Shift**: Ensures that the position and size of elements in the StatusBar do not unexpectedly change.
