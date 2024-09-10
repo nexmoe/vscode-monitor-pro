@@ -5,15 +5,15 @@ import { pageTree } from '@/app/source';
 // shared configuration
 export const baseOptions: HomeLayoutProps = {
   nav: {
-    title: 'My App',
+    title: 'Monitor Pro',
   },
-  links: [
-    {
-      text: 'Documentation',
-      url: '/docs',
-      active: 'nested-url',
-    },
-  ],
+  // links: [
+  //   {
+  //     text: 'Documentation',
+  //     url: '/docs',
+  //     active: 'nested-url',
+  //   },
+  // ],
 };
 
 // docs layout configuration

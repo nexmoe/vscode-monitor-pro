@@ -1,7 +1,6 @@
 import { HomeLayout } from 'fumadocs-ui/home-layout'
-import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-
+import { baseOptions } from './layout.config'
 function CTA() {
 	return (
 		<section className="w-full py-16 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-900">
@@ -80,7 +79,7 @@ function HeroSection() {
 							Monitor Pro
 						</h1>
 						<p className="mx-auto max-w-[700px] text-gray-700 dark:text-gray-300 md:text-xl">
-							为您的VS Code提供强大的系统监控能力,实时掌握资源使用情况。
+							为您的 VS Code 提供强大的系统监控能力,实时掌握资源使用情况。
 						</p>
 					</div>
 					<div className="space-x-4">
@@ -89,13 +88,20 @@ function HeroSection() {
 								立即获取
 							</Button>
 						</a>
-						<Button
+						{/* <Button
 							variant="outline"
 							className="inline-flex h-12 items-center justify-center rounded-full border border-gray-900 dark:border-white bg-transparent px-8 py-2 text-sm font-medium shadow-lg transition-colors hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 dark:focus-visible:ring-white"
 						>
 							了解更多
-						</Button>
+						</Button> */}
 					</div>
+				</div>
+				<div className="mt-16 flex justify-center">
+					<img
+						src="https://github.com/nexmoe/vscode-monitor-pro/raw/main/assets/screenshot0.png"
+						alt="Monitor Pro 界面预览"
+						className="rounded-lg shadow-2xl w-full h-auto"
+					/>
 				</div>
 			</div>
 			<div className="absolute inset-0 bg-[url('/path-to-your-image.jpg')] bg-cover bg-center opacity-10"></div>
@@ -256,7 +262,7 @@ function getIconPath(icon) {
 
 export default function Home() {
 	return (
-		<HomeLayout>
+		<HomeLayout {...baseOptions}>
 			<div className="flex flex-col items-center bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white">
 				<HeroSection />
 				<FeaturesSection />
