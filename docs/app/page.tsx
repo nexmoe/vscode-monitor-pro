@@ -100,7 +100,7 @@ function HeroSection() {
 					<img
 						src="https://github.com/nexmoe/vscode-monitor-pro/raw/main/assets/screenshot0.png"
 						alt="Monitor Pro 界面预览"
-						className="rounded-lg shadow-2xl w-full h-auto"
+						className="rounded-2xl shadow-2xl w-full h-auto"
 					/>
 				</div>
 			</div>
