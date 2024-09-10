@@ -1,5 +1,6 @@
-import { HomeLayout } from 'fumadocs-ui/home-layout';
-import { motion } from 'framer-motion';
+import { HomeLayout } from 'fumadocs-ui/home-layout'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
 
 function CTA() {
 	return (
@@ -11,15 +12,14 @@ function CTA() {
 				<p className="mb-8 text-xl text-gray-700 dark:text-gray-300">
 					立即安装 Monitor Pro,开启智能资源监控之旅!
 				</p>
-				<a
-					href="https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro"
-					className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-2 text-sm font-medium shadow-lg transition-all hover:from-blue-600 hover:to-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-				>
-					获取 Monitor Pro
+				<a href="https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro">
+					<Button className="inline-flex h-12 items-center justify-center rounded-full px-8 py-2 text-sm font-medium shadow-lg transition-all">
+						获取 Monitor Pro
+					</Button>
 				</a>
 			</div>
 		</section>
-	);
+	)
 }
 
 function StepsSection() {
@@ -67,15 +67,15 @@ function StepsSection() {
 				</div>
 			</div>
 		</section>
-	);
+	)
 }
 
 function HeroSection() {
 	return (
-		<section className="w-full py-24 md:py-32 lg:py-48 bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-black text-gray-900 dark:text-white overflow-hidden">
+		<section className="w-full py-24 md:py-32 lg:py-48 bg-gradient-to-b from-gray-100 to-white dark:from-gray-900 dark:to-black text-gray-900 dark:text-white overflow-hidden">
 			<div className="container px-4 md:px-6 relative z-10">
-				<div className="flex flex-col items-center space-y-4 text-center">
-					<div className="space-y-2">
+				<div className="flex flex-col items-center space-y-12 text-center">
+					<div className="space-y-6">
 						<h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
 							Monitor Pro
 						</h1>
@@ -84,24 +84,23 @@ function HeroSection() {
 						</p>
 					</div>
 					<div className="space-x-4">
-						<a
-							className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-2 text-sm font-medium shadow-lg transition-all hover:from-blue-600 hover:to-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-							href="https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro"
-						>
-							立即获取
+						<a href="https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro">
+							<Button className="inline-flex h-12 items-center justify-center rounded-full px-8 py-2 text-sm font-medium shadow-lg">
+								立即获取
+							</Button>
 						</a>
-						<a
+						<Button
+							variant="outline"
 							className="inline-flex h-12 items-center justify-center rounded-full border border-gray-900 dark:border-white bg-transparent px-8 py-2 text-sm font-medium shadow-lg transition-colors hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 dark:focus-visible:ring-white"
-							href="#features"
 						>
 							了解更多
-						</a>
+						</Button>
 					</div>
 				</div>
 			</div>
 			<div className="absolute inset-0 bg-[url('/path-to-your-image.jpg')] bg-cover bg-center opacity-10"></div>
 		</section>
-	);
+	)
 }
 
 function FeaturesSection() {
@@ -175,17 +174,17 @@ function FeaturesSection() {
 				</div>
 			</div>
 		</section>
-	);
+	)
 }
 
 function MonitoredResourcesSection() {
 	return (
 		<section className="w-full py-24 md:py-32 bg-white dark:bg-black">
-			<div className="container px-4 md:px-6">
+			<div className="container px-4 md:px-6 mx-auto">
 				<h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-12 text-center text-gray-900 dark:text-white">
 					支持监控的资源
 				</h2>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
 					<ResourceItem icon="cpu" title="CPU 使用率" description="实时监控 CPU 使用情况" />
 					<ResourceItem icon="activity" title="CPU 频率" description="跟踪 CPU 当前运行频率" />
 					<ResourceItem icon="thermometer" title="CPU 温度" description="监控 CPU 温度变化" />
@@ -202,25 +201,57 @@ function MonitoredResourcesSection() {
 				</div>
 			</div>
 		</section>
-	);
+	)
 }
 
 function ResourceItem({ icon, title, description }) {
 	return (
-		<div className="flex flex-col items-center text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-			<svg
-				className="w-12 h-12 mb-4 text-blue-500"
-				fill="none"
-				stroke="currentColor"
-				viewBox="0 0 24 24"
-				xmlns="http://www.w3.org/2000/svg"
-			>
-				<use xlinkHref={`/icons.svg#${icon}`} />
-			</svg>
-			<h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{title}</h3>
+		<div className="flex flex-col items-center text-center p-12 border border-gray-300 bg-white backdrop-blur-sm hover:bg-gray-100 rounded-3xl shadow-lg transition-all hover:shadow-xl hover:scale-105 ease-in-out dark:border-gray-700  dark:bg-gray-800/50 dark:hover:bg-gray-800/80">
+			<div className="w-20 h-20 mb-6 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+				<svg
+					className="w-12 h-12 text-white"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+					xmlns="http://www.w3.org/2000/svg"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						strokeWidth={2}
+						d={getIconPath(icon)}
+					/>
+				</svg>
+			</div>
+			<h3 className="text-2xl font-semibold mb-3 text-gray-900 dark:text-white">{title}</h3>
 			<p className="text-gray-600 dark:text-gray-400">{description}</p>
 		</div>
-	);
+	)
+}
+
+function getIconPath(icon) {
+	switch (icon) {
+		case 'cpu':
+			return 'M4 4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h16v12H4V6zm2 3h12M6 12h12m-9 3h6'
+		case 'activity':
+			return 'M22 12h-4l-3 9L9 3l-3 9H2'
+		case 'thermometer':
+			return 'M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z'
+		case 'database':
+			return 'M12 2a8 8 0 0 0-8 8v12a8 8 0 0 0 16 0V10a8 8 0 0 0-8-8zm0 4a4 4 0 0 1 4 4v12a4 4 0 0 1-8 0V10a4 4 0 0 1 4-4z'
+		case 'wifi':
+			return 'M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01'
+		case 'hard-drive':
+			return 'M22 12H2M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11zM6 16h.01M10 16h.01'
+		case 'battery-charging':
+			return 'M5 18H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.19M15 6h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3.19M23 13v-2M11 6l-4 6h6l-4 6'
+		case 'server':
+			return 'M22 12H2M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11zM6 16h.01M10 16h.01'
+		case 'clock':
+			return 'M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm1-8.59V7a1 1 0 0 0-2 0v5a1 1 0 0 0 .29.71l3 3a1 1 0 0 0 1.42-1.42L13 11.41z'
+		default:
+			return ''
+	}
 }
 
 export default function Home() {
@@ -234,5 +265,5 @@ export default function Home() {
 				<CTA />
 			</div>
 		</HomeLayout>
-	);
+	)
 }
