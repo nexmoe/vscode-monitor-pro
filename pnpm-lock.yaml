@@ -13,8 +13,8 @@ importers:
         version: 5.23.5
     devDependencies:
       '@types/mocha':
-        specifier: 10.0.7
-        version: 10.0.7
+        specifier: 10.0.8
+        version: 10.0.8
       '@types/node':
         specifier: 18.19.50
         version: 18.19.50
@@ -155,8 +155,8 @@ packages:
   '@types/json-schema@7.0.13':
     resolution: {integrity: sha512-RbSSoHliUbnXj3ny0CNFOoxrIDV6SUGyStHsvDqosw6CkdPV8TtWGlfecuK4ToyMEAql6pzNxgCFKanovUzlgQ==}
 
-  '@types/mocha@10.0.7':
-    resolution: {integrity: sha512-GN8yJ1mNTcFcah/wKEFIJckJx9iJLoMSzWcfRRuxz/Jk+U6KQNnml+etbtxFK8lPjzOw3zp4Ha/kjSst9fsHYw==}
+  '@types/mocha@10.0.8':
+    resolution: {integrity: sha512-HfMcUmy9hTMJh66VNcmeC9iVErIZJli2bszuXc6julh5YGuRb/W5OnkHjwLNYdFlMis0sY3If5SEAp+PktdJjw==}
 
   '@types/node@18.19.50':
     resolution: {integrity: sha512-xonK+NRrMBRtkL1hVCc3G+uXtjh1Al4opBLjqVmipe5ZAaBYWW6cNAiBVZ1BvmkBhep698rP3UM3aRAdSALuhg==}
@@ -1560,7 +1560,7 @@ snapshots:
 
   '@types/json-schema@7.0.13': {}
 
-  '@types/mocha@10.0.7': {}
+  '@types/mocha@10.0.8': {}
 
   '@types/node@18.19.50':
     dependencies:
