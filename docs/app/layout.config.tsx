@@ -7,13 +7,14 @@ export const baseOptions: HomeLayoutProps = {
   nav: {
     title: 'Monitor Pro',
   },
-  // links: [
-  //   {
-  //     text: 'Documentation',
-  //     url: '/docs',
-  //     active: 'nested-url',
-  //   },
-  // ],
+  githubUrl: 'https://github.com/nexmoe/vscode-monitor-pro',
+  links: [
+    {
+      text: '文档',
+      url: '/docs',
+      active: 'nested-url',
+    },
+  ],
 };
 
 // docs layout configuration

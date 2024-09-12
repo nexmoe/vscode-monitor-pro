@@ -4,6 +4,7 @@ import { baseOptions } from './layout.config'
 import ShimmerButton from '@/components/magicui/shimmer-button'
 
 import { Metadata } from 'next'
+import Footer from '@/components/footer'
 export const metadata = {
 	title: 'Monitor Pro',
 	description:
@@ -284,6 +285,7 @@ export default function Home() {
 				<MonitoredResourcesSection />
 				<StepsSection />
 				<CTA />
+				<Footer />
 			</div>
 		</HomeLayout>
 	)

@@ -1,0 +1,88 @@
+---
+title: 贡献指南
+---
+
+## 开发环境配置
+
+1. 克隆该代码仓库。
+2. 运行命令 `pnpm install` 安装依赖项。
+
+## 添加度量指标
+
+要往项目添加度量指标，请按以下步骤操作：
+
+### 1. 编辑 `metrics.ts`
+
+在 `metrics.ts` 文件中，定位至 `metrics` 数组，并往其中追加以下对象：
+
+```ts
+{
+  func: cpuSpeedText,
+  section: "cpuSpeed",
+},
+{
+  func: osDistroText,
+  section: "osDistro",
+},
+// 在此追加更多度量指标对象
+```
+
+### 2. 编辑本地化文件
+
+打开 `locales/zh-CN.json` 文件（以及任何其他相关的本地化文件），并追加以下条目：
+
+```json5
+"metric.cpuTemp.name": "CPU 温度",
+"metric.cpuSpeed.name": "CPU 速度",
+"metric.osDistro.name": "操作系统发行版本",
+// 在此追加更多度量指标条目
+```
+
+### 3. 更新 `package.json`
+
+在 `package.json` 文件中，定位至 `"monitor-pro.metrics"` 部分，将新添加的度量指标加入到 `"default"` 数组和 `"enum"` 数组中：
+
+```json5
+"monitor-pro.metrics": {
+  "type": "array",
+  "items": {
+    "type": "string",
+    "enum": [
+      "cpu",
+      "memoryActive",
+      "memoryUsed",
+      "network",
+      "fileSystem",
+      "battery",
+      "cpuTemp",
+      "cpuSpeed",
+      "osDistro",
+      // 在此追加更多度量指标
+    ]
+  },
+  "default": [
+    "cpu",
+    "memoryActive",
+    "memoryUsed",
+    "network",
+    "fileSystem",
+    "battery",
+    "cpuTemp",
+    "cpuSpeed",
+    "osDistro",
+    // 在此追加更多度量指标
+  ],
+  "description": "%config.metrics%"
+},
+//...
+```
+
+## 调试
+
+想调试这个扩展程序，可遵循以下步骤：
+
+1. 打开 Visual Studio Code。
+2. 导航至**菜单**并选择**运行**。
+3. 选择**开始调试**。
+
+若想获取更详细的说明，请参阅 [Your First Extension](https://code.visualstudio.com/api/get-started/your-first-extension#debugging-the-extension) 指南。
