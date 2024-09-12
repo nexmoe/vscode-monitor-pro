@@ -1,6 +1,7 @@
 import { HomeLayout } from 'fumadocs-ui/home-layout'
 import { Button } from '@/components/ui/button'
 import { baseOptions } from './layout.config'
+import ShimmerButton from '@/components/magicui/shimmer-button'
 
 import { Metadata } from 'next'
 export const metadata = {
@@ -12,17 +13,19 @@ export const metadata = {
 function CTA() {
 	return (
 		<section className="w-full py-16 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-900">
-			<div className="container px-4 md:px-6 text-center">
+			<div className="container px-4 md:px-6 flex items-center justify-center flex-col">
 				<h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4 text-gray-900 dark:text-white">
 					准备好提升您的开发体验了吗?
 				</h2>
 				<p className="mb-8 text-xl text-gray-700 dark:text-gray-300">
-					立即安装 Monitor Pro,开启智能资源监控之旅!
+					立即安装 Monitor Pro，开启智能资源监控之旅!
 				</p>
-				<a href="https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro">
-					<Button className="inline-flex h-12 items-center justify-center rounded-full px-8 py-2 text-sm font-medium shadow-lg transition-all">
-						获取 Monitor Pro
-					</Button>
+				<a href="https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro" target='_blank'>
+					<ShimmerButton className="shadow-2xl">
+						<span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+							获取 Monitor Pro
+						</span>
+					</ShimmerButton>
 				</a>
 			</div>
 		</section>
@@ -91,10 +94,12 @@ function HeroSection() {
 						</p>
 					</div>
 					<div className="space-x-4">
-						<a href="https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro">
-							<Button className="inline-flex h-12 items-center justify-center rounded-full px-8 py-2 text-sm font-medium shadow-lg">
-								立即获取
-							</Button>
+						<a href="https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro" target='_blank'>
+							<ShimmerButton className="shadow-2xl">
+								<span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+									获取 Monitor Pro
+								</span>
+							</ShimmerButton>
 						</a>
 						{/* <Button
 							variant="outline"
@@ -106,6 +111,8 @@ function HeroSection() {
 				</div>
 				<div className="mt-16 flex justify-center">
 					<img
+						width="1835"
+						height="425"
 						src="https://github.com/nexmoe/vscode-monitor-pro/raw/main/assets/screenshot0.png"
 						alt="Monitor Pro 界面预览"
 						className="rounded-2xl shadow-2xl w-full h-auto"
