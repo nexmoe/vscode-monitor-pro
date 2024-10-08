@@ -13,11 +13,11 @@ importers:
         version: 5.23.5
     devDependencies:
       '@types/mocha':
-        specifier: 10.0.8
-        version: 10.0.8
+        specifier: 10.0.9
+        version: 10.0.9
       '@types/node':
-        specifier: 18.19.54
-        version: 18.19.54
+        specifier: 18.19.55
+        version: 18.19.55
       '@types/vscode':
         specifier: 1.94.0
         version: 1.94.0
@@ -155,11 +155,11 @@ packages:
   '@types/json-schema@7.0.13':
     resolution: {integrity: sha512-RbSSoHliUbnXj3ny0CNFOoxrIDV6SUGyStHsvDqosw6CkdPV8TtWGlfecuK4ToyMEAql6pzNxgCFKanovUzlgQ==}
 
-  '@types/mocha@10.0.8':
-    resolution: {integrity: sha512-HfMcUmy9hTMJh66VNcmeC9iVErIZJli2bszuXc6julh5YGuRb/W5OnkHjwLNYdFlMis0sY3If5SEAp+PktdJjw==}
+  '@types/mocha@10.0.9':
+    resolution: {integrity: sha512-sicdRoWtYevwxjOHNMPTl3vSfJM6oyW8o1wXeI7uww6b6xHg8eBznQDNSGBCDJmsE8UMxP05JgZRtsKbTqt//Q==}
 
-  '@types/node@18.19.54':
-    resolution: {integrity: sha512-+BRgt0G5gYjTvdLac9sIeE0iZcJxi4Jc4PV5EUzqi+88jmQLr+fRZdv2tCTV7IHKSGxM6SaLoOXQWWUiLUItMw==}
+  '@types/node@18.19.55':
+    resolution: {integrity: sha512-zzw5Vw52205Zr/nmErSEkN5FLqXPuKX/k5d1D7RKHATGqU7y6YfX9QxZraUzUrFGqH6XzOzG196BC35ltJC4Cw==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -591,6 +591,7 @@ packages:
   eslint@8.57.1:
     resolution: {integrity: sha512-ypowyDxpVSYpkXr9WPv2PAZCtNip1Mv5KTW0SCurXv/9iOpcrH9PaqUElksqEB6pChqHGDRCFTyrZlGhnLNGiA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -1560,9 +1561,9 @@ snapshots:
 
   '@types/json-schema@7.0.13': {}
 
-  '@types/mocha@10.0.8': {}
+  '@types/mocha@10.0.9': {}
 
-  '@types/node@18.19.54':
+  '@types/node@18.19.55':
     dependencies:
       undici-types: 5.26.5
 
@@ -2286,7 +2287,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 18.19.54
+      '@types/node': 18.19.55
       merge-stream: 2.0.0
       supports-color: 8.1.1
 

@@ -44,8 +44,8 @@
 		"build:i18n": "node scripts/build-i18n.js"
 	},
 	"devDependencies": {
-		"@types/mocha": "10.0.8",
-		"@types/node": "18.19.54",
+		"@types/mocha": "10.0.9",
+		"@types/node": "18.19.55",
 		"@types/vscode": "1.94.0",
 		"@typescript-eslint/eslint-plugin": "6.21.0",
 		"@typescript-eslint/parser": "6.21.0",
