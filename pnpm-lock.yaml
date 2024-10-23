@@ -16,8 +16,8 @@ importers:
         specifier: 10.0.9
         version: 10.0.9
       '@types/node':
-        specifier: 18.19.58
-        version: 18.19.58
+        specifier: 18.19.59
+        version: 18.19.59
       '@types/vscode':
         specifier: 1.94.0
         version: 1.94.0
@@ -158,8 +158,8 @@ packages:
   '@types/mocha@10.0.9':
     resolution: {integrity: sha512-sicdRoWtYevwxjOHNMPTl3vSfJM6oyW8o1wXeI7uww6b6xHg8eBznQDNSGBCDJmsE8UMxP05JgZRtsKbTqt//Q==}
 
-  '@types/node@18.19.58':
-    resolution: {integrity: sha512-2ryJttbOAWCYuZMdk4rmZZ6oqE+GSL5LxbaTVe4PCs0FUrHObZZAQL4ihMw9/cH1Pn8lSQ9TXVhsM4LrnfZ0aA==}
+  '@types/node@18.19.59':
+    resolution: {integrity: sha512-vizm2EqwV/7Zay+A6J3tGl9Lhr7CjZe2HmWS988sefiEmsyP9CeXEleho6i4hJk/8UtZAo0bWN4QPZZr83RxvQ==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -1563,7 +1563,7 @@ snapshots:
 
   '@types/mocha@10.0.9': {}
 
-  '@types/node@18.19.58':
+  '@types/node@18.19.59':
     dependencies:
       undici-types: 5.26.5
 
@@ -2287,7 +2287,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 18.19.58
+      '@types/node': 18.19.59
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
