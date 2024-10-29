@@ -45,8 +45,8 @@
 	},
 	"devDependencies": {
 		"@types/mocha": "10.0.9",
-		"@types/node": "18.19.60",
-		"@types/vscode": "1.94.0",
+		"@types/node": "18.19.61",
+		"@types/vscode": "1.95.0",
 		"@typescript-eslint/eslint-plugin": "6.21.0",
 		"@typescript-eslint/parser": "6.21.0",
 		"@vscode/test-electron": "2.4.1",
