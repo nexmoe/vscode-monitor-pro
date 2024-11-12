@@ -12,7 +12,7 @@
     "@radix-ui/react-slot": "1.1.0",
     "class-variance-authority": "0.7.0",
     "clsx": "2.1.1",
-    "framer-motion": "11.11.11",
+    "framer-motion": "11.11.13",
     "fumadocs-core": "13.4.10",
     "fumadocs-mdx": "10.0.2",
     "fumadocs-ui": "13.4.10",
