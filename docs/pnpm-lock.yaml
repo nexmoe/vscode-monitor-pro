@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@radix-ui/react-slot':
-        specifier: 1.1.0
-        version: 1.1.0(@types/react@18.3.16)(react@18.3.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@18.3.16)(react@18.3.1)
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
@@ -18,8 +18,8 @@ importers:
         specifier: 2.1.1
         version: 2.1.1
       framer-motion:
-        specifier: 11.14.1
-        version: 11.14.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 11.14.4
+        version: 11.14.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       fumadocs-core:
         specifier: 13.4.10
         version: 13.4.10(@types/react@18.3.16)(next@14.2.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -422,6 +422,15 @@ packages:
       '@types/react':
         optional: true
 
+  '@radix-ui/react-compose-refs@1.1.1':
+    resolution: {integrity: sha512-Y9VzoRDSJtgFMUCoiZBDVo084VQ5hfpXxVE+NgkdNsjiDBByiImMZKKhxMwCbdHvhlENG6a833CbFkOQvTricw==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
   '@radix-ui/react-context@1.0.1':
     resolution: {integrity: sha512-ebbrdFoYTcuZ0v4wG5tedGnp9tzcV8awzsxYph7gXUyvnNLuTIcCk1q17JEbnVhXAKG9oX3KtchwiMIAYp9NLg==}
     peerDependencies:
@@ -704,6 +713,15 @@ packages:
 
   '@radix-ui/react-slot@1.1.0':
     resolution: {integrity: sha512-FUCf5XMfmW4dtYl69pdS4DbxKy8nj4M7SafBgPllysxmdachynNflAdp/gCsnYWNDnge6tI9onzMp5ARYc1KNw==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@radix-ui/react-slot@1.1.1':
+    resolution: {integrity: sha512-RApLLOcINYJA+dMVbOju7MYv1Mb2EBp2nH4HdDzXTSyaR5optlm6Otrz1euW3HbdOR8UmmFK06TD+A9frYWv+g==}
     peerDependencies:
       '@types/react': '*'
       react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
@@ -1148,8 +1166,8 @@ packages:
   fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
 
-  framer-motion@11.14.1:
-    resolution: {integrity: sha512-6B7jC54zgnefmUSa2l4gkc/2CrqclHL9AUbDxxRfbFyWKLd+4guUYtEabzoYMU8G5ICZ6CdJdydOLy74Ekd7ag==}
+  framer-motion@11.14.4:
+    resolution: {integrity: sha512-NQuzr9JbeJDMQmy0FFLhLzk9h1kAjVC1tGE/HY4ubF02B95EBm2lpA21LE3Od/OpXqXgp0zl5Hdqu25hliBRsA==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -1530,11 +1548,11 @@ packages:
     resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
     engines: {node: '>=16 || 14 >=14.17'}
 
-  motion-dom@11.14.1:
-    resolution: {integrity: sha512-Y68tHWR0d2HxHDskNxpeY3pzUdz7L/m5A8TV7VSE6Sq4XUNJdZV8zXco1aeAQ44o48u0i8UKjt8TGIqkZSQ8ew==}
+  motion-dom@11.14.3:
+    resolution: {integrity: sha512-lW+D2wBy5vxLJi6aCP0xyxTxlTfiu+b+zcpVbGVFUxotwThqhdpPRSmX8xztAgtZMPMeU0WGVn/k1w4I+TbPqA==}
 
-  motion-utils@11.14.1:
-    resolution: {integrity: sha512-R6SsehArpkEBUHydkcwQ/8ij8k2PyKWAJ7Y8PN3ztnFwq5RBU3zIamYH6esTp09OgsbwB57mBEZ9DORaN1WTxQ==}
+  motion-utils@11.14.3:
+    resolution: {integrity: sha512-Xg+8xnqIJTpr0L/cidfTTBFkvRw26ZtGGuIhA94J9PQ2p4mEa06Xx7QVYZH0BP+EpMSaDlu+q0I0mmvwADPsaQ==}
 
   ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
@@ -2306,6 +2324,12 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.16
 
+  '@radix-ui/react-compose-refs@1.1.1(@types/react@18.3.16)(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+    optionalDependencies:
+      '@types/react': 18.3.16
+
   '@radix-ui/react-context@1.0.1(@types/react@18.3.16)(react@18.3.1)':
     dependencies:
       '@babel/runtime': 7.25.6
@@ -2594,6 +2618,13 @@ snapshots:
   '@radix-ui/react-slot@1.1.0(@types/react@18.3.16)(react@18.3.1)':
     dependencies:
       '@radix-ui/react-compose-refs': 1.1.0(@types/react@18.3.16)(react@18.3.1)
+      react: 18.3.1
+    optionalDependencies:
+      '@types/react': 18.3.16
+
+  '@radix-ui/react-slot@1.1.1(@types/react@18.3.16)(react@18.3.1)':
+    dependencies:
+      '@radix-ui/react-compose-refs': 1.1.1(@types/react@18.3.16)(react@18.3.1)
       react: 18.3.1
     optionalDependencies:
       '@types/react': 18.3.16
@@ -3032,10 +3063,10 @@ snapshots:
 
   fraction.js@4.3.7: {}
 
-  framer-motion@11.14.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  framer-motion@11.14.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      motion-dom: 11.14.1
-      motion-utils: 11.14.1
+      motion-dom: 11.14.3
+      motion-utils: 11.14.3
       tslib: 2.7.0
     optionalDependencies:
       react: 18.3.1
@@ -3738,9 +3769,9 @@ snapshots:
 
   minipass@7.1.2: {}
 
-  motion-dom@11.14.1: {}
+  motion-dom@11.14.3: {}
 
-  motion-utils@11.14.1: {}
+  motion-utils@11.14.3: {}
 
   ms@2.1.2: {}
 
