@@ -22,7 +22,7 @@
 	"icon": "assets/icon.png",
 	"version": "0.6.0",
 	"engines": {
-		"vscode": "1.96.0"
+		"vscode": "1.96.1"
 	},
 	"categories": [
 		"Other"
@@ -60,7 +60,7 @@
 		"webpack-cli": "5.1.4"
 	},
 	"dependencies": {
-		"systeminformation": "5.23.13"
+		"systeminformation": "5.23.14"
 	},
 	"contributes": {
 		"configuration": {
