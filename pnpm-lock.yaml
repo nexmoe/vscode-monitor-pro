@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       systeminformation:
-        specifier: 5.23.24
-        version: 5.23.24
+        specifier: 5.23.25
+        version: 5.23.25
     devDependencies:
       '@types/mocha':
         specifier: 10.0.10
@@ -1299,8 +1299,8 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  systeminformation@5.23.24:
-    resolution: {integrity: sha512-dPEaqxCaOQMp+5/zCSjuGWbYW2NNBHUZZgI8SNs8xZbLSML2gXvf8OUiqr7Ea1zLkEuH3Tu58DLiNe4kwftPxw==}
+  systeminformation@5.23.25:
+    resolution: {integrity: sha512-sX/q1AL8gjn+VizKPieuHAiwMyPmM4/oj0mW434sEzwv3m0vghF4aO/VHUvmbMdIa3o5MVFgY9JtvX6M2dL36g==}
     engines: {node: '>=8.0.0'}
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
@@ -2747,7 +2747,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  systeminformation@5.23.24: {}
+  systeminformation@5.23.25: {}
 
   tapable@2.2.1: {}
 
