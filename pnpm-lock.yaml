@@ -43,8 +43,8 @@ importers:
         specifier: 5.0.2
         version: 5.0.2
       ts-loader:
-        specifier: 9.5.1
-        version: 9.5.1(typescript@5.7.3)(webpack@5.97.1)
+        specifier: 9.5.2
+        version: 9.5.2(typescript@5.7.3)(webpack@5.97.1)
       typescript:
         specifier: 5.7.3
         version: 5.7.3
@@ -550,10 +550,6 @@ packages:
 
   emoji-regex@9.2.2:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
-
-  enhanced-resolve@5.16.1:
-    resolution: {integrity: sha512-4U5pNsuDl0EhuZpq46M5xPslstkviJuhrdobaRDBk2Jy2KO37FDAJl4lb2KlNabxT0m4MTK2UHNrsAcphE8nyw==}
-    engines: {node: '>=10.13.0'}
 
   enhanced-resolve@5.17.1:
     resolution: {integrity: sha512-LMHl3dXhTcfv8gM4kEzIUeTQ+7fpdA0l2tUf34BddXPkz2A5xJ5L/Pchd5BL6rdccM9QGvu0sWZzK1Z1t4wwyg==}
@@ -1343,8 +1339,8 @@ packages:
     peerDependencies:
       typescript: '>=4.2.0'
 
-  ts-loader@9.5.1:
-    resolution: {integrity: sha512-rNH3sK9kGZcH9dYzC7CewQm4NtxJTjSEVRJ2DyBZR7f8/wcta+iV44UPCXc5+nzDzivKtlzV6c9P4e+oFhDLYg==}
+  ts-loader@9.5.2:
+    resolution: {integrity: sha512-Qo4piXvOTWcMGIgRiuFa6nHNm+54HbYaZCKqc9eeZCLRy3XqafQgwX2F7mofrbJG3g7EEb+lkiR+z2Lic2s3Zw==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       typescript: '*'
@@ -1994,11 +1990,6 @@ snapshots:
   emoji-regex@8.0.0: {}
 
   emoji-regex@9.2.2: {}
-
-  enhanced-resolve@5.16.1:
-    dependencies:
-      graceful-fs: 4.2.11
-      tapable: 2.2.1
 
   enhanced-resolve@5.17.1:
     dependencies:
@@ -2777,12 +2768,12 @@ snapshots:
     dependencies:
       typescript: 5.7.3
 
-  ts-loader@9.5.1(typescript@5.7.3)(webpack@5.97.1):
+  ts-loader@9.5.2(typescript@5.7.3)(webpack@5.97.1):
     dependencies:
       chalk: 4.1.2
-      enhanced-resolve: 5.16.1
+      enhanced-resolve: 5.17.1
       micromatch: 4.0.5
-      semver: 7.5.4
+      semver: 7.6.2
       source-map: 0.7.4
       typescript: 5.7.3
       webpack: 5.97.1(webpack-cli@5.1.4)
