@@ -51,7 +51,7 @@
 		"@typescript-eslint/parser": "6.21.0",
 		"@vscode/test-electron": "2.5.2",
 		"eslint": "8.57.1",
-		"glob": "10.4.5",
+		"glob": "11.0.2",
 		"mocha": "10.8.2",
 		"npm-run-all2": "5.0.2",
 		"ts-loader": "9.5.2",
