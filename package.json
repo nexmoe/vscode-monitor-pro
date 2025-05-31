@@ -52,7 +52,7 @@
 		"@vscode/test-electron": "2.5.2",
 		"eslint": "8.57.1",
 		"glob": "10.4.5",
-		"mocha": "10.8.2",
+		"mocha": "11.5.0",
 		"npm-run-all2": "5.0.2",
 		"ts-loader": "9.5.2",
 		"typescript": "5.8.3",
