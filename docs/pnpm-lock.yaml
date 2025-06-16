@@ -30,8 +30,8 @@ importers:
         specifier: 13.4.10
         version: 13.4.10(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(next@14.2.30(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.17)
       lucide-react:
-        specifier: 0.515.0
-        version: 0.515.0(react@18.3.1)
+        specifier: 0.516.0
+        version: 0.516.0(react@18.3.1)
       next:
         specifier: 14.2.30
         version: 14.2.30(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -62,10 +62,10 @@ importers:
         version: 18.3.7(@types/react@18.3.23)
       autoprefixer:
         specifier: 10.4.21
-        version: 10.4.21(postcss@8.5.5)
+        version: 10.4.21(postcss@8.5.6)
       postcss:
-        specifier: 8.5.5
-        version: 8.5.5
+        specifier: 8.5.6
+        version: 8.5.6
       tailwindcss:
         specifier: 3.4.17
         version: 3.4.17
@@ -1367,8 +1367,8 @@ packages:
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0-rc
 
-  lucide-react@0.515.0:
-    resolution: {integrity: sha512-Sy7bY0MeicRm2pzrnoHm2h6C1iVoeHyBU2fjdQDsXGP51fhkhau1/ZV/dzrcxEmAKsxYb6bGaIsMnGHuQ5s0dw==}
+  lucide-react@0.516.0:
+    resolution: {integrity: sha512-aybBJzLHcw1CIn3rUcRkztB37dsJATtpffLNX+0/w+ws2p21nYIlOwX/B5fqxq8F/BjqVemnJX8chKwRidvROg==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -1699,8 +1699,8 @@ packages:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.5:
-    resolution: {integrity: sha512-d/jtm+rdNT8tpXuHY5MMtcbJFBkhXE6593XVR9UoGCH8jSFGci7jGvMGH5RYd5PBJW+00NZQt6gf7CbagJCrhg==}
+  postcss@8.5.6:
+    resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
   property-information@6.5.0:
@@ -2833,14 +2833,14 @@ snapshots:
 
   astring@1.9.0: {}
 
-  autoprefixer@10.4.21(postcss@8.5.5):
+  autoprefixer@10.4.21(postcss@8.5.6):
     dependencies:
       browserslist: 4.24.4
       caniuse-lite: 1.0.30001702
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
-      postcss: 8.5.5
+      postcss: 8.5.6
       postcss-value-parser: 4.2.0
 
   bail@2.0.2: {}
@@ -3317,7 +3317,7 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  lucide-react@0.515.0(react@18.3.1):
+  lucide-react@0.516.0(react@18.3.1):
     dependencies:
       react: 18.3.1
 
@@ -3864,28 +3864,28 @@ snapshots:
 
   pirates@4.0.6: {}
 
-  postcss-import@15.1.0(postcss@8.5.5):
+  postcss-import@15.1.0(postcss@8.5.6):
     dependencies:
-      postcss: 8.5.5
+      postcss: 8.5.6
       postcss-value-parser: 4.2.0
       read-cache: 1.0.0
       resolve: 1.22.8
 
-  postcss-js@4.0.1(postcss@8.5.5):
+  postcss-js@4.0.1(postcss@8.5.6):
     dependencies:
       camelcase-css: 2.0.1
-      postcss: 8.5.5
+      postcss: 8.5.6
 
-  postcss-load-config@4.0.2(postcss@8.5.5):
+  postcss-load-config@4.0.2(postcss@8.5.6):
     dependencies:
       lilconfig: 3.1.3
       yaml: 2.5.0
     optionalDependencies:
-      postcss: 8.5.5
+      postcss: 8.5.6
 
-  postcss-nested@6.2.0(postcss@8.5.5):
+  postcss-nested@6.2.0(postcss@8.5.6):
     dependencies:
-      postcss: 8.5.5
+      postcss: 8.5.6
       postcss-selector-parser: 6.1.2
 
   postcss-selector-parser@6.0.10:
@@ -3906,7 +3906,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.5.5:
+  postcss@8.5.6:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -4176,11 +4176,11 @@ snapshots:
       normalize-path: 3.0.0
       object-hash: 3.0.0
       picocolors: 1.1.1
-      postcss: 8.5.5
-      postcss-import: 15.1.0(postcss@8.5.5)
-      postcss-js: 4.0.1(postcss@8.5.5)
-      postcss-load-config: 4.0.2(postcss@8.5.5)
-      postcss-nested: 6.2.0(postcss@8.5.5)
+      postcss: 8.5.6
+      postcss-import: 15.1.0(postcss@8.5.6)
+      postcss-js: 4.0.1(postcss@8.5.6)
+      postcss-load-config: 4.0.2(postcss@8.5.6)
+      postcss-nested: 6.2.0(postcss@8.5.6)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.8
       sucrase: 3.35.0
