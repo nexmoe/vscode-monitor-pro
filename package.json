@@ -22,7 +22,7 @@
 	"icon": "assets/icon.png",
 	"version": "0.6.0",
 	"engines": {
-		"vscode": "1.101.2"
+		"vscode": "1.102.0"
 	},
 	"categories": [
 		"Other"
