@@ -1,12 +1,14 @@
 import { workspace } from "vscode";
 import { MetricsExist } from "./constants";
 export const getRefreshInterval = () =>
-	workspace.getConfiguration().get<number>("monitor-pro.refresh-interval") ??
-	3000;
+    workspace.getConfiguration().get<number>("monitor-pro.refresh-interval") ??
+    2000;
 
 export const getMetrics = () =>
-	workspace.getConfiguration().get("monitor-pro.metrics") as MetricsExist[];
+    workspace.getConfiguration().get("monitor-pro.metrics") as MetricsExist[];
 export const getDiskSpaceConfig = () =>
-	workspace.getConfiguration().get<string[]>("monitor-pro.diskSpace") ?? ["/"];
+    workspace.getConfiguration().get<string[]>("monitor-pro.diskSpace") ?? [
+        "/",
+    ];
 
 export { MetricsExist };

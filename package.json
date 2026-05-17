@@ -101,7 +101,7 @@
 				},
 				"monitor-pro.refresh-interval": {
 					"type": "number",
-					"default": 3000,
+					"default": 2000,
 					"description": "%config.refresh-interval%"
 				},
 				"monitor-pro.diskSpace": {
