@@ -33,16 +33,19 @@
 	"main": "./dist/extension.js",
 	"l10n": "./l10n",
 	"scripts": {
-		"vscode:prepublish": "run-s package",
-		"compile": "webpack",
-		"watch": "webpack --watch",
-		"package": "run-s build:i18n && webpack --mode production --devtool hidden-source-map",
-		"compile-tests": "tsc -p . --outDir out",
-		"watch-tests": "tsc -p . -w --outDir out",
-		"pretest": "run-s compile-tests && run-s compile && run-s lint",
+		"vscode:prepublish": "pnpm run package",
+		"check-types": "pnpm tsc --noEmit",
+		"compile": "pnpm run check-types && node esbuild.js",
+		"compile-tests": "pnpm tsc -p . --outDir out",
+		"gen-l10n": "npx @vscode/l10n-dev export -o ./l10n ./src",
 		"lint": "eslint src --ext ts",
+		"package": "pnpm run check-types && node esbuild.js --production",
+		"pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
 		"test": "node ./out/test/runTest.js",
-		"build:i18n": "node scripts/build-i18n.js"
+		"watch": "npm-run-all -p watch:*",
+		"watch-tests": "tsc -p . -w --outDir out",
+		"watch:esbuild": "node esbuild.js --watch",
+		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json"
 	},
 	"devDependencies": {
 		"@types/mocha": "10.0.10",
