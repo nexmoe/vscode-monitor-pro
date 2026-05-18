@@ -1,35 +1,44 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import { workspace, ExtensionContext } from "vscode";
+import { ExtensionContext, window } from "vscode";
 import { powerShellRelease, powerShellStart } from "systeminformation";
 import { getRefreshInterval } from "./configuration";
 import { Metric, getEnabledMetrics } from "./metricsInit";
 import I18n from "./i18n";
 
-let intervalIds: NodeJS.Timeout;
+const log = window.createOutputChannel("Monitor Pro", { log: true });
+
+let timeoutId: NodeJS.Timeout;
 let metrics: Metric[] = [];
 
-// workspace.onDidChangeConfiguration(() => {
-// 	deactivate();
-// 	activate();
-// });
-
 export const activate = async (ctx: ExtensionContext) => {
+	log.info("activate() start");
 	if (process.platform === "win32") {
 		powerShellStart();
 	}
-	I18n.init(ctx.extensionPath);
+	try {
+		I18n.init(ctx.extensionPath);
+		log.info("I18n.init OK");
+	} catch (e) {
+		log.error("I18n.init FAILED: " + String(e));
+	}
 	metrics.forEach((x) => x.dispose());
 	metrics = getEnabledMetrics();
-	const updateBarsText = async () =>
-		await Promise.all(metrics.map((x) => x.update()));
-	intervalIds = setInterval(updateBarsText, getRefreshInterval());
+	log.info(`metrics created: ${metrics.length}`);
+	const scheduleUpdate = async () => {
+		try {
+			await Promise.all(metrics.map((x) => x.update()));
+			// log.info("update cycle OK");
+		} catch (e) {
+			log.error("update cycle FAILED: " + String(e));
+		}
+		timeoutId = setTimeout(scheduleUpdate, getRefreshInterval());
+	};
+	scheduleUpdate();
 };
 
 export const deactivate = () => {
 	if (process.platform === "win32") {
 		powerShellRelease();
 	}
-	clearInterval(intervalIds);
+	clearTimeout(timeoutId);
 	metrics.forEach((x) => x.dispose());
 };

@@ -1,4 +1,5 @@
 import * as SI from "systeminformation";
+import os from "os";
 import byteFormat from "./byteFormat";
 import { MetricCtrProps } from "./constants";
 import { getDiskSpaceConfig } from "./configuration";
@@ -24,6 +25,22 @@ const pretty = (bytes: number, option: any = {}): string => {
 	});
 };
 
+let _memPromise: Promise<SI.Systeminformation.MemData> | null = null;
+const getMem = (): Promise<SI.Systeminformation.MemData> => {
+	if (!_memPromise) {
+		_memPromise = SI.mem().finally(() => { _memPromise = null; });
+	}
+	return _memPromise;
+};
+
+let _osPromise: Promise<SI.Systeminformation.OsData> | null = null;
+const getOsInfo = (): Promise<SI.Systeminformation.OsData> => {
+	if (!_osPromise) {
+		_osPromise = SI.osInfo();
+	}
+	return _osPromise;
+};
+
 const cpuText = async () => {
 	const cl = await SI.currentLoad();
 	return `$(pulse)${cl.currentLoad.toLocaleString(undefined, {
@@ -33,7 +50,7 @@ const cpuText = async () => {
 };
 
 const memActiveText = async () => {
-	const m = await SI.mem();
+	const m = await getMem();
 	let active, total;
 	if (Number(pretty(m.total, { suffix: false })) < 100) {
 		active = pretty(m.active, {
@@ -56,7 +73,7 @@ const memActiveText = async () => {
 };
 
 const memUsedText = async () => {
-	const m = await SI.mem();
+	const m = await getMem();
 	let used, total;
 	if (Number(pretty(m.total, { suffix: false })) < 100) {
 		used = pretty(m.used, {
@@ -122,7 +139,7 @@ const cpuTempText = async () => {
 };
 
 const osDistroText = async () => {
-	const os = await SI.osInfo();
+	const os = await getOsInfo();
 	return `${os.distro}`;
 };
 
@@ -149,10 +166,10 @@ const diskSpaceText = async () => {
 };
 
 const uptimeText = async () => {
-	const uptime = await SI.time();
-	const days = Math.floor(uptime.uptime / (24 * 3600));
-	const hours = Math.floor((uptime.uptime % (24 * 3600)) / 3600);
-	const minutes = Math.floor((uptime.uptime % 3600) / 60);
+	const uptime = os.uptime();
+	const days = Math.floor(uptime / (24 * 3600));
+	const hours = Math.floor((uptime % (24 * 3600)) / 3600);
+	const minutes = Math.floor((uptime % 3600) / 60);
 	return `$(clock) ${days}d ${hours}h ${minutes}m`;
 };
 
