@@ -5,159 +5,93 @@ name: Publish Extension
 on:
     push:
         tags:
-            - "[0-9]+.[0-9]+.[0-9]+"
+            - '[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
     contents: write
+
+env:
+    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
     publish:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
               with:
                   fetch-depth: 0
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20"
-
-            - name: Setup pnpm
-              uses: pnpm/action-setup@v4
-              with:
-                  version: latest
-
-            - name: Get pnpm store directory
-              shell: bash
-              run: |
-                  echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-            - name: Setup pnpm cache
-              uses: actions/cache@v4
-              with:
-                  path: ${{ env.STORE_PATH }}
-                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-store-
-
-            - name: Install dependencies
-              run: pnpm install --frozen-lockfile
-
-            - name: Build extension
-              run: pnpm run package
-
-            - name: Install vsce
-              run: pnpm add -g @vscode/vsce
+            - uses: ./.github/actions/setup
 
             - name: Get tag version
               id: get_version
               run: |
                   VERSION=${GITHUB_REF#refs/tags/}
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
-                  echo "Publishing version: $VERSION"
 
-            - name: Verify package.json version matches tag
+            - name: Verify version match
               run: |
-                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
-                  TAG_VERSION="${{ steps.get_version.outputs.version }}"
-                  echo "Package.json version: $PACKAGE_VERSION"
-                  echo "Git tag version: $TAG_VERSION"
-                  if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
-                    echo "Error: Package.json version ($PACKAGE_VERSION) does not match git tag ($TAG_VERSION)"
-                    exit 1
+                  PKG_VER=$(node -p "require('./package.json').version")
+                  TAG_VER="${{ steps.get_version.outputs.version }}"
+                  echo "package.json: $PKG_VER | tag: $TAG_VER"
+                  if [ "$PKG_VER" != "$TAG_VER" ]; then
+                    echo "Error: version mismatch"; exit 1
                   fi
 
             - name: Package extension
-              run: |
-                  pnpm vsce package --no-dependencies
+              run: npx vsce package --no-dependencies
 
             - name: Publish to VSCode Marketplace
-              run: |
-                  pnpm vsce publish --no-dependencies --pat ${{ secrets.VSCE_TOKEN }}
-              env:
-                  VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+              run: npx vsce publish --no-dependencies --pat ${{ secrets.VSCE_TOKEN }}
 
-            - name: Find previous version tag
+            - name: Find previous tag
               id: previous_tag
               run: |
-                  CURRENT_TAG="${{ steps.get_version.outputs.version }}"
-                  PREVIOUS_TAG=$(git tag -l --sort=-version:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "^$CURRENT_TAG$" | head -n1)
-
-                  if [ -n "$PREVIOUS_TAG" ]; then
-                    echo "Found previous tag: $PREVIOUS_TAG"
-                    echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
-                  else
-                    echo "No previous tag found"
-                    echo "previous_tag=" >> $GITHUB_OUTPUT
-                  fi
+                  CUR="${{ steps.get_version.outputs.version }}"
+                  PREV=$(git tag -l --sort=-version:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "^$CUR$" | head -n1)
+                  echo "previous_tag=$PREV" >> $GITHUB_OUTPUT
 
             - name: Generate release notes
               id: release_notes
               run: |
-                  CURRENT_TAG="${{ steps.get_version.outputs.version }}"
-                  PREVIOUS_TAG="${{ steps.previous_tag.outputs.previous_tag }}"
+                  CUR="${{ steps.get_version.outputs.version }}"
+                  PREV="${{ steps.previous_tag.outputs.previous_tag }}"
 
-                  echo "# VSCode Monitor Pro v$CURRENT_TAG" > release_notes.md
+                  echo "# VSCode Monitor Pro v$CUR" > release_notes.md
 
-                  if [ -f "CHANGELOG.md" ]; then
+                  if [ -f CHANGELOG.md ]; then
                     echo "## 更新内容" >> release_notes.md
-                    awk -v version="$CURRENT_TAG" '
-                      /^##/ { 
-                        if (found) exit
-                        if ($0 ~ version) found=1
-                        next
-                      }
-                      found && /^##/ { exit }
-                      found { print }
-                    ' CHANGELOG.md >> release_notes.md
+                    awk -v v="$CUR" '/^##/{if(f)exit; if($0~v)f=1;next} f&&/^##/{exit} f{print}' CHANGELOG.md >> release_notes.md
                   fi
 
+                  echo "" >> release_notes.md
                   echo "## 提交记录" >> release_notes.md
-                  echo "" >> release_notes.md
-
-                  if [ -z "$PREVIOUS_TAG" ]; then
-                    echo "生成从初始提交到 $CURRENT_TAG 的提交记录"
-                    git log --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
+                  if [ -n "$PREV" ]; then
+                    git log "$PREV..$CUR" --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
                   else
-                    echo "生成从 $PREVIOUS_TAG 到 $CURRENT_TAG 的提交记录"
-                    git log "$PREVIOUS_TAG..$CURRENT_TAG" --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
+                    git log --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
                   fi
 
-                  if [ ! -s release_notes.md ] || [ $(wc -l < release_notes.md) -le 5 ]; then
-                    echo "- 版本发布" >> release_notes.md
-                  fi
-
-                  echo "" >> release_notes.md
                   echo "" >> release_notes.md
                   echo "---" >> release_notes.md
-                  echo "" >> release_notes.md
-                  echo "📦 **安装方式：**" >> release_notes.md
-                  echo "" >> release_notes.md
+                  echo "📦 **安装方式:**" >> release_notes.md
                   echo "- 通过 VSCode 扩展市场搜索 \"Monitor Pro\" 安装" >> release_notes.md
                   echo "- 或下载 .vsix 文件手动安装" >> release_notes.md
 
-                  echo "生成的发布说明:"
-                  cat release_notes.md
-
-            - name: Create GitHub Release
-              uses: softprops/action-gh-release@v2
+            - uses: softprops/action-gh-release@v2
               with:
                   tag_name: ${{ steps.get_version.outputs.version }}
-                  name: "Monitor Pro v${{ steps.get_version.outputs.version }}"
+                  name: 'Monitor Pro v${{ steps.get_version.outputs.version }}'
                   body_path: release_notes.md
-                  files: |
-                      *.vsix
+                  files: '*.vsix'
                   draft: false
                   prerelease: false
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Upload VSIX artifact
-              uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v4
               with:
-                  name: vsix-package-${{ steps.get_version.outputs.version }}
-                  path: "*.vsix"
+                  name: vsix-${{ steps.get_version.outputs.version }}
+                  path: '*.vsix'
                   retention-days: 90
