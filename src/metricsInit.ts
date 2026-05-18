@@ -4,6 +4,16 @@ import { getMetrics, MetricsExist } from "./configuration";
 import { MetricCtrProps } from "./constants";
 import i18n from './i18n';
 
+const _logger: { debug: (m: string) => void; warn: (m: string) => void; error: (m: string) => void } = {
+	debug: () => {},
+	warn: () => {},
+	error: () => {},
+};
+
+export function setLogger(l: typeof _logger) {
+	Object.assign(_logger, l);
+}
+
 export class Metric {
 	#func: () => Promise<string>;
 	#bar: vscode.StatusBarItem | null = null;
@@ -24,7 +34,13 @@ export class Metric {
 		if (!this.#bar) {
 			throw new Error("Metric not initialized");
 		}
-		this.#bar.text = await this.#func();
+		try {
+			this.#bar.text = await this.#func();
+			_logger.debug(`Metric[${this.#section}] updated OK: ${this.#bar.text}`);
+		} catch (e) {
+			_logger.error(`Metric[${this.#section}] update FAILED: ${String(e)}`);
+			this.#bar.text = `$(error) ${this.#section}`;
+		}
 	}
 
 	dispose() {
@@ -49,11 +65,14 @@ const newBarItem = ({ priority,section }: { priority: number, section: MetricsEx
 
 export const getEnabledMetrics = () => {
 	const enabledSections = getMetrics() ?? [];
-	return enabledSections.flatMap((x) => {
+	_logger.debug(`getEnabledMetrics: enabledSections=${JSON.stringify(enabledSections)}`);
+	return enabledSections.flatMap((x, index) => {
 		const metric = metrics.find((m) => m.section === x);
 		if (metric) {
-			return new Metric(metric).init(enabledSections.indexOf(x));
+			_logger.debug(`getEnabledMetrics: creating Metric[${x}] at priority ${-1e3 - index}`);
+			return new Metric(metric).init(index);
 		}
+		_logger.warn(`getEnabledMetrics: section "${x}" not found, skipping`);
 		return [];
 	});
 };
