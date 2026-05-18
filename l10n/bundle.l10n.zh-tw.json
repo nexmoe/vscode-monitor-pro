@@ -1,0 +1,13 @@
+{
+	"metric.cpu.name": "CPU 使用情況",
+	"metric.memoryActive.name": "活動記憶體（不包括緩衝區/快取）",
+	"metric.memoryUsed.name": "使用的記憶體（包括緩衝區/快取）",
+	"metric.network.name": "網路使用率（下行/上行）",
+	"metric.fileSystem.name": "檔案系統使用情況（寫入/讀取）",
+	"metric.battery.name": "電池狀態",
+	"metric.cpuTemp.name": "CPU 溫度",
+	"metric.cpuSpeed.name": "處理器速度",
+	"metric.osDistro.name": "作業系統分發",
+	"metric.diskSpace.name": "磁碟空間",
+	"metric.uptime.name": "系統運作時間"
+}

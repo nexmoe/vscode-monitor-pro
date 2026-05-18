@@ -1,0 +1,13 @@
+{
+  "metric.cpu.name": "metric.cpu.name",
+  "metric.memoryActive.name": "metric.memoryActive.name",
+  "metric.memoryUsed.name": "metric.memoryUsed.name",
+  "metric.network.name": "metric.network.name",
+  "metric.fileSystem.name": "metric.fileSystem.name",
+  "metric.battery.name": "metric.battery.name",
+  "metric.cpuTemp.name": "metric.cpuTemp.name",
+  "metric.cpuSpeed.name": "metric.cpuSpeed.name",
+  "metric.osDistro.name": "metric.osDistro.name",
+  "metric.diskSpace.name": "metric.diskSpace.name",
+  "metric.uptime.name": "metric.uptime.name"
+}

@@ -31,6 +31,7 @@
 		"onStartupFinished"
 	],
 	"main": "./dist/extension.js",
+	"l10n": "./l10n",
 	"scripts": {
 		"vscode:prepublish": "run-s package",
 		"compile": "webpack",
@@ -49,6 +50,7 @@
 		"@types/vscode": "1.104.0",
 		"@typescript-eslint/eslint-plugin": "6.21.0",
 		"@typescript-eslint/parser": "6.21.0",
+		"@vscode/l10n-dev": "^0.0.35",
 		"@vscode/test-electron": "2.5.2",
 		"esbuild": "^0.25.9",
 		"eslint": "8.57.1",

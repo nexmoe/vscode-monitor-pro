@@ -1,0 +1,13 @@
+{
+	"metric.cpu.name": "CPU 使用情况",
+	"metric.memoryActive.name": "活动内存（不包括缓冲区/缓存）",
+	"metric.memoryUsed.name": "使用的内存（包括缓冲区/缓存）",
+	"metric.network.name": "网络使用率（下行/上行）",
+	"metric.fileSystem.name": "文件系统使用情况（写入/读取）",
+	"metric.battery.name": "电池状态",
+	"metric.cpuTemp.name": "CPU 温度",
+	"metric.cpuSpeed.name": "处理器速度",
+	"metric.osDistro.name": "操作系统分发",
+	"metric.diskSpace.name": "磁盘空间",
+	"metric.uptime.name": "系统运行时间"
+}

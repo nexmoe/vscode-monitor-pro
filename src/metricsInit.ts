@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import metrics from "./metrics";
 import { getMetrics, MetricsExist } from "./configuration";
 import { MetricCtrProps } from "./constants";
-import i18n from './i18n';
 
 const _logger: { debug: (m: string) => void; warn: (m: string) => void; error: (m: string) => void } = {
 	debug: () => {},
@@ -48,8 +47,25 @@ export class Metric {
 	}
 }
 
+function getMetricTitle(section: MetricsExist): string {
+	switch (section) {
+		case "cpu": return vscode.l10n.t("metric.cpu.name");
+		case "memoryActive": return vscode.l10n.t("metric.memoryActive.name");
+		case "memoryUsed": return vscode.l10n.t("metric.memoryUsed.name");
+		case "network": return vscode.l10n.t("metric.network.name");
+		case "fileSystem": return vscode.l10n.t("metric.fileSystem.name");
+		case "battery": return vscode.l10n.t("metric.battery.name");
+		case "cpuTemp": return vscode.l10n.t("metric.cpuTemp.name");
+		case "cpuSpeed": return vscode.l10n.t("metric.cpuSpeed.name");
+		case "osDistro": return vscode.l10n.t("metric.osDistro.name");
+		case "diskSpace": return vscode.l10n.t("metric.diskSpace.name");
+		case "uptime": return vscode.l10n.t("metric.uptime.name");
+	}
+	return section;
+}
+
 const newBarItem = ({ priority,section }: { priority: number, section: MetricsExist }) => {
-	const title = i18n.t(`metric.${section}.name`);
+	const title = getMetricTitle(section);
 
 	const sbi = vscode.window.createStatusBarItem(
 		`Monitor Pro: ${title}`,

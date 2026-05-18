@@ -1,0 +1,13 @@
+{
+	"metric.cpu.name": "CPU使用率",
+	"metric.memoryActive.name": "アクティブメモリ (バッファ/キャッシュを除く)",
+	"metric.memoryUsed.name": "使用メモリ (バッファ/キャッシュを含む)",
+	"metric.network.name": "ネットワーク使用量 (ダウンストリーム/アップストリーム)",
+	"metric.fileSystem.name": "ファイルシステムの使用状況 (書き込み/読み取り)",
+	"metric.battery.name": "バッテリー状態",
+	"metric.cpuTemp.name": "CPU温度",
+	"metric.cpuSpeed.name": "プロセッサ速度",
+	"metric.osDistro.name": "オペレーティング システムのディストリビューション",
+	"metric.diskSpace.name": "ディスクスペース",
+	"metric.uptime.name": "システム稼働時間"
+}
