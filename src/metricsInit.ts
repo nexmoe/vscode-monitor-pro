@@ -31,14 +31,14 @@ export class Metric {
 
 	async update() {
 		if (!this.#bar) {
-			throw new Error("Metric not initialized");
+			throw new Error(vscode.l10n.t("Metric not initialized"));
 		}
 		try {
 			this.#bar.text = await this.#func();
-			_logger.debug(`Metric[${this.#section}] updated OK: ${this.#bar.text}`);
+			_logger.debug(vscode.l10n.t("Metric [{0}] updated: {1}", this.#section, this.#bar.text));
 		} catch (e) {
-			_logger.error(`Metric[${this.#section}] update FAILED: ${String(e)}`);
-			this.#bar.text = `$(error) ${this.#section}`;
+			_logger.error(vscode.l10n.t("Metric [{0}] update failed: {1}", this.#section, String(e)));
+			this.#bar.text = vscode.l10n.t("$(error) {0}", this.#section);
 		}
 	}
 
@@ -68,7 +68,7 @@ const newBarItem = ({ priority,section }: { priority: number, section: MetricsEx
 	const title = getMetricTitle(section);
 
 	const sbi = vscode.window.createStatusBarItem(
-		`Monitor Pro: ${title}`,
+		vscode.l10n.t("Monitor Pro: {0}", title),
 		vscode.StatusBarAlignment.Left,
 		priority
 	);
@@ -81,14 +81,14 @@ const newBarItem = ({ priority,section }: { priority: number, section: MetricsEx
 
 export const getEnabledMetrics = () => {
 	const enabledSections = getMetrics() ?? [];
-	_logger.debug(`getEnabledMetrics: enabledSections=${JSON.stringify(enabledSections)}`);
+	_logger.debug(vscode.l10n.t("Enabled metrics: {0}", JSON.stringify(enabledSections)));
 	return enabledSections.flatMap((x, index) => {
 		const metric = metrics.find((m) => m.section === x);
 		if (metric) {
-			_logger.debug(`getEnabledMetrics: creating Metric[${x}] at priority ${-1e3 - index}`);
+			_logger.debug(vscode.l10n.t("Creating metric [{0}] at priority {1}", x, -1e3 - index));
 			return new Metric(metric).init(index);
 		}
-		_logger.warn(`getEnabledMetrics: section "${x}" not found, skipping`);
+		_logger.warn(vscode.l10n.t("Metric section \"{0}\" not found, skipping", x));
 		return [];
 	});
 };
