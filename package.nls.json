@@ -12,5 +12,8 @@
 	"metric.memoryUsed.name": "Memory Used (incl. buffers/cache)",
 	"metric.network.name": "Network Usage (Down/Up)",
 	"metric.osDistro.name": "OS Distribution",
-	"metric.uptime.name": "System running time"
+	"metric.uptime.name": "System running time",
+	"viewContainer.monitor-pro.title": "Monitor Pro",
+	"views.taskManager": "Task Manager",
+	"command.focusTaskManager": "Focus Task Manager View"
 }

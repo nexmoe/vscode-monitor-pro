@@ -17,3 +17,5 @@ RELEASE.md
 docs
 renovate.json
 vscode-monitor-pro.code-workspace
+assets/*.png
+!assets/icon.png
