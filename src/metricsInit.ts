@@ -47,13 +47,13 @@ const newBarItem = ({ priority,section }: { priority: number, section: MetricsEx
 	return sbi;
 };
 
-const allMetrics = getMetrics.flatMap((x) => {
-	const metric = metrics.find((m) => m.section === x);
-	if(metric) {
-		return new Metric(metric);
-	} else {
+export const getEnabledMetrics = () => {
+	const enabledSections = getMetrics() ?? [];
+	return enabledSections.flatMap((x) => {
+		const metric = metrics.find((m) => m.section === x);
+		if (metric) {
+			return new Metric(metric).init(enabledSections.indexOf(x));
+		}
 		return [];
-	}
-});
-export const getEnabledMetrics = () =>
-	allMetrics.flatMap((x, index) => x.init(index) || []);
+	});
+};
