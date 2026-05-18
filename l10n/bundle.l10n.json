@@ -32,6 +32,7 @@
   "Extension activating": "Extension activating",
   "Metrics initialized: {0}": "Metrics initialized: {0}",
   "Platform: {0}, Architecture: {1}": "Platform: {0}, Architecture: {1}",
+  "Task Manager view registered": "Task Manager view registered",
   "Update cycle completed in {0}ms": "Update cycle completed in {0}ms",
   "Update cycle failed: {0}": "Update cycle failed: {0}",
   "Next update scheduled in {0}ms": "Next update scheduled in {0}ms",

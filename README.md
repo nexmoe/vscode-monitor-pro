@@ -16,11 +16,11 @@ Monitor Pro is a comprehensive resource monitoring tool designed to help you tra
 
 ## Screenshots
 
-![screenshot0](assets/screenshot0.png)
+![screenshot0](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/screenshot0.png)
 
-![screenshot1](assets/screenshot1.png)
+![screenshot1](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/screenshot1.png)
 
-![screenshot2](assets/screenshot2.png)
+![screenshot2](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/screenshot2.png)
 
 ## Features
 

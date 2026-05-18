@@ -20,7 +20,7 @@
 		"url": "https://github.com/nexmoe/vscode-monitor-pro"
 	},
 	"icon": "assets/icon.png",
-	"version": "0.6.0",
+	"version": "0.6.3",
 	"engines": {
 		"vscode": "^1.104.1"
 	},
@@ -66,9 +66,34 @@
 		"typescript": "5.9.2"
 	},
 	"dependencies": {
-		"systeminformation": "5.27.10"
+		"systeminformation": "5.31.6"
 	},
 	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "monitor-pro",
+					"title": "%viewContainer.monitor-pro.title%",
+					"icon": "assets/icon.png"
+				}
+			]
+		},
+		"views": {
+			"monitor-pro": [
+				{
+					"icon": "$(graph-line)",
+					"type": "webview",
+					"id": "monitor-pro.taskManager",
+					"name": "%views.taskManager%"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "monitor-pro.focusTaskManager",
+				"title": "%command.focusTaskManager%"
+			}
+		],
 		"configuration": {
 			"title": "Monitor Pro",
 			"properties": {
