@@ -30,6 +30,6 @@
 	"metric.osDistro.name": "OS Distribution",
 	"metric.uptime.name": "System running time",
 	"viewContainer.monitor-pro.title": "Monitor Pro",
-	"views.taskManager": "Task Manager",
-	"command.focusTaskManager": "Focus Task Manager View"
+	"views.resourceUsage": "Resource Usage View",
+	"command.focusResourceUsage": "Focus Resource Usage View"
 }

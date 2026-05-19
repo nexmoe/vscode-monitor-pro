@@ -81,17 +81,17 @@
 		"views": {
 			"monitor-pro": [
 				{
-					"icon": "$(pause)",
+					"icon": "$(pulse)",
 					"type": "webview",
-					"id": "monitor-pro.taskManager",
-					"name": "%views.taskManager%"
+					"id": "monitor-pro.resourceUsage",
+					"name": "%views.resourceUsage%"
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "monitor-pro.focusTaskManager",
-				"title": "%command.focusTaskManager%"
+				"command": "monitor-pro.focusResourceUsage",
+				"title": "%command.focusResourceUsage%"
 			}
 		],
 		"configuration": {

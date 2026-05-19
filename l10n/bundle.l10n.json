@@ -34,7 +34,7 @@
   "Metrics initialized: {0}": "Metrics initialized: {0}",
   "Extension activating": "Extension activating",
   "Platform: {0}, Architecture: {1}": "Platform: {0}, Architecture: {1}",
-  "Task Manager view registered": "Task Manager view registered",
+  "Resource Usage view registered": "Resource Usage view registered",
   "Update cycle completed in {0}ms": "Update cycle completed in {0}ms",
   "Update cycle failed: {0}": "Update cycle failed: {0}",
   "Configuration changed, hot-reloading": "Configuration changed, hot-reloading",

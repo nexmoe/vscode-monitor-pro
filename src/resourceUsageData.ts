@@ -11,18 +11,18 @@ export interface DataPoint {
   diskWx: number;
 }
 
-export interface TaskManagerPayload {
+export interface ResourceUsagePayload {
   history: DataPoint[];
   current: DataPoint;
 }
 
-export class TaskManagerDataCollector {
+export class ResourceUsageDataCollector {
   private history: DataPoint[] = [];
   private maxHistory = 60;
   private unsubscribe: (() => void) | null = null;
-  private onData: ((data: TaskManagerPayload) => void) | null = null;
+  private onData: ((data: ResourceUsagePayload) => void) | null = null;
 
-  setOnData(cb: (data: TaskManagerPayload) => void) {
+  setOnData(cb: (data: ResourceUsagePayload) => void) {
     this.onData = cb;
   }
 

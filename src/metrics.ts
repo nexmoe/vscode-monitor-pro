@@ -56,7 +56,7 @@ const cpuText = async () => {
   const sp = _space ? " " : "";
   const val = fmtSigNum(data.currentLoad, sig) + sp + "%";
   _logger.debug(vscode.l10n.t("CPU load: {0}%", data.currentLoad.toFixed(2)));
-  return `$(pulse)${val}`;
+  return `$(pulse) ${val}`;
 };
 
 const memActiveText = async () => {
@@ -65,11 +65,7 @@ const memActiveText = async () => {
   _logger.debug(vscode.l10n.t("Memory - Total: {0}, Active: {1}, Used: {2}", m.total, m.active, m.used));
   const active = prettySig(m.active, sig);
   const total = prettySig(m.total, sig);
-
-  if (active.slice(-1) === total.slice(-1)) {
-    return `$(server)${active.slice(0, -1)}/${total}`;
-  }
-  return `$(server)${active}/${total}`;
+  return `$(server) ${active}/${total}`;
 };
 
 const memUsedText = async () => {
@@ -77,11 +73,7 @@ const memUsedText = async () => {
   const m = (await systemData.getSnapshot()).mem;
   const used = prettySig(m.used, sig);
   const total = prettySig(m.total, sig);
-
-  if (used.slice(-1) === total.slice(-1)) {
-    return `$(server)${used.slice(0, -1)}/${total}`;
-  }
-  return `$(server)${used}/${total}`;
+  return `$(server) ${used}/${total}`;
 };
 
 const netText = async () => {
@@ -92,7 +84,7 @@ const netText = async () => {
   const rx = rawRx || 0;
   const tx = rawTx || 0;
   _logger.debug(vscode.l10n.t("Network - RX: {0}/s, TX: {1}/s, Interface: {2}", rawRx, rawTx, ns?.[0]?.iface));
-  return `$(cloud-download)${prettySig(rx, sig)}/s $(cloud-upload)${prettySig(tx, sig)}/s`;
+  return `$(cloud-download) ${prettySig(rx, sig)}/s $(cloud-upload) ${prettySig(tx, sig)}/s`;
 };
 
 const fsText = async () => {
@@ -100,7 +92,7 @@ const fsText = async () => {
   const fs = (await systemData.getSnapshot()).fsStats;
   _logger.debug(vscode.l10n.t("Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms",
     fs.rx_sec?.toString() ?? "null", fs.wx_sec?.toString() ?? "null", fs.rx, fs.wx, fs.ms));
-  return `$(log-in)${prettySig(fs.rx_sec || 0, sig)}/s $(log-out)${prettySig(fs.wx_sec || 0, sig)}/s`;
+  return `$(log-in) ${prettySig(fs.rx_sec || 0, sig)}/s $(log-out) ${prettySig(fs.wx_sec || 0, sig)}/s`;
 };
 
 const batteryText = async () => {
@@ -112,7 +104,7 @@ const batteryText = async () => {
   }
   const charging = b.isCharging ? vscode.l10n.t(" (Charging)") : "";
   const sp = _space ? " " : "";
-  return `$(plug)${fmtSigNum(b.percent, sig) + sp + "%"}${charging}`;
+  return `$(plug) ${fmtSigNum(b.percent, sig) + sp + "%"}${charging}`;
 };
 
 const cpuSpeedText = async () => {
@@ -134,7 +126,7 @@ const cpuTempText = async () => {
     return "";
   }
   const sp = _space ? " " : "";
-  return `$(thermometer)${fmtSigNum(cl.main, sig) + sp + "°C"}`;
+  return `$(flame) ${fmtSigNum(cl.main, sig) + sp + "°C"}`;
 };
 
 const osDistroText = async () => {

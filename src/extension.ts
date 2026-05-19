@@ -1,5 +1,5 @@
 import { commands, ExtensionContext, l10n, window, workspace } from "vscode";
-import { TaskManagerProvider } from "./taskManagerProvider";
+import { ResourceUsageProvider } from "./resourceUsageProvider";
 import { powerShellRelease, powerShellStart } from "systeminformation";
 import { getRefreshInterval, isConfigChanged } from "./configuration";
 import { Metric, getEnabledMetrics, setLogger as setMetricsInitLogger } from "./metricsInit";
@@ -47,14 +47,14 @@ export const activate = async (ctx: ExtensionContext) => {
   rebuildMetrics();
   log.info(l10n.t("Platform: {0}, Architecture: {1}", process.platform, process.arch));
 
-  const taskManagerProvider = new TaskManagerProvider(ctx.extensionPath);
+  const resourceUsageProvider = new ResourceUsageProvider(ctx.extensionPath);
   ctx.subscriptions.push(
-    window.registerWebviewViewProvider(TaskManagerProvider.viewType, taskManagerProvider),
-    commands.registerCommand("monitor-pro.focusTaskManager", () => {
+    window.registerWebviewViewProvider(ResourceUsageProvider.viewType, resourceUsageProvider),
+    commands.registerCommand("monitor-pro.focusResourceUsage", () => {
       commands.executeCommand("workbench.view.extension.monitor-pro");
     }),
   );
-  log.info(l10n.t("Task Manager view registered"));
+  log.info(l10n.t("Resource Usage view registered"));
 
   systemData.setInterval(getRefreshInterval());
   systemData.start();

@@ -34,7 +34,7 @@
 	"Metrics initialized: {0}": "{0} 個のメトリックを初期化しました",
 	"Extension activating": "拡張機能を有効化中",
 	"Platform: {0}, Architecture: {1}": "プラットフォーム: {0}, アーキテクチャ: {1}",
-	"Task Manager view registered": "Task Manager view registered",
+	"Resource Usage view registered": "リソース使用状況ビューを登録しました",
 	"Update cycle completed in {0}ms": "更新サイクルが完了しました ({0}ms)",
 	"Update cycle failed: {0}": "更新サイクルに失敗しました: {0}",
 	"Configuration changed, hot-reloading": "設定が変更されました。ホットリロード中",

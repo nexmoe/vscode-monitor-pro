@@ -34,7 +34,7 @@
 	"Metrics initialized: {0}": "已初始化 {0} 个度量",
 	"Extension activating": "扩展正在激活",
 	"Platform: {0}, Architecture: {1}": "平台: {0}, 架构: {1}",
-	"Task Manager view registered": "Task Manager view registered",
+	"Resource Usage view registered": "资源占用视图已注册",
 	"Update cycle completed in {0}ms": "更新周期完成，耗时 {0}ms",
 	"Update cycle failed: {0}": "更新周期失败: {0}",
 	"Configuration changed, hot-reloading": "配置已变更，热重载中",

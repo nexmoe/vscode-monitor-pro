@@ -1,23 +1,23 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { TaskManagerDataCollector, TaskManagerPayload } from "./taskManagerData";
+import { ResourceUsageDataCollector, ResourceUsagePayload } from "./resourceUsageData";
 import byteFormat from "./byteFormat";
 import { getFormatConfig } from "./configuration";
 
 interface FormattedPayload {
-  history: TaskManagerPayload["history"];
+  history: ResourceUsagePayload["history"];
   formatted: Record<string, string>;
   formatConfig: ReturnType<typeof getFormatConfig>;
 }
 
-export class TaskManagerProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "monitor-pro.taskManager";
+export class ResourceUsageProvider implements vscode.WebviewViewProvider {
+  public static readonly viewType = "monitor-pro.resourceUsage";
   private _view?: vscode.WebviewView;
-  private _collector: TaskManagerDataCollector;
+  private _collector: ResourceUsageDataCollector;
 
   constructor(extensionPath: string) {
-    this._collector = new TaskManagerDataCollector();
+    this._collector = new ResourceUsageDataCollector();
     this._extensionPath = extensionPath;
   }
 
@@ -47,7 +47,7 @@ export class TaskManagerProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  private _formatPayload(data: TaskManagerPayload): FormattedPayload {
+  private _formatPayload(data: ResourceUsagePayload): FormattedPayload {
     const { current } = data;
     const fmtConfig = getFormatConfig();
     const isBinary = fmtConfig.unitSystem === "binary";
@@ -91,7 +91,7 @@ export class TaskManagerProvider implements vscode.WebviewViewProvider {
 
   private _getHtml(): string {
     const nonce = getNonce();
-    const htmlPath = path.join(this._extensionPath, "assets", "taskManagerView.html");
+    const htmlPath = path.join(this._extensionPath, "assets", "resourceUsageView.html");
     let html = fs.readFileSync(htmlPath, "utf-8");
     return html.replace(/__NONCE__/g, nonce);
   }
