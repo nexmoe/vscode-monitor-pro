@@ -58,6 +58,50 @@ export function getUptimeFormat(): string {
   return workspace.getConfiguration(CONFIG_SECTION).get<string>("uptimeFormat", "auto");
 }
 
+export interface ResourceUsageChartConfig {
+  enabled: boolean;
+  view: "line" | "bar";
+  color?: string;
+}
+
+export interface ResourceUsageConfig {
+  charts: Record<string, ResourceUsageChartConfig>;
+  diskSpaceMounts: string[];
+}
+
+const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
+  cpu:       { enabled: true,  view: "line", color: "--vscode-charts-blue" },
+  memActive: { enabled: true,  view: "line", color: "--vscode-charts-green" },
+  memUsed:   { enabled: false, view: "line", color: "--vscode-charts-green" },
+  netRx:     { enabled: true,  view: "line", color: "--vscode-charts-orange" },
+  netTx:     { enabled: true,  view: "line", color: "--vscode-charts-purple" },
+  diskRx:    { enabled: true,  view: "line", color: "--vscode-charts-yellow" },
+  diskWx:    { enabled: true,  view: "line", color: "--vscode-charts-red" },
+  battery:   { enabled: true,  view: "line", color: "--vscode-textLink-foreground" },
+  cpuTemp:   { enabled: true,  view: "line", color: "--vscode-errorForeground" },
+  cpuSpeed:  { enabled: true,  view: "line", color: "--vscode-terminal-ansiBrightCyan" },
+};
+
+const CHART_SECTION = "resourceUsage";
+
+export function getResourceUsageConfig(): ResourceUsageConfig {
+  const config = workspace.getConfiguration(CONFIG_SECTION);
+  const charts = config.get<Record<string, ResourceUsageChartConfig>>(`${CHART_SECTION}.charts`, {});
+  for (const key of Object.keys(DEFAULT_CHARTS)) {
+    if (!charts[key]) {
+      charts[key] = { ...DEFAULT_CHARTS[key] };
+    } else {
+      if (charts[key].color === undefined) {
+        charts[key].color = DEFAULT_CHARTS[key].color;
+      }
+    }
+  }
+  return {
+    charts,
+    diskSpaceMounts: config.get<string[]>(`${CHART_SECTION}.diskSpaceMounts`, ["all"]),
+  };
+}
+
 
 
 export function getDiskSpaceConfig(): string[] {

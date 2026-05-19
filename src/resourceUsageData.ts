@@ -9,11 +9,34 @@ export interface DataPoint {
   networkTx: number;
   diskRx: number;
   diskWx: number;
+  diskSpaceUse: number;
+  batteryPercent: number;
+  cpuTemperature: number;
+  cpuSpeedAvg: number;
+}
+
+export interface DiskSpaceMount {
+  fs: string;
+  mount: string;
+  size: number;
+  used: number;
+  use: number;
+}
+
+export interface TextMetrics {
+  battery: { hasBattery: boolean; percent: number; charging: boolean };
+  cpuTemp: number;
+  cpuTemperature: number;
+  cpuSpeed: { avg: number; min: number; max: number };
+  osDistro: string;
+  uptime: number;
+  diskSpace: DiskSpaceMount[];
 }
 
 export interface ResourceUsagePayload {
   history: DataPoint[];
   current: DataPoint;
+  textMetrics: TextMetrics;
 }
 
 export class ResourceUsageDataCollector {
@@ -43,6 +66,11 @@ export class ResourceUsageDataCollector {
   }
 
   private pushPoint(snap: SystemSnapshot) {
+    const disks = snap.fsSize.filter((d) => d.size > 0);
+    const avgUse = disks.length > 0
+      ? disks.reduce((s, d) => s + d.use, 0) / disks.length
+      : 0;
+
     const point: DataPoint = {
       cpu: snap.currentLoad,
       memoryActive: snap.mem.active,
@@ -52,6 +80,10 @@ export class ResourceUsageDataCollector {
       networkTx: snap.networkStats?.[0]?.tx_sec || 0,
       diskRx: snap.fsStats.rx_sec || 0,
       diskWx: snap.fsStats.wx_sec || 0,
+      diskSpaceUse: avgUse,
+      batteryPercent: snap.battery.hasBattery ? snap.battery.percent : -1,
+      cpuTemperature: snap.cpuTemperature.main ?? 0,
+      cpuSpeedAvg: snap.cpuCurrentSpeed.avg,
     };
 
     this.history.push(point);
@@ -62,6 +94,31 @@ export class ResourceUsageDataCollector {
     this.onData?.({
       history: [...this.history],
       current: point,
+      textMetrics: {
+        battery: {
+          hasBattery: snap.battery.hasBattery,
+          percent: snap.battery.percent,
+          charging: snap.battery.isCharging || snap.battery.acConnected,
+        },
+        cpuTemp: snap.cpuTemperature.main ?? 0,
+        cpuTemperature: snap.cpuTemperature.main ?? 0,
+        cpuSpeed: {
+          avg: snap.cpuCurrentSpeed.avg,
+          min: snap.cpuCurrentSpeed.min,
+          max: snap.cpuCurrentSpeed.max,
+        },
+        osDistro: snap.osInfo.distro
+          ? `${snap.osInfo.distro} ${snap.osInfo.release}`
+          : "",
+        uptime: snap.time?.uptime ?? 0,
+        diskSpace: disks.map((d) => ({
+          fs: d.fs,
+          mount: d.mount,
+          size: d.size,
+          used: d.used,
+          use: d.use,
+        })),
+      },
     });
   }
 }

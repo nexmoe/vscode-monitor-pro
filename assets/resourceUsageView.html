@@ -9,47 +9,16 @@
         />
         <style>
             :root {
-                --bg: var(
-                    --vscode-sideBar-background,
-                    var(--vscode-editor-background)
-                );
-                --fg: var(
-                    --vscode-sideBar-foreground,
-                    var(--vscode-editor-foreground)
-                );
+                --bg: var(--vscode-sideBar-background, var(--vscode-editor-background));
+                --fg: var(--vscode-sideBar-foreground, var(--vscode-editor-foreground));
                 --fg-muted: var(--vscode-descriptionForeground);
-                --border: var(
-                    --vscode-sideBar-border,
-                    var(--vscode-editorWidget-border, transparent)
-                );
-                --font: var(
-                    --vscode-font-family,
-                    -apple-system,
-                    BlinkMacSystemFont,
-                    sans-serif
-                );
+                --border: var(--vscode-sideBar-border, var(--vscode-editorWidget-border, transparent));
+                --font: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
                 --font-size: var(--vscode-font-size, 13px);
                 --card-bg: var(--vscode-editor-background);
                 --hover-bg: var(--vscode-list-hoverBackground);
-                --scrollbar-bg: var(--vscode-scrollbarSlider-background);
-                --scrollbar-hover: var(
-                    --vscode-scrollbarSlider-hoverBackground
-                );
-
-                --chart-cpu: var(--vscode-charts-blue);
-                --chart-mem: var(--vscode-charts-green);
-                --chart-netrx: var(--vscode-charts-orange);
-                --chart-nettx: var(--vscode-charts-purple);
-                --chart-diskrx: var(--vscode-charts-yellow);
-                --chart-diskwx: var(--vscode-charts-red);
             }
-
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-
+            * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
                 font-family: var(--font);
                 font-size: var(--font-size);
@@ -59,18 +28,24 @@
                 overflow-x: hidden;
                 user-select: none;
             }
-
+            .section-title {
+                font-size: calc(var(--font-size) - 1px);
+                font-weight: 600;
+                color: var(--fg-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin: 12px 0 6px 2px;
+            }
             .card {
                 background: var(--card-bg);
                 border-radius: 4px;
                 padding: 6px;
                 margin-bottom: 6px;
             }
-
             .card-header {
                 display: flex;
                 justify-content: space-between;
-                align-items: center;
+                align-items: flex-start;
                 margin-bottom: 2px;
                 font-size: calc(var(--font-size) - 1px);
                 font-weight: 600;
@@ -78,25 +53,23 @@
                 text-transform: uppercase;
                 letter-spacing: 0.3px;
             }
-
-            .card-left {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-
+            .card-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
             .card-value {
                 font-weight: 700;
                 font-size: calc(var(--font-size) - 1px);
                 color: var(--fg);
                 font-variant-numeric: tabular-nums;
             }
-
-            .toggle-group {
-                display: flex;
-                gap: 2px;
+            .card-sub {
+                font-size: calc(var(--font-size) - 2px);
+                color: var(--fg-muted);
+                font-weight: 400;
+                text-transform: none;
+                letter-spacing: 0;
+                margin-top: 1px;
+                width: 100%;
             }
-
+            .toggle-group { display: flex; gap: 2px; flex-shrink: 0; }
             .toggle-btn {
                 background: none;
                 border: 1px solid transparent;
@@ -108,61 +81,88 @@
                 border-radius: 3px;
                 opacity: 0.4;
             }
-
-            .toggle-btn:hover {
-                opacity: 0.8;
-                background: var(--hover-bg);
-            }
-
+            .toggle-btn:hover { opacity: 0.8; background: var(--hover-bg); }
             .toggle-btn.active {
                 opacity: 1;
                 background: var(--card-bg);
                 border-color: var(--border);
             }
-
-            .chart-wrap {
-                width: 100%;
-                height: 56px;
-            }
-
-            .chart-wrap canvas {
-                width: 100%;
-                height: 100%;
-                display: block;
-            }
-
-            .bar-wrap {
-                width: 100%;
-                height: 20px;
-                padding: 6px 0;
-            }
-
-            .bar-row {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-            }
-
+            .chart-wrap { width: 100%; height: 56px; }
+            .chart-wrap canvas { width: 100%; height: 100%; display: block; }
+            .bar-wrap { width: 100%; padding: 6px 0; }
+            .bar-row { display: flex; align-items: center; gap: 4px; }
             .bar-track {
                 flex: 1;
                 height: 8px;
-                background: rgba(128, 128, 128, 0.12);
+                background: rgba(128,128,128,0.12);
                 border-radius: 4px;
                 overflow: hidden;
             }
-
             .bar-fill {
                 height: 100%;
                 border-radius: 4px;
                 min-width: 2px;
             }
-
             .bar-label {
                 font-size: calc(var(--font-size) - 2px);
                 color: var(--fg-muted);
                 font-variant-numeric: tabular-nums;
                 white-space: nowrap;
                 flex-shrink: 0;
+            }
+            .info-card {
+                background: var(--card-bg);
+                border-radius: 4px;
+                padding: 8px 10px;
+                margin-bottom: 6px;
+            }
+            .info-header {
+                font-size: calc(var(--font-size) - 1px);
+                font-weight: 600;
+                color: var(--fg-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+                margin-bottom: 4px;
+            }
+            .info-value {
+                font-weight: 700;
+                font-size: var(--font-size);
+                color: var(--fg);
+                font-variant-numeric: tabular-nums;
+            }
+            .info-mount-row {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 3px;
+            }
+            .info-mount-name {
+                font-size: calc(var(--font-size) - 2px);
+                color: var(--fg-muted);
+                white-space: nowrap;
+                flex-shrink: 0;
+                min-width: 40px;
+            }
+            .info-bar-track {
+                flex: 1;
+                height: 6px;
+                background: rgba(128,128,128,0.12);
+                border-radius: 3px;
+                overflow: hidden;
+            }
+            .info-bar-fill {
+                height: 100%;
+                border-radius: 3px;
+                min-width: 2px;
+            }
+            .info-bar-label {
+                font-size: calc(var(--font-size) - 2px);
+                color: var(--fg-muted);
+                font-variant-numeric: tabular-nums;
+                white-space: nowrap;
+                flex-shrink: 0;
+                min-width: 48px;
+                text-align: right;
             }
         </style>
     </head>
@@ -173,104 +173,15 @@
             (function () {
                 "use strict";
 
-                // -------- metric definitions --------
+                const vscode = acquireVsCodeApi();
 
-                const METRICS = [
-                    {
-                        id: "cpu",
-                        label: "CPU",
-                        cssVar: "--chart-cpu",
-                        isRate: false,
-                        isMem: true,
-                    },
-                    {
-                        id: "memActive",
-                        label: "Memory (Active)",
-                        cssVar: "--chart-mem",
-                        isRate: false,
-                        isMem: true,
-                    },
-                    {
-                        id: "memUsed",
-                        label: "Memory (Used)",
-                        cssVar: "--chart-mem",
-                        isRate: false,
-                        isMem: true,
-                    },
-                    {
-                        id: "netRx",
-                        label: "Network \u2193",
-                        cssVar: "--chart-netrx",
-                        isRate: true,
-                        isMem: false,
-                    },
-                    {
-                        id: "netTx",
-                        label: "Network \u2191",
-                        cssVar: "--chart-nettx",
-                        isRate: true,
-                        isMem: false,
-                    },
-                    {
-                        id: "diskRx",
-                        label: "Disk \u2193",
-                        cssVar: "--chart-diskrx",
-                        isRate: true,
-                        isMem: false,
-                    },
-                    {
-                        id: "diskWx",
-                        label: "Disk \u2191",
-                        cssVar: "--chart-diskwx",
-                        isRate: true,
-                        isMem: false,
-                    },
-                ];
+                // -------- state --------
 
-                const getId = (id, suffix) => id + "-" + suffix;
-
-                // -------- color helpers --------
-
-                function getCSSVar(name) {
-                    return getComputedStyle(document.documentElement)
-                        .getPropertyValue(name)
-                        .trim();
-                }
-
-                const COLORS = {};
-                for (const m of METRICS) COLORS[m.id] = getCSSVar(m.cssVar);
-
-                const FG = getCSSVar("--vscode-editor-foreground");
-
-                function hexToRgb(hex) {
-                    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
-                        hex,
-                    );
-                    return m
-                        ? {
-                              r: parseInt(m[1], 16),
-                              g: parseInt(m[2], 16),
-                              b: parseInt(m[3], 16),
-                          }
-                        : null;
-                }
-
-                function rgba(color, a) {
-                    const rgb = hexToRgb(color);
-                    return rgb
-                        ? "rgba(" +
-                              rgb.r +
-                              "," +
-                              rgb.g +
-                              "," +
-                              rgb.b +
-                              "," +
-                              a +
-                              ")"
-                        : "rgba(128,128,128," + a + ")";
-                }
-
-                // -------- formatting --------
+                let _charts = {};
+                let _chartColors = {};
+                let _show = { uptime: true, osDistro: true };
+                let _labels = {};
+                let _diskSpaceMounts = ["all"];
 
                 let _fmtConfig = {
                     unitSystem: "binary",
@@ -278,118 +189,284 @@
                     significantDigits: {},
                 };
 
-                function formatRate(v) {
-                    if (v < 1) return "0 B/s"; // B is same for binary/decimal first tier
-                    const isBinary = _fmtConfig.unitSystem === "binary";
-                    const sp = _fmtConfig.showSpace ? " " : "";
-                    const divisor = isBinary ? 1024 : 1000;
-                    const units = isBinary
-                        ? ["B/s", "KiB/s", "MiB/s", "GiB/s", "TiB/s", "PiB/s"]
-                        : ["B/s", "kB/s", "MB/s", "GB/s", "TB/s", "PB/s"];
-                    let i = 0;
-                    let val = v;
-                    while (val >= divisor && i < units.length - 1) {
-                        val /= divisor;
-                        i++;
-                    }
-                    const sig = _fmtConfig.significantDigits?.network ?? 3;
-                    const s = val.toPrecision(sig);
-                    return s + sp + units[i];
-                }
-
-                // -------- state --------
+                const ALL_CHART_IDS = [
+                    "cpu","memActive","memUsed",
+                    "netRx","netTx",
+                    "diskRx","diskWx",
+                    "battery","cpuTemp","cpuSpeed",
+                ];
 
                 const state = {
                     viewMode: {},
                     history: {},
                     barMax: {},
+                    textMetrics: null,
                 };
 
-                for (const m of METRICS) {
-                    state.viewMode[m.id] = "line";
-                    state.history[m.id] = [];
-                    state.barMax[m.id] = 1;
-                }
+                // -------- color resolution --------
 
-                // -------- build DOM --------
-
-                const app = document.getElementById("app");
-
-                function buildCards() {
-                    let html = "";
-                    for (const m of METRICS) {
-                        html +=
-                            '<div class="card">' +
-                            '<div class="card-header">' +
-                            '<div class="card-left">' +
-                            "<span>" +
-                            m.label +
-                            "</span>" +
-                            '<span class="card-value" id="' +
-                            getId(m.id, "val") +
-                            '">\u2014</span>' +
-                            "</div>" +
-                            '<div class="toggle-group">' +
-                            '<button class="toggle-btn active" data-metric="' +
-                            m.id +
-                            '" data-view="line" title="Line chart">\u25E0</button>' +
-                            '<button class="toggle-btn" data-metric="' +
-                            m.id +
-                            '" data-view="bar" title="Bar">\u25A4</button>' +
-                            "</div>" +
-                            "</div>" +
-                            '<div class="chart-wrap" id="' +
-                            getId(m.id, "chart-wrap") +
-                            '">' +
-                            '<canvas id="' +
-                            getId(m.id, "canvas") +
-                            '"></canvas>' +
-                            "</div>" +
-                            '<div class="bar-wrap" id="' +
-                            getId(m.id, "bar-wrap") +
-                            '" style="display:none">' +
-                            '<div class="bar-row">' +
-                            '<div class="bar-track">' +
-                            '<div class="bar-fill" id="' +
-                            getId(m.id, "bar-fill") +
-                            '" style="width:0%;background:' + COLORS[m.id] + '"></div>' +
-                            "</div>" +
-                            '<span class="bar-label" id="' +
-                            getId(m.id, "bar-label") +
-                            '">\u2014</span>' +
-                            "</div>" +
-                            "</div>" +
-                            "</div>";
+                function resolveColorValue(val) {
+                    if (!val) return "";
+                    if (val.startsWith("--")) {
+                        return getComputedStyle(document.documentElement).getPropertyValue(val).trim();
                     }
-                    app.innerHTML = html;
+                    return val;
                 }
-                buildCards();
 
-                // -------- DOM references --------
+                function hexToRgb(hex) {
+                    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                    return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) } : null;
+                }
 
-                const canvases = {};
-                const chartWraps = {};
-                const barWraps = {};
-                const barFills = {};
-                const barLabels = {};
-                const valueEls = {};
+                function rgba(color, a) {
+                    const rgb = hexToRgb(color);
+                    return rgb ? "rgba("+rgb.r+","+rgb.g+","+rgb.b+","+a+")" : "rgba(128,128,128,"+a+")";
+                }
 
-                for (const m of METRICS) {
-                    const id = m.id;
-                    canvases[id] = document.getElementById(getId(id, "canvas"));
-                    chartWraps[id] = document.getElementById(
-                        getId(id, "chart-wrap"),
-                    );
-                    barWraps[id] = document.getElementById(
-                        getId(id, "bar-wrap"),
-                    );
-                    barFills[id] = document.getElementById(
-                        getId(id, "bar-fill"),
-                    );
-                    barLabels[id] = document.getElementById(
-                        getId(id, "bar-label"),
-                    );
-                    valueEls[id] = document.getElementById(getId(id, "val"));
+                // -------- formatting --------
+
+                function formatRate(v) {
+                    if (v < 1) return "0 B/s";
+                    const isBinary = _fmtConfig.unitSystem === "binary";
+                    const sp = _fmtConfig.showSpace ? " " : "";
+                    const divisor = isBinary ? 1024 : 1000;
+                    const units = isBinary
+                        ? ["B/s","KiB/s","MiB/s","GiB/s","TiB/s","PiB/s"]
+                        : ["B/s","kB/s","MB/s","GB/s","TB/s","PB/s"];
+                    let i = 0, val = v;
+                    while (val >= divisor && i < units.length-1) { val /= divisor; i++; }
+                    const sig = _fmtConfig.significantDigits?.network ?? 3;
+                    return val.toPrecision(sig) + sp + units[i];
+                }
+
+                function formatBytes(v, sig) {
+                    if (v < 1) return "0 B";
+                    const isBinary = _fmtConfig.unitSystem === "binary";
+                    const sp = _fmtConfig.showSpace ? " " : "";
+                    const divisor = isBinary ? 1024 : 1000;
+                    const units = isBinary
+                        ? ["B","KiB","MiB","GiB","TiB","PiB"]
+                        : ["B","kB","MB","GB","TB","PB"];
+                    let i = 0, val = v;
+                    while (val >= divisor && i < units.length-1) { val /= divisor; i++; }
+                    const s = sig != null ? val.toPrecision(sig) : val.toFixed(1);
+                    return s + sp + units[i];
+                }
+
+                function formatUptimeSimple(seconds) {
+                    const d = Math.floor(seconds / 86400);
+                    const h = Math.floor((seconds % 86400) / 3600);
+                    const m = Math.floor((seconds % 3600) / 60);
+                    const parts = [];
+                    if (d > 0) parts.push(d+"d");
+                    if (h > 0) parts.push(h+"h");
+                    parts.push(m+"m");
+                    return parts.join(" ");
+                }
+
+                function isRateId(id) {
+                    return id === "netRx" || id === "netTx" || id === "diskRx" || id === "diskWx";
+                }
+
+                function isPercentId(id) {
+                    return id === "cpu" || id === "memActive" || id === "memUsed" || id === "battery";
+                }
+
+                function colorFor(id) {
+                    const c = resolveColorValue(_chartColors[id]);
+                    if (c) return c;
+                    return getComputedStyle(document.documentElement).getPropertyValue("--vscode-editor-foreground").trim();
+                }
+
+                // -------- config handler --------
+
+                function handleConfig(cfg) {
+                    _charts = cfg.charts || {};
+                    _diskSpaceMounts = cfg.diskSpaceMounts || ["all"];
+
+                    _chartColors = {};
+                    for (const id of ALL_CHART_IDS) {
+                        const c = _charts[id];
+                        _chartColors[id] = (c && c.color) ? c.color : "";
+                    }
+
+                    _show = {
+                        uptime:   cfg.showUptime !== false,
+                        osDistro: cfg.showOsDistro !== false,
+                    };
+                    _labels = cfg.labels || {};
+
+                    for (const id of ALL_CHART_IDS) {
+                        const c = _charts[id];
+                        if (c && c.enabled) {
+                            state.viewMode[id] = c.view || "line";
+                            if (!state.history[id]) state.history[id] = [];
+                            state.barMax[id] = state.barMax[id] || 1;
+                        }
+                    }
+
+                    renderAll();
+                }
+
+                // -------- render --------
+
+                function renderAll() {
+                    renderCharts();
+                    renderInfo();
+                }
+
+                function renderCharts() {
+                    const container = document.getElementById("chart-container");
+                    if (!container) return;
+
+                    const enabled = ALL_CHART_IDS.filter(id => {
+                        const c = _charts[id];
+                        return c && c.enabled;
+                    });
+
+                    let html = "";
+                    for (const id of enabled) {
+                        const label = _labels[id] || id;
+                        const color = colorFor(id);
+                        const view = state.viewMode[id] || "line";
+
+                        html +=
+                            '<div class="card" data-metric="'+id+'">'+
+                            '<div class="card-header">'+
+                            '<div class="card-left">'+
+                            '<span>'+label+'</span>'+
+                            '<span class="card-value" id="val-'+id+'">\u2014</span>'+
+                            '<div class="card-sub" id="sub-'+id+'"></div>'+
+                            '</div>'+
+                            '<div class="toggle-group">'+
+                            '<button class="toggle-btn'+(view==="line"?" active":"")+'" data-metric="'+id+'" data-view="line" title="Line chart">\u25E0</button>'+
+                            '<button class="toggle-btn'+(view==="bar"?" active":"")+'" data-metric="'+id+'" data-view="bar" title="Bar">\u25A4</button>'+
+                            '</div>'+
+                            '</div>'+
+                            '<div class="chart-wrap" id="chart-wrap-'+id+'"'+(view==="bar"?' style="display:none"':'')+'>'+
+                            '<canvas id="canvas-'+id+'"></canvas>'+
+                            '</div>'+
+                            '<div class="bar-wrap" id="bar-wrap-'+id+'"'+(view==="line"?' style="display:none"':'')+'>'+
+                            '<div class="bar-row">'+
+                            '<div class="bar-track"><div class="bar-fill" id="bar-fill-'+id+'" style="width:0%;background:'+color+'"></div></div>'+
+                            '<span class="bar-label" id="bar-label-'+id+'">\u2014</span>'+
+                            '</div>'+
+                            '</div>'+
+                            '</div>';
+                    }
+                    container.innerHTML = html;
+
+                    for (const id of enabled) {
+                        const canvas = document.getElementById("canvas-"+id);
+                        const chartWrap = document.getElementById("chart-wrap-"+id);
+                        if (canvas) registerCanvas(id, canvas, chartWrap);
+                        const barFill = document.getElementById("bar-fill-"+id);
+                        const barLabel = document.getElementById("bar-label-"+id);
+                        const valEl = document.getElementById("val-"+id);
+                        if (barFill) registerBar(id, barFill, barLabel, valEl);
+                    }
+                }
+
+                const _canvases = {};
+                const _chartWraps = {};
+                const _barFills = {};
+                const _barLabels = {};
+                const _valueEls = {};
+                const _resizeObserved = new Set();
+
+                function registerCanvas(id, canvas, wrap) {
+                    _canvases[id] = canvas;
+                    _chartWraps[id] = wrap;
+                    if (!_resizeObserved.has(id)) {
+                        _resizeObserved.add(id);
+                        if (_resizeObserver) _resizeObserver.observe(canvas);
+                    }
+                }
+
+                function registerBar(id, fill, label, valEl) {
+                    _barFills[id] = fill;
+                    _barLabels[id] = label;
+                    _valueEls[id] = valEl;
+                }
+
+                // -------- info section --------
+
+                function renderInfo() {
+                    const container = document.getElementById("info-container");
+                    if (!container) return;
+
+                    const rows = [];
+                    if (_show.uptime) rows.push({ id: "uptime", label: _labels.uptime || "Uptime" });
+                    if (_show.osDistro) rows.push({ id: "osDistro", label: _labels.osDistro || "OS Distribution" });
+
+                    let html = "";
+                    for (const r of rows) {
+                        html +=
+                            '<div class="info-card" id="info-'+r.id+'">'+
+                            '<div class="info-header">'+r.label+'</div>'+
+                            '<div class="info-value" id="info-val-'+r.id+'">\u2014</div>'+
+                            '</div>';
+                    }
+
+                    // Disk space mounts
+                    html +=
+                        '<div class="info-card" id="info-diskSpace">'+
+                        '<div class="info-header">'+(_labels.diskSpace || "Disk Space")+'</div>'+
+                        '<div id="disk-mount-list"></div>'+
+                        '</div>';
+
+                    container.innerHTML = html;
+                }
+
+                // -------- disk space bar helpers --------
+
+                function renderDiskMountBars(mounts) {
+                    const container = document.getElementById("disk-mount-list");
+                    if (!container) return;
+                    if (!mounts || mounts.length === 0) {
+                        container.innerHTML = '<div class="info-value" style="font-size:calc(var(--font-size)-1px)">\u2014</div>';
+                        return;
+                    }
+
+                    const isAll = _diskSpaceMounts.length === 1 && _diskSpaceMounts[0] === "all";
+                    const filtered = isAll ? mounts : mounts.filter(m => _diskSpaceMounts.includes(m.mount));
+
+                    let html = "";
+                    for (const m of filtered) {
+                        let barColor;
+                        if (m.use >= 80) {
+                            barColor = resolveColorValue("--vscode-charts-red");
+                        } else if (m.use >= 60) {
+                            barColor = resolveColorValue("--vscode-charts-yellow");
+                        } else {
+                            barColor = resolveColorValue("--vscode-charts-green");
+                        }
+                        if (!barColor) barColor = colorFor("memActive");
+                        html +=
+                            '<div class="info-mount-row">'+
+                            '<span class="info-mount-name">'+escHtml(m.mount)+'</span>'+
+                            '<div class="info-bar-track"><div class="info-bar-fill" style="width:'+m.use+'%;background:'+barColor+'"></div></div>'+
+                            '<span class="info-bar-label">'+m.use+'%</span>'+
+                            '</div>';
+                    }
+                    const totalSize = mounts.reduce((s,m) => s + m.size, 0);
+                    const totalUsed = mounts.reduce((s,m) => s + m.used, 0);
+                    const totalPct = totalSize > 0 ? ((totalUsed / totalSize) * 100).toFixed(1) : "0";
+                    html +=
+                        '<div class="info-mount-row" style="margin-top:6px;border-top:1px solid rgba(128,128,128,0.15);padding-top:4px">'+
+                        '<span class="info-mount-name" style="font-weight:600">'+
+                        (_labels.diskSpace || "Disk Space")+'</span>'+
+                        '<span class="info-bar-label" style="font-weight:600;color:var(--fg)">'+
+                        formatBytes(totalUsed,3) + ' / ' + formatBytes(totalSize,3) +
+                        ' ('+totalPct+'%)</span>'+
+                        '</div>';
+                    container.innerHTML = html;
+                }
+
+                function escHtml(s) {
+                    const d = document.createElement("div");
+                    d.textContent = s;
+                    return d.innerHTML;
                 }
 
                 // -------- view toggle --------
@@ -405,25 +482,18 @@
 
                     const group = btn.parentElement;
                     for (const child of group.children) {
-                        child.classList.toggle(
-                            "active",
-                            child.dataset.view === view,
-                        );
+                        child.classList.toggle("active", child.dataset.view === view);
                     }
 
-                    chartWraps[metric].style.display =
-                        view === "line" ? "" : "none";
-                    barWraps[metric].style.display =
-                        view === "bar" ? "" : "none";
+                    const chartWrap = document.getElementById("chart-wrap-"+metric);
+                    const barWrap = document.getElementById("bar-wrap-"+metric);
+                    if (chartWrap) chartWrap.style.display = view === "line" ? "" : "none";
+                    if (barWrap) barWrap.style.display = view === "bar" ? "" : "none";
 
                     if (view === "bar") {
                         updateBar(metric);
-                    } else if (state.history[metric].length >= 2) {
-                        drawChart(
-                            metric,
-                            state.history[metric],
-                            COLORS[metric],
-                        );
+                    } else if (state.history[metric] && state.history[metric].length >= 2) {
+                        drawChart(metric, state.history[metric], colorFor(metric));
                     }
                 });
 
@@ -434,14 +504,15 @@
                     for (const dp of history) {
                         let v;
                         if (id === "cpu") v = dp.cpu;
-                        else if (id === "memActive")
-                            v = (dp.memoryActive / dp.memoryTotal) * 100;
-                        else if (id === "memUsed")
-                            v = (dp.memoryUsed / dp.memoryTotal) * 100;
+                        else if (id === "memActive") v = (dp.memoryActive / dp.memoryTotal) * 100;
+                        else if (id === "memUsed") v = (dp.memoryUsed / dp.memoryTotal) * 100;
                         else if (id === "netRx") v = dp.networkRx;
                         else if (id === "netTx") v = dp.networkTx;
                         else if (id === "diskRx") v = dp.diskRx;
                         else if (id === "diskWx") v = dp.diskWx;
+                        else if (id === "battery") v = dp.batteryPercent >= 0 ? dp.batteryPercent : 0;
+                        else if (id === "cpuTemp") v = dp.cpuTemperature;
+                        else if (id === "cpuSpeed") v = dp.cpuSpeedAvg;
                         else v = 0;
                         vals.push(v);
                     }
@@ -451,13 +522,13 @@
                 // -------- line chart drawing --------
 
                 function drawChart(id, history, color) {
-                    const canvas = canvases[id];
+                    const canvas = _canvases[id];
+                    if (!canvas) return;
                     const ctx = canvas.getContext("2d");
                     const rect = canvas.getBoundingClientRect();
                     const dpr = window.devicePixelRatio || 1;
                     const w = rect.width;
                     const h = rect.height;
-
                     if (w === 0 || h === 0) return;
 
                     canvas.width = w * dpr;
@@ -465,68 +536,49 @@
                     ctx.scale(dpr, dpr);
                     ctx.clearRect(0, 0, w, h);
 
-                    const padTop = 4;
-                    const padBot = 4;
+                    const padTop = 4, padBot = 4;
                     const drawH = h - padTop - padBot;
 
                     let dataMin, dataMax;
-                    const metric = METRICS.find(function (m) {
-                        return m.id === id;
-                    });
-                    if (metric && !metric.isRate) {
+                    if (isPercentId(id)) {
                         dataMin = 0;
                         dataMax = 100;
                     } else {
                         dataMin = 0;
-                        dataMax =
-                            history.length > 0
-                                ? Math.max(1, ...history) * 1.15
-                                : 1;
+                        dataMax = history.length > 0 ? Math.max(1, ...history) * 1.15 : 1;
                     }
-
                     if (dataMax === dataMin) dataMax = dataMin + 10;
                     const range = dataMax - dataMin;
                     const n = history.length;
-
                     if (n < 2) return;
 
-                    function yPos(val) {
-                        return (
-                            padTop + drawH - ((val - dataMin) / range) * drawH
-                        );
-                    }
+                    function yPos(val) { return padTop + drawH - ((val-dataMin)/range) * drawH; }
 
                     const xStep = w / (n - 1);
 
-                    // grid
-                    ctx.strokeStyle = rgba(FG, 0.06);
+                    const fg = getComputedStyle(document.documentElement).getPropertyValue("--vscode-editor-foreground").trim();
+
+                    ctx.strokeStyle = rgba(fg, 0.06);
                     ctx.lineWidth = 1;
                     for (let i = 0; i <= 4; i++) {
-                        const y = padTop + (drawH / 4) * i;
+                        const y = padTop + (drawH/4)*i;
                         ctx.beginPath();
                         ctx.moveTo(0, y);
                         ctx.lineTo(w, y);
                         ctx.stroke();
                     }
 
-                    // gradient fill
-                    const grad = ctx.createLinearGradient(
-                        0,
-                        padTop,
-                        0,
-                        padTop + drawH,
-                    );
+                    const grad = ctx.createLinearGradient(0, padTop, 0, padTop+drawH);
                     grad.addColorStop(0, rgba(color, 0.18));
                     grad.addColorStop(1, rgba(color, 0.02));
                     ctx.beginPath();
                     curvePath(ctx, history, xStep, yPos);
-                    ctx.lineTo((n - 1) * xStep, padTop + drawH);
-                    ctx.lineTo(0, padTop + drawH);
+                    ctx.lineTo((n-1)*xStep, padTop+drawH);
+                    ctx.lineTo(0, padTop+drawH);
                     ctx.closePath();
                     ctx.fillStyle = grad;
                     ctx.fill();
 
-                    // smooth line
                     ctx.beginPath();
                     curvePath(ctx, history, xStep, yPos);
                     ctx.strokeStyle = color;
@@ -535,137 +587,176 @@
                     ctx.lineCap = "round";
                     ctx.stroke();
 
-                    // current value label (top-right)
-                    const last = history[n - 1];
-                    const label =
-                        metric && !metric.isRate
-                            ? last.toFixed(1) + "%"
-                            : formatRate(last);
-                    ctx.fillStyle = color;
-                    ctx.font =
-                        "bold " +
-                        Math.round(h * 0.24) +
-                        "px var(--vscode-font-family, sans-serif)";
+                    const last = history[n-1];
+                    let label;
+                    if (id === "battery") {
+                        label = last.toFixed(1) + "%";
+                    } else if (id === "cpuTemp") {
+                        label = last.toFixed(1) + "\u00B0C";
+                    } else if (id === "cpuSpeed") {
+                        label = last.toFixed(2) + " GHz";
+                    } else if (isPercentId(id)) {
+                        label = last.toFixed(1) + "%";
+                    } else {
+                        label = formatRate(last);
+                    }
+
+                    const bg = getComputedStyle(document.documentElement).getPropertyValue("--vscode-editor-background").trim();
+                    ctx.font = "bold "+Math.round(h*0.24)+"px var(--vscode-font-family, sans-serif)";
                     ctx.textAlign = "right";
                     ctx.textBaseline = "top";
-                    ctx.fillText(label, w - 2, padTop + 2);
+                    ctx.strokeStyle = bg;
+                    ctx.lineWidth = 3;
+                    ctx.lineJoin = "round";
+                    ctx.strokeText(label, w-2, padTop+2);
+                    ctx.fillStyle = color;
+                    ctx.fillText(label, w-2, padTop+2);
 
-                    // scale label (top-left, rate metrics only)
-                    if (metric && metric.isRate) {
-                        ctx.fillStyle = rgba(FG, 0.25);
-                        ctx.font =
-                            Math.round(h * 0.16) +
-                            "px var(--vscode-font-family, sans-serif)";
+                    if (isRateId(id)) {
+                        ctx.font = Math.round(h*0.16)+"px var(--vscode-font-family, sans-serif)";
                         ctx.textAlign = "left";
                         ctx.textBaseline = "top";
-                        ctx.fillText(formatRate(dataMax), 2, padTop + 2);
+                        ctx.strokeStyle = bg;
+                        ctx.lineWidth = 2;
+                        ctx.lineJoin = "round";
+                        ctx.strokeText(formatRate(dataMax), 2, padTop+2);
+                        ctx.fillStyle = rgba(color, 0.55);
+                        ctx.fillText(formatRate(dataMax), 2, padTop+2);
                     }
                 }
 
                 function curvePath(ctx, data, xStep, yPos) {
                     const n = data.length;
                     ctx.moveTo(0, yPos(data[0]));
-                    for (let i = 1; i < n - 1; i++) {
-                        const mx = (i * xStep + (i + 1) * xStep) / 2;
-                        const my = (yPos(data[i]) + yPos(data[i + 1])) / 2;
-                        ctx.quadraticCurveTo(i * xStep, yPos(data[i]), mx, my);
+                    for (let i = 1; i < n-1; i++) {
+                        const mx = (i*xStep + (i+1)*xStep)/2;
+                        const my = (yPos(data[i]) + yPos(data[i+1]))/2;
+                        ctx.quadraticCurveTo(i*xStep, yPos(data[i]), mx, my);
                     }
-                    ctx.lineTo((n - 1) * xStep, yPos(data[n - 1]));
+                    ctx.lineTo((n-1)*xStep, yPos(data[n-1]));
                 }
 
                 // -------- bar updates --------
 
                 function updateBar(id) {
                     const pct = getBarPercent(id);
-                    barFills[id].style.width = Math.min(100, pct) + "%";
-
-                    const metric = METRICS.find(function (m) {
-                        return m.id === id;
-                    });
-                    if (metric && metric.isRate) {
-                        barLabels[id].textContent = formatRate(
-                            state.barMax[id],
-                        );
+                    const fill = _barFills[id];
+                    if (fill) fill.style.width = Math.min(100, pct) + "%";
+                    const label = _barLabels[id];
+                    if (!label) return;
+                    if (isRateId(id)) {
+                        label.textContent = formatRate(state.barMax[id] || 1);
                     } else {
-                        barLabels[id].textContent = "100%";
+                        label.textContent = "100%";
                     }
                 }
 
                 function getBarPercent(id) {
                     const hist = state.history[id];
-                    const val = hist.length > 0 ? hist[hist.length - 1] : 0;
-                    const metric = METRICS.find(function (m) {
-                        return m.id === id;
-                    });
-                    if (!metric || !metric.isRate) {
-                        return Math.min(100, val);
+                    const val = hist && hist.length > 0 ? hist[hist.length-1] : 0;
+                    if (isRateId(id)) {
+                        const maxVal = state.barMax[id];
+                        return maxVal > 0 ? (val / maxVal) * 100 : 0;
                     }
-                    const maxVal = state.barMax[id];
-                    return maxVal > 0 ? (val / maxVal) * 100 : 0;
+                    return Math.min(100, val);
                 }
 
                 // -------- handle data --------
 
-                function handleUpdate(data) {
+                function handleUpdate(data, formattedText) {
                     const h = data.history;
                     if (!h || h.length < 1) return;
 
                     const fmt = data.formatted;
+                    if (data.formatConfig) _fmtConfig = data.formatConfig;
 
-                    // update format config if provided
-                    if (data.formatConfig) {
-                        _fmtConfig = data.formatConfig;
-                    }
+                    const tm = data.textMetrics;
 
-                    for (const m of METRICS) {
-                        const id = m.id;
+                    for (const id of ALL_CHART_IDS) {
+                        const c = _charts[id];
+                        if (!c || !c.enabled) continue;
 
-                        // update history (no animation)
                         state.history[id] = extractHistory(h, id);
 
-                        // update bar max for rate metrics
-                        if (m.isRate) {
+                        if (isRateId(id)) {
                             const vals = state.history[id];
                             state.barMax[id] = Math.max(1, ...vals) * 1.15;
                         }
 
-                        // update text value
-                        valueEls[id].textContent = fmt[id] || "\u2014";
+                        const valEl = document.getElementById("val-"+id);
+                        if (valEl) valEl.textContent = fmt[id] || "\u2014";
 
-                        // redraw
+                        // subtitles
+                        const subEl = document.getElementById("sub-"+id);
+                        if (subEl) {
+                            let sub = "";
+                            if (id === "battery" && tm && tm.battery.charging) {
+                                sub = "\u26A1";
+                            }
+                            if (id === "cpuSpeed" && tm && tm.cpuSpeed.avg > 0) {
+                                sub = "Min: " + tm.cpuSpeed.min.toFixed(2) + " / Max: " + tm.cpuSpeed.max.toFixed(2) + " GHz";
+                            }
+                            subEl.textContent = sub;
+                        }
+
                         if (state.viewMode[id] === "line") {
-                            drawChart(id, state.history[id], COLORS[id]);
+                            drawChart(id, state.history[id], colorFor(id));
                         } else {
                             updateBar(id);
                         }
                     }
+
+                    if (tm) {
+                        state.textMetrics = tm;
+                        updateTextMetrics(tm, formattedText);
+                    }
                 }
 
-                // -------- resize observer --------
+                function updateTextMetrics(tm, formattedText) {
+                    const ft = formattedText || {};
 
-                const ro = new ResizeObserver(function () {
-                    for (const m of METRICS) {
-                        if (
-                            state.viewMode[m.id] === "line" &&
-                            state.history[m.id].length >= 2
-                        ) {
-                            drawChart(m.id, state.history[m.id], COLORS[m.id]);
-                        }
+                    const uptimeVal = document.getElementById("info-val-uptime");
+                    if (uptimeVal) uptimeVal.textContent = ft.uptime || formatUptimeSimple(tm.uptime);
+
+                    const distroVal = document.getElementById("info-val-osDistro");
+                    if (distroVal) distroVal.textContent = ft.osDistro || tm.osDistro || "N/A";
+
+                    if (tm.diskSpace) {
+                        renderDiskMountBars(tm.diskSpace);
                     }
-                });
-
-                for (const m of METRICS) {
-                    if (canvases[m.id]) ro.observe(canvases[m.id]);
                 }
 
                 // -------- message handler --------
 
                 window.addEventListener("message", function (e) {
                     const msg = e.data;
-                    if (msg.type === "update" && msg.data) {
-                        handleUpdate(msg.data);
+                    if (msg.type === "config" && msg.data) {
+                        handleConfig(msg.data);
+                    } else if (msg.type === "update" && msg.data) {
+                        handleUpdate(msg.data, msg.formattedText);
                     }
                 });
+
+                // -------- resize observer --------
+
+                const _resizeObserver = new ResizeObserver(function () {
+                    for (const id of ALL_CHART_IDS) {
+                        const c = _charts[id];
+                        if (!c || !c.enabled) continue;
+                        if (state.viewMode[id] === "line" && state.history[id] && state.history[id].length >= 2) {
+                            drawChart(id, state.history[id], colorFor(id));
+                        }
+                    }
+                });
+
+                // -------- initial render --------
+
+                const app = document.getElementById("app");
+                app.innerHTML =
+                    '<div id="chart-container"></div>'+
+                    '<div id="info-container"></div>';
+
+                vscode.postMessage({ type: "ready" });
             })();
         </script>
     </body>

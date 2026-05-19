@@ -11,6 +11,7 @@ export interface SystemSnapshot {
   cpuCurrentSpeed: SI.Systeminformation.CpuCurrentSpeedData;
   cpuTemperature: SI.Systeminformation.CpuTemperatureData;
   battery: SI.Systeminformation.BatteryData;
+  time: SI.Systeminformation.TimeData;
 }
 
 type Listener = (data: SystemSnapshot) => void;
@@ -115,6 +116,8 @@ class SystemDataProvider {
       SI.cpuTemperature().catch(() => null),
       SI.battery().catch(() => null),
     ]);
+    let tm: SI.Systeminformation.TimeData | null = null;
+    try { tm = SI.time(); } catch { /* ignore */ }
 
     this._collectPromise = null;
 
@@ -130,6 +133,7 @@ class SystemDataProvider {
       cpuCurrentSpeed: cpuSpeed ?? prev?.cpuCurrentSpeed ?? { min: 0, max: 0, avg: 0, cores: [] },
       cpuTemperature: cpuTemp ?? prev?.cpuTemperature ?? { main: 0, cores: [], max: 0 },
       battery: bat ?? prev?.battery ?? { hasBattery: false, cycleCount: 0, isCharging: false, designedCapacity: 0, maxCapacity: 0, currentCapacity: 0, capacityUnit: "mWh", voltage: 0, percent: 0, timeRemaining: 0, acConnected: false, type: "", model: "", manufacturer: "", serial: "" },
+      time: tm ?? prev?.time ?? { uptime: 0, timezone: "", timezoneName: "", current: 0 },
     };
   }
 }

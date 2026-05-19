@@ -20,7 +20,7 @@
 		"url": "https://github.com/nexmoe/vscode-monitor-pro"
 	},
 	"icon": "assets/icon.png",
-	"version": "0.6.3",
+	"version": "0.7.0",
 	"engines": {
 		"vscode": "^1.104.1"
 	},
@@ -74,7 +74,7 @@
 				{
 					"id": "monitor-pro",
 					"title": "%viewContainer.monitor-pro.title%",
-					"icon": "assets/icon.png"
+					"icon": "$(pulse)"
 				}
 			]
 		},
@@ -97,6 +97,28 @@
 		"configuration": {
 			"title": "Monitor Pro",
 			"properties": {
+				"monitor-pro.resourceUsage.charts": {
+					"type": "object",
+					"default": {
+						"cpu": { "enabled": true, "view": "line", "color": "--vscode-charts-blue" },
+						"memActive": { "enabled": true, "view": "line", "color": "--vscode-charts-green" },
+						"memUsed": { "enabled": false, "view": "line", "color": "--vscode-charts-green" },
+						"netRx": { "enabled": true, "view": "line", "color": "--vscode-charts-orange" },
+						"netTx": { "enabled": true, "view": "line", "color": "--vscode-charts-purple" },
+						"diskRx": { "enabled": true, "view": "line", "color": "--vscode-charts-yellow" },
+						"diskWx": { "enabled": true, "view": "line", "color": "--vscode-charts-red" },
+						"battery": { "enabled": true, "view": "line", "color": "--vscode-textLink-foreground" },
+						"cpuTemp": { "enabled": true, "view": "line", "color": "--vscode-errorForeground" },
+						"cpuSpeed": { "enabled": true, "view": "line", "color": "--vscode-terminal-ansiBrightCyan" }
+					},
+					"description": "%config.resourceUsage.charts%"
+				},
+				"monitor-pro.resourceUsage.diskSpaceMounts": {
+					"type": "array",
+					"items": { "type": "string" },
+					"default": ["all"],
+					"description": "%config.resourceUsage.diskSpaceMounts%"
+				},
 				"monitor-pro.metrics.cpu": {
 					"type": "boolean",
 					"default": true,
