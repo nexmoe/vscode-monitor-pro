@@ -1,0 +1,22 @@
+name: 'Setup Build Environment'
+description: 'Setup Node.js, pnpm, and install dependencies'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+          node-version: '22'
+
+    - name: Install pnpm
+      shell: bash
+      run: npm install -g pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Build extension
+      shell: bash
+      run: pnpm run package

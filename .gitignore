@@ -4,8 +4,6 @@ node_modules
 .vscode-test/
 *.vsix
 
-package.nls.*
-
 # deps
 /node_modules
 
