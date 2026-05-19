@@ -3,9 +3,9 @@ import { TaskManagerProvider } from "./taskManagerProvider";
 import { powerShellRelease, powerShellStart } from "systeminformation";
 import { getRefreshInterval, isConfigChanged } from "./configuration";
 import { Metric, getEnabledMetrics, setLogger as setMetricsInitLogger } from "./metricsInit";
-import { setLogger as setMetricsLogger, updateFormatConfig } from "./metrics";
+import { setLogger as setMetricsLogger, updateGlobalConfig } from "./metrics";
 import { systemData } from "./systemData";
-import { getUnitSystem, getShowSpace, getSignificantDigits } from "./configuration";
+import { getUnitSystem, getShowSpace, getSingleUnit, getSignificantDigits } from "./configuration";
 
 const log = window.createOutputChannel("Monitor Pro", { log: true });
 
@@ -14,9 +14,10 @@ let unsubscribeData: (() => void) | null = null;
 
 function applyFormatConfig() {
   const unitSystem = getUnitSystem();
-  updateFormatConfig(
+  updateGlobalConfig(
     unitSystem === "binary",
     getShowSpace(),
+    getSingleUnit(),
     getSignificantDigits(),
   );
 }
@@ -77,9 +78,10 @@ export const activate = async (ctx: ExtensionContext) => {
 
       log.info(l10n.t("Configuration changed, hot-reloading"));
 
-      // 1. Format config: unit system, space, digits
+      // 1. Format config: unit system, space, significant digits
       if (event.affectsConfiguration("monitor-pro.unitSystem") ||
           event.affectsConfiguration("monitor-pro.showSpace") ||
+          event.affectsConfiguration("monitor-pro.singleUnit") ||
           event.affectsConfiguration("monitor-pro.significantDigits")) {
         applyFormatConfig();
         log.debug(l10n.t("Format config updated"));
@@ -93,7 +95,8 @@ export const activate = async (ctx: ExtensionContext) => {
 
       // 3. Metrics enabled/order changed → rebuild status bar items
       if (event.affectsConfiguration("monitor-pro.metrics") ||
-          event.affectsConfiguration("monitor-pro.metricsOrder")) {
+          event.affectsConfiguration("monitor-pro.metricsOrder") ||
+          event.affectsConfiguration("monitor-pro.uptimeFormat")) {
         rebuildMetrics();
         log.debug(l10n.t("Metrics rebuilt"));
       }

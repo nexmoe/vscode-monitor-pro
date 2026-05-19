@@ -2,7 +2,7 @@ import os from "os";
 import * as vscode from "vscode";
 import byteFormat from "./byteFormat";
 import { MetricCtrProps } from "./constants";
-import { getDiskSpaceConfig, getUnitSystem, getShowSpace, getSignificantDigits } from "./configuration";
+import { getDiskSpaceConfig, getUptimeFormat } from "./configuration";
 import { systemData } from "./systemData";
 
 const _logger: { debug: (m: string) => void; warn: (m: string) => void; error: (m: string) => void } = {
@@ -15,57 +15,56 @@ export function setLogger(l: typeof _logger) {
   Object.assign(_logger, l);
 }
 
-// Cached formatting config, updated on hot-reload
 let _binary = true;
 let _space = false;
-let _sigDigits = 4;
+let _singleUnit = false;
+let _sigDigits: Record<string, number> = {};
 
-export function updateFormatConfig(binary: boolean, space: boolean, sigDigits: number) {
+export function updateGlobalConfig(binary: boolean, space: boolean, singleUnit: boolean, sigDigits: Record<string, number>) {
   _binary = binary;
   _space = space;
+  _singleUnit = singleUnit;
   _sigDigits = sigDigits;
 }
 
-const pretty = (bytes: number, option: any = {}): string => {
+function getSigDigits(section: string): number {
+  return _sigDigits[section] ?? 3;
+}
+
+function fmtSigNum(n: number, sigfigs: number): string {
+  return n.toLocaleString(undefined, {
+    minimumSignificantDigits: sigfigs,
+    maximumSignificantDigits: sigfigs,
+    useGrouping: false,
+  });
+}
+
+const prettySig = (bytes: number, sigfigs: number): string => {
   return byteFormat(bytes, {
     binary: _binary,
     space: _space,
-    single: false,
-    minimumFractionDigits: 1,
-    minimumIntegerDigits: 1,
-    minimumSignificantDigits: _sigDigits,
-    maximumSignificantDigits: _sigDigits,
-    ...option,
+    single: _singleUnit,
+    minimumSignificantDigits: sigfigs,
+    maximumSignificantDigits: sigfigs,
+    useGrouping: false,
   });
 };
 
 const cpuText = async () => {
+  const sig = getSigDigits("cpu");
   const data = await systemData.getSnapshot();
-  const result = `$(pulse)${data.currentLoad.toLocaleString(undefined, {
-    maximumSignificantDigits: 3,
-    minimumSignificantDigits: 3,
-  })}%`;
+  const sp = _space ? " " : "";
+  const val = fmtSigNum(data.currentLoad, sig) + sp + "%";
   _logger.debug(vscode.l10n.t("CPU load: {0}%", data.currentLoad.toFixed(2)));
-  return result;
+  return `$(pulse)${val}`;
 };
 
 const memActiveText = async () => {
+  const sig = getSigDigits("memoryActive");
   const m = (await systemData.getSnapshot()).mem;
   _logger.debug(vscode.l10n.t("Memory - Total: {0}, Active: {1}, Used: {2}", m.total, m.active, m.used));
-  let active, total;
-  if (Number(pretty(m.total, { suffix: false })) < 100) {
-    active = pretty(m.active, {
-      minimumSignificantDigits: 3,
-      maximumSignificantDigits: 3,
-    });
-    total = pretty(m.total, {
-      minimumSignificantDigits: 3,
-      maximumSignificantDigits: 3,
-    });
-  } else {
-    active = pretty(m.active);
-    total = pretty(m.total);
-  }
+  const active = prettySig(m.active, sig);
+  const total = prettySig(m.total, sig);
 
   if (active.slice(-1) === total.slice(-1)) {
     return `$(server)${active.slice(0, -1)}/${total}`;
@@ -74,21 +73,10 @@ const memActiveText = async () => {
 };
 
 const memUsedText = async () => {
+  const sig = getSigDigits("memoryUsed");
   const m = (await systemData.getSnapshot()).mem;
-  let used, total;
-  if (Number(pretty(m.total, { suffix: false })) < 100) {
-    used = pretty(m.used, {
-      minimumSignificantDigits: 3,
-      maximumSignificantDigits: 3,
-    });
-    total = pretty(m.total, {
-      minimumSignificantDigits: 3,
-      maximumSignificantDigits: 3,
-    });
-  } else {
-    used = pretty(m.used);
-    total = pretty(m.total);
-  }
+  const used = prettySig(m.used, sig);
+  const total = prettySig(m.total, sig);
 
   if (used.slice(-1) === total.slice(-1)) {
     return `$(server)${used.slice(0, -1)}/${total}`;
@@ -97,51 +85,56 @@ const memUsedText = async () => {
 };
 
 const netText = async () => {
+  const sig = getSigDigits("network");
   const ns = (await systemData.getSnapshot()).networkStats;
   const rawRx = ns?.[0]?.rx_sec;
   const rawTx = ns?.[0]?.tx_sec;
   const rx = rawRx || 0;
   const tx = rawTx || 0;
   _logger.debug(vscode.l10n.t("Network - RX: {0}/s, TX: {1}/s, Interface: {2}", rawRx, rawTx, ns?.[0]?.iface));
-  return `$(cloud-download)${pretty(rx)}/s $(cloud-upload)${pretty(tx)}/s`;
+  return `$(cloud-download)${prettySig(rx, sig)}/s $(cloud-upload)${prettySig(tx, sig)}/s`;
 };
 
 const fsText = async () => {
+  const sig = getSigDigits("fileSystem");
   const fs = (await systemData.getSnapshot()).fsStats;
   _logger.debug(vscode.l10n.t("Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms",
     fs.rx_sec?.toString() ?? "null", fs.wx_sec?.toString() ?? "null", fs.rx, fs.wx, fs.ms));
-
-  return `$(log-in)${pretty(fs.rx_sec || 0)}/s $(log-out)${pretty(
-    fs.wx_sec || 0
-  )}/s`;
+  return `$(log-in)${prettySig(fs.rx_sec || 0, sig)}/s $(log-out)${prettySig(fs.wx_sec || 0, sig)}/s`;
 };
 
 const batteryText = async () => {
+  const sig = getSigDigits("battery");
   const b = (await systemData.getSnapshot()).battery;
   _logger.debug(vscode.l10n.t("Battery - Has battery: {0}, Percent: {1}, Charging: {2}", b.hasBattery, b.percent, b.isCharging));
   if (!b.hasBattery) {
     return "";
   }
   const charging = b.isCharging ? vscode.l10n.t(" (Charging)") : "";
-  return `$(plug)${b.percent}%${charging}`;
+  const sp = _space ? " " : "";
+  return `$(plug)${fmtSigNum(b.percent, sig) + sp + "%"}${charging}`;
 };
 
 const cpuSpeedText = async () => {
+  const sig = getSigDigits("cpuSpeed");
   const cpuCurrentSpeed = (await systemData.getSnapshot()).cpuCurrentSpeed;
   _logger.debug(vscode.l10n.t("CPU Speed - Avg: {0}GHz, Min: {1}GHz, Max: {2}GHz", cpuCurrentSpeed.avg, cpuCurrentSpeed.min, cpuCurrentSpeed.max));
   if (!cpuCurrentSpeed.avg || cpuCurrentSpeed.avg === 0) {
     return "";
   }
-  return `$(dashboard) ${cpuCurrentSpeed.avg}GHz`;
+  const sp = _space ? " " : "";
+  return `$(dashboard) ${fmtSigNum(cpuCurrentSpeed.avg, sig) + sp + "GHz"}`;
 };
 
 const cpuTempText = async () => {
+  const sig = getSigDigits("cpuTemp");
   const cl = (await systemData.getSnapshot()).cpuTemperature;
   _logger.debug(vscode.l10n.t("CPU Temperature: {0}°C", cl.main?.toString() ?? vscode.l10n.t("N/A")));
   if (!cl.main) {
     return "";
   }
-  return `$(thermometer)${cl.main}°C`;
+  const sp = _space ? " " : "";
+  return `$(thermometer)${fmtSigNum(cl.main, sig) + sp + "°C"}`;
 };
 
 const osDistroText = async () => {
@@ -150,6 +143,7 @@ const osDistroText = async () => {
 };
 
 const diskSpaceText = async () => {
+  const sig = getSigDigits("diskSpace");
   const fsSize = (await systemData.getSnapshot()).fsSize;
   const disksToShow = getDiskSpaceConfig();
   _logger.debug(vscode.l10n.t("Disk config: {0}, Found disks: {1}", JSON.stringify(disksToShow), fsSize.length));
@@ -161,8 +155,9 @@ const diskSpaceText = async () => {
       _logger.warn(vscode.l10n.t("Disk {0} has size=0, skipping", disk.mount));
       return null;
     }
-    const usedPercentage = (used / total * 100).toFixed(1);
-    return `$(database)${disk.mount} ${usedPercentage}% ${pretty(used)}/${pretty(total)}`;
+    const sp = _space ? " " : "";
+    const pctVal = fmtSigNum(used / total * 100, sig) + sp + "%";
+    return `$(database)${disk.mount} ${pctVal} ${prettySig(used, sig)}/${prettySig(total, sig)}`;
   };
 
   if (disksToShow.includes('all') && fsSize.length > 0) {
@@ -177,6 +172,14 @@ const diskSpaceText = async () => {
 
 const uptimeText = async () => {
   const uptime = os.uptime();
+  const fmt = getUptimeFormat();
+  if (fmt && fmt !== "auto") {
+    const days = Math.floor(uptime / (24 * 3600));
+    const hours = Math.floor((uptime % (24 * 3600)) / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    const seconds = Math.floor(uptime % 60);
+    return `$(clock) ${fmt.replace("{d}", String(days)).replace("{h}", String(hours)).replace("{m}", String(minutes)).replace("{s}", String(seconds))}`;
+  }
   const days = Math.floor(uptime / (24 * 3600));
   const hours = Math.floor((uptime % (24 * 3600)) / 3600);
   const minutes = Math.floor((uptime % 3600) / 60);

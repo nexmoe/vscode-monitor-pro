@@ -38,14 +38,32 @@ export function getShowSpace(): boolean {
   return workspace.getConfiguration(CONFIG_SECTION).get<boolean>("showSpace", false);
 }
 
-export function getSignificantDigits(): number {
-  return workspace.getConfiguration(CONFIG_SECTION).get<number>("significantDigits", 4);
+export function getSingleUnit(): boolean {
+  return workspace.getConfiguration(CONFIG_SECTION).get<boolean>("singleUnit", false);
 }
+
+export function getSignificantDigits(): Record<string, number> {
+  return workspace.getConfiguration(CONFIG_SECTION).get<Record<string, number>>("significantDigits") ?? {};
+}
+
+export function getFormatConfig() {
+  return {
+    unitSystem: getUnitSystem(),
+    showSpace: getShowSpace(),
+    significantDigits: getSignificantDigits(),
+  };
+}
+
+export function getUptimeFormat(): string {
+  return workspace.getConfiguration(CONFIG_SECTION).get<string>("uptimeFormat", "auto");
+}
+
+
 
 export function getDiskSpaceConfig(): string[] {
   return (
     workspace.getConfiguration(CONFIG_SECTION).get<string[]>("diskSpace") ?? [
-      "all", "/",
+      "/", "C:",
     ]
   );
 }

@@ -86,6 +86,7 @@ export default function byteFormat(
 		locale?: string | string[] | boolean;
 		signed?: boolean;
 		option2?: Intl.NumberFormatOptions;
+		[key: string]: any;
 	}
 ): string {
 	if (!Number.isFinite(number)) {
