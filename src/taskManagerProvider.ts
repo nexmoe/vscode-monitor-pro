@@ -3,10 +3,12 @@ import * as path from "path";
 import * as fs from "fs";
 import { TaskManagerDataCollector, TaskManagerPayload } from "./taskManagerData";
 import byteFormat from "./byteFormat";
+import { getFormatConfig } from "./configuration";
 
 interface FormattedPayload {
   history: TaskManagerPayload["history"];
   formatted: Record<string, string>;
+  formatConfig: ReturnType<typeof getFormatConfig>;
 }
 
 export class TaskManagerProvider implements vscode.WebviewViewProvider {
@@ -47,33 +49,42 @@ export class TaskManagerProvider implements vscode.WebviewViewProvider {
 
   private _formatPayload(data: TaskManagerPayload): FormattedPayload {
     const { current } = data;
+    const fmtConfig = getFormatConfig();
+    const isBinary = fmtConfig.unitSystem === "binary";
+    const showSpace = fmtConfig.showSpace;
+    const sigDigits = fmtConfig.significantDigits;
 
     const fmtMem = (bytes: number) =>
       byteFormat(bytes, {
-        binary: true,
-        space: true,
-        option2: { minimumSignificantDigits: 3, maximumSignificantDigits: 3 },
+        binary: isBinary,
+        space: showSpace,
+        minimumSignificantDigits: sigDigits.memoryActive ?? 4,
+        maximumSignificantDigits: sigDigits.memoryActive ?? 4,
+        useGrouping: false,
       });
 
     const fmtRate = (bytes: number) =>
       byteFormat(bytes, {
-        binary: true,
-        space: true,
-        option2: { minimumSignificantDigits: 2, maximumSignificantDigits: 2 },
+        binary: isBinary,
+        space: showSpace,
+        minimumSignificantDigits: sigDigits.network ?? 4,
+        maximumSignificantDigits: sigDigits.network ?? 4,
+        useGrouping: false,
       });
 
     return {
       history: data.history,
+      formatConfig: fmtConfig,
       formatted: {
         cpu: current.cpu.toFixed(1) + "%",
         memActive: fmtMem(current.memoryActive) + " / " + fmtMem(current.memoryTotal),
         memActivePercent: ((current.memoryActive / current.memoryTotal) * 100).toFixed(1) + "%",
         memUsed: fmtMem(current.memoryUsed) + " / " + fmtMem(current.memoryTotal),
         memUsedPercent: ((current.memoryUsed / current.memoryTotal) * 100).toFixed(1) + "%",
-        netRx: "\u2193 " + fmtRate(current.networkRx) + "/s",
-        netTx: "\u2191 " + fmtRate(current.networkTx) + "/s",
-        diskRx: "\u2193 " + fmtRate(current.diskRx) + "/s",
-        diskWx: "\u2191 " + fmtRate(current.diskWx) + "/s",
+        netRx: fmtRate(current.networkRx) + "/s",
+        netTx: fmtRate(current.networkTx) + "/s",
+        diskRx: fmtRate(current.diskRx) + "/s",
+        diskWx: fmtRate(current.diskWx) + "/s",
       },
     };
   }
