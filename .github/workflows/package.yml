@@ -34,7 +34,7 @@ jobs:
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
 
             - name: Package extension
-              run: npx vsce package --no-dependencies
+              run: pnpm exec vsce package --no-dependencies
 
             - name: Create development release
               if: github.event_name != 'workflow_dispatch'
