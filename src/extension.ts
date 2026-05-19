@@ -105,6 +105,14 @@ export const activate = async (ctx: ExtensionContext) => {
       if (event.affectsConfiguration("monitor-pro.diskSpace")) {
         log.debug(l10n.t("Disk space config updated"));
       }
+
+      // 5. Resource Usage view config changed → push to webview
+      if (event.affectsConfiguration("monitor-pro.resourceUsage") ||
+          event.affectsConfiguration("monitor-pro.metrics.uptime") ||
+          event.affectsConfiguration("monitor-pro.metrics.osDistro")) {
+        resourceUsageProvider.pushConfigUpdate();
+        log.debug(l10n.t("Resource Usage view config pushed"));
+      }
     }),
   );
 };
