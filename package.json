@@ -97,7 +97,62 @@
 		"configuration": {
 			"title": "Monitor Pro",
 			"properties": {
-				"monitor-pro.metrics": {
+				"monitor-pro.metrics.cpu": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.cpu%"
+				},
+				"monitor-pro.metrics.memoryActive": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.memoryActive%"
+				},
+				"monitor-pro.metrics.memoryUsed": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.memoryUsed%"
+				},
+				"monitor-pro.metrics.network": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.network%"
+				},
+				"monitor-pro.metrics.fileSystem": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.fileSystem%"
+				},
+				"monitor-pro.metrics.battery": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.battery%"
+				},
+				"monitor-pro.metrics.cpuTemp": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.cpuTemp%"
+				},
+				"monitor-pro.metrics.cpuSpeed": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.cpuSpeed%"
+				},
+				"monitor-pro.metrics.osDistro": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.osDistro%"
+				},
+				"monitor-pro.metrics.diskSpace": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.diskSpace%"
+				},
+				"monitor-pro.metrics.uptime": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.metrics.uptime%"
+				},
+				"monitor-pro.metricsOrder": {
 					"type": "array",
 					"items": {
 						"type": "string",
@@ -128,12 +183,35 @@
 						"diskSpace",
 						"uptime"
 					],
-					"description": "%config.metrics%"
+					"description": "%config.metricsOrder%"
 				},
 				"monitor-pro.refresh-interval": {
 					"type": "number",
 					"default": 2000,
+					"minimum": 500,
+					"maximum": 30000,
 					"description": "%config.refresh-interval%"
+				},
+				"monitor-pro.unitSystem": {
+					"type": "string",
+					"enum": [
+						"binary",
+						"decimal"
+					],
+					"default": "binary",
+					"description": "%config.unitSystem%"
+				},
+				"monitor-pro.showSpace": {
+					"type": "boolean",
+					"default": false,
+					"description": "%config.showSpace%"
+				},
+				"monitor-pro.significantDigits": {
+					"type": "number",
+					"default": 4,
+					"minimum": 2,
+					"maximum": 6,
+					"description": "%config.significantDigits%"
 				},
 				"monitor-pro.diskSpace": {
 					"type": "array",
