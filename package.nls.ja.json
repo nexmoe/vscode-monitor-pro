@@ -30,6 +30,6 @@
 	"metric.osDistro.name": "オペレーティング システムのディストリビューション",
 	"metric.uptime.name": "システム稼働時間",
 	"viewContainer.monitor-pro.title": "Monitor Pro",
-	"views.taskManager": "タスクマネージャー",
-	"command.focusTaskManager": "タスクマネージャービューにフォーカス"
+	"views.resourceUsage": "リソース使用状況表示",
+	"command.focusResourceUsage": "リソース使用状況ビューにフォーカス"
 }

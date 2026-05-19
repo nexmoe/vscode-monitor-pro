@@ -30,6 +30,6 @@
 	"metric.osDistro.name": "操作系统分发",
 	"metric.uptime.name": "系统运行时间",
 	"viewContainer.monitor-pro.title": "Monitor Pro",
-	"views.taskManager": "任务管理器",
-	"command.focusTaskManager": "聚焦任务管理器视图"
+	"views.resourceUsage": "资源占用视图",
+	"command.focusResourceUsage": "聚焦资源占用视图"
 }
