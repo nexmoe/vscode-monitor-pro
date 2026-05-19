@@ -1,0 +1,97 @@
+# 该工作流只能通过正式版本的标签自动触发
+
+name: Publish Extension
+
+on:
+    push:
+        tags:
+            - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+    contents: write
+
+env:
+    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - uses: ./.github/actions/setup
+
+            - name: Get tag version
+              id: get_version
+              run: |
+                  VERSION=${GITHUB_REF#refs/tags/}
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+            - name: Verify version match
+              run: |
+                  PKG_VER=$(node -p "require('./package.json').version")
+                  TAG_VER="${{ steps.get_version.outputs.version }}"
+                  echo "package.json: $PKG_VER | tag: $TAG_VER"
+                  if [ "$PKG_VER" != "$TAG_VER" ]; then
+                    echo "Error: version mismatch"; exit 1
+                  fi
+
+            - name: Package extension
+              run: npx vsce package --no-dependencies
+
+            - name: Publish to VSCode Marketplace
+              run: npx vsce publish --no-dependencies --pat ${{ secrets.VSCE_TOKEN }}
+
+            - name: Find previous tag
+              id: previous_tag
+              run: |
+                  CUR="${{ steps.get_version.outputs.version }}"
+                  PREV=$(git tag -l --sort=-version:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "^$CUR$" | head -n1)
+                  echo "previous_tag=$PREV" >> $GITHUB_OUTPUT
+
+            - name: Generate release notes
+              id: release_notes
+              run: |
+                  CUR="${{ steps.get_version.outputs.version }}"
+                  PREV="${{ steps.previous_tag.outputs.previous_tag }}"
+
+                  echo "# VSCode Monitor Pro v$CUR" > release_notes.md
+
+                  if [ -f CHANGELOG.md ]; then
+                    echo "## 更新内容" >> release_notes.md
+                    awk -v v="$CUR" '/^##/{if(f)exit; if($0~v)f=1;next} f&&/^##/{exit} f{print}' CHANGELOG.md >> release_notes.md
+                  fi
+
+                  echo "" >> release_notes.md
+                  echo "## 提交记录" >> release_notes.md
+                  if [ -n "$PREV" ]; then
+                    git log "$PREV..$CUR" --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
+                  else
+                    git log --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
+                  fi
+
+                  echo "" >> release_notes.md
+                  echo "---" >> release_notes.md
+                  echo "📦 **安装方式:**" >> release_notes.md
+                  echo "- 通过 VSCode 扩展市场搜索 \"Monitor Pro\" 安装" >> release_notes.md
+                  echo "- 或下载 .vsix 文件手动安装" >> release_notes.md
+
+            - uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ steps.get_version.outputs.version }}
+                  name: 'Monitor Pro v${{ steps.get_version.outputs.version }}'
+                  body_path: release_notes.md
+                  files: '*.vsix'
+                  draft: false
+                  prerelease: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: vsix-${{ steps.get_version.outputs.version }}
+                  path: '*.vsix'
+                  retention-days: 90
