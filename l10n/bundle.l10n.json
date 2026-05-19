@@ -18,6 +18,8 @@
   "Enabled metrics: {0}": "Enabled metrics: {0}",
   "Creating metric [{0}] at priority {1}": "Creating metric [{0}] at priority {1}",
   "Metric section \"{0}\" not found, skipping": "Metric section \"{0}\" not found, skipping",
+  "Metrics order: {0}": "Metrics order: {0}",
+  "Metric \"{0}\" disabled by user, skipping": "Metric \"{0}\" disabled by user, skipping",
   "CPU load: {0}%": "CPU load: {0}%",
   "Memory - Total: {0}, Active: {1}, Used: {2}": "Memory - Total: {0}, Active: {1}, Used: {2}",
   "Network - RX: {0}/s, TX: {1}/s, Interface: {2}": "Network - RX: {0}/s, TX: {1}/s, Interface: {2}",
@@ -37,5 +39,10 @@
   "Update cycle failed: {0}": "Update cycle failed: {0}",
   "Next update scheduled in {0}ms": "Next update scheduled in {0}ms",
   "Extension deactivating": "Extension deactivating",
-  "Disposed {0} metrics": "Disposed {0} metrics"
+  "Disposed {0} metrics": "Disposed {0} metrics",
+  "Configuration changed, hot-reloading": "Configuration changed, hot-reloading",
+  "Format config updated": "Format config updated",
+  "Refresh interval updated to {0}ms": "Refresh interval updated to {0}ms",
+  "Metrics rebuilt": "Metrics rebuilt",
+  "Disk space config updated": "Disk space config updated"
 }

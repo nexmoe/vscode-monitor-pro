@@ -18,6 +18,8 @@
 	"Enabled metrics: {0}": "已啟用度量: {0}",
 	"Creating metric [{0}] at priority {1}": "建立度量 [{0}]，優先順序 {1}",
 	"Metric section \"{0}\" not found, skipping": "找不到度量 \"{0}\"，已跳過",
+	"Metrics order: {0}": "度量排序: {0}",
+	"Metric \"{0}\" disabled by user, skipping": "使用者已停用度量 \"{0}\"，跳過",
 	"CPU load: {0}%": "CPU 負載: {0}%",
 	"Memory - Total: {0}, Active: {1}, Used: {2}": "記憶體 - 總計: {0}, 活躍: {1}, 已用: {2}",
 	"Network - RX: {0}/s, TX: {1}/s, Interface: {2}": "網路 - 下行: {0}/s, 上行: {1}/s, 網路卡: {2}",
@@ -34,7 +36,11 @@
 	"Platform: {0}, Architecture: {1}": "平台: {0}, 架構: {1}",
 	"Update cycle completed in {0}ms": "更新週期完成，耗時 {0}ms",
 	"Update cycle failed: {0}": "更新週期失敗: {0}",
-	"Next update scheduled in {0}ms": "下次更新將在 {0}ms 後執行",
 	"Extension deactivating": "擴充套件正在停用",
-	"Disposed {0} metrics": "已銷毀 {0} 個度量"
+	"Disposed {0} metrics": "已銷毀 {0} 個度量",
+	"Configuration changed, hot-reloading": "設定已變更，熱重載中",
+	"Format config updated": "格式設定已更新",
+	"Refresh interval updated to {0}ms": "重新整理間隔已更新為 {0}ms",
+	"Metrics rebuilt": "度量已重建",
+	"Disk space config updated": "磁碟空間設定已更新"
 }
