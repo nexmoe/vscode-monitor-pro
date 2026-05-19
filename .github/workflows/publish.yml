@@ -1,5 +1,3 @@
-# 该工作流只能通过正式版本的标签自动触发
-
 name: Publish Extension
 
 on:
@@ -12,6 +10,10 @@ permissions:
 
 env:
     FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+concurrency:
+    group: publish-extension-${{ github.ref }}
+    cancel-in-progress: false
 
 jobs:
     publish:
@@ -36,14 +38,26 @@ jobs:
                   TAG_VER="${{ steps.get_version.outputs.version }}"
                   echo "package.json: $PKG_VER | tag: $TAG_VER"
                   if [ "$PKG_VER" != "$TAG_VER" ]; then
-                    echo "Error: version mismatch"; exit 1
+                    echo "::error::package.json version ($PKG_VER) must match git tag ($TAG_VER)"
+                    exit 1
+                  fi
+
+            - name: Verify marketplace token
+              env:
+                  VSCE_PAT: ${{ secrets.VSCE_PAT }}
+              run: |
+                  if [ -z "$VSCE_PAT" ]; then
+                    echo "::error::Missing GitHub Actions secret VSCE_PAT. Create an Azure DevOps Marketplace PAT and save it as VSCE_PAT."
+                    exit 1
                   fi
 
             - name: Package extension
-              run: npx vsce package --no-dependencies
+              run: pnpm exec vsce package --no-dependencies --out monitor-pro-${{ steps.get_version.outputs.version }}.vsix
 
             - name: Publish to VSCode Marketplace
-              run: npx vsce publish --no-dependencies --pat ${{ secrets.VSCE_TOKEN }}
+              run: pnpm run deploy
+              env:
+                  VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
             - name: Find previous tag
               id: previous_tag
