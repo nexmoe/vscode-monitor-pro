@@ -85,10 +85,7 @@ jobs:
                       | `monitor-pro-${{ steps.get_version.outputs.version }}-universal.vsix` | macOS / Linux |
                       | `monitor-pro-${{ steps.get_version.outputs.version }}-win32-x64.vsix` | Windows x64 |
                       | `monitor-pro-${{ steps.get_version.outputs.version }}-win32-arm64.vsix` | Windows ARM64 |
-                  files: |
-                      monitor-pro-${{ steps.get_version.outputs.version }}-universal.vsix
-                      monitor-pro-${{ steps.get_version.outputs.version }}-win32-x64.vsix
-                      monitor-pro-${{ steps.get_version.outputs.version }}-win32-arm64.vsix
+                  files: monitor-pro-*.vsix
                   draft: false
                   prerelease: true
               env:
