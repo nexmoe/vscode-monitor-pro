@@ -663,7 +663,7 @@
 
                 // -------- handle data --------
 
-                function handleUpdate(data, formattedText) {
+                function handleUpdate(data, formattedText, unavailableMetrics) {
                     const h = data.history;
                     if (!h || h.length < 1) return;
 
@@ -672,9 +672,16 @@
 
                     const tm = data.textMetrics;
 
+                    const hidden = new Set(unavailableMetrics || []);
+                    for (const metric of hidden) {
+                        const card = document.querySelector('.card[data-metric="' + metric + '"]');
+                        if (card) card.style.display = 'none';
+                    }
+
                     for (const id of ALL_CHART_IDS) {
                         const c = _charts[id];
                         if (!c || !c.enabled) continue;
+                        if (hidden.has(id)) continue;
 
                         state.history[id] = extractHistory(h, id);
 
@@ -733,7 +740,7 @@
                     if (msg.type === "config" && msg.data) {
                         handleConfig(msg.data);
                     } else if (msg.type === "update" && msg.data) {
-                        handleUpdate(msg.data, msg.formattedText);
+                        handleUpdate(msg.data, msg.formattedText, msg.unavailableMetrics);
                     }
                 });
 

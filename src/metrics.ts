@@ -32,6 +32,9 @@ function getSigDigits(section: string): number {
 }
 
 function fmtSigNum(n: number, sigfigs: number): string {
+  if (n !== 0 && Math.abs(n) < 0.001) {
+    return "0";
+  }
   return n.toLocaleString(undefined, {
     minimumSignificantDigits: sigfigs,
     maximumSignificantDigits: sigfigs,

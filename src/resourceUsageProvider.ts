@@ -66,6 +66,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
           type: "update",
           data: payload,
           formattedText: payload.formattedText,
+          unavailableMetrics: data.unavailableMetrics,
         });
       }
     });
