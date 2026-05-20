@@ -110,12 +110,12 @@ jobs:
                   echo "# VSCode Monitor Pro v$CUR" > release_notes.md
 
                   if [ -f CHANGELOG.md ]; then
-                    echo "## 更新内容" >> release_notes.md
+                    echo "## What's Changed" >> release_notes.md
                     awk -v v="$CUR" '/^##/{if(f)exit; if($0~v)f=1;next} f&&/^##/{exit} f{print}' CHANGELOG.md >> release_notes.md
                   fi
 
                   echo "" >> release_notes.md
-                  echo "## 提交记录" >> release_notes.md
+                  echo "## Commits" >> release_notes.md
                   if [ -n "$PREV" ]; then
                     git log "$PREV..$CUR" --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
                   else
@@ -124,9 +124,9 @@ jobs:
 
                   echo "" >> release_notes.md
                   echo "---" >> release_notes.md
-                  echo "📦 **安装方式:**" >> release_notes.md
-                  echo "- 通过 VSCode 扩展市场搜索 \"Monitor Pro\" 安装" >> release_notes.md
-                  echo "- 或下载 .vsix 文件手动安装" >> release_notes.md
+                  echo "📦 **Installation:**" >> release_notes.md
+                  echo "- Install from the VS Code Marketplace by searching for \"Monitor Pro\"" >> release_notes.md
+                  echo "- Or download the .vsix file below to install manually" >> release_notes.md
 
             - uses: softprops/action-gh-release@v2
               with:

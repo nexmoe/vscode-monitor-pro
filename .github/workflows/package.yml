@@ -58,22 +58,22 @@ jobs:
               uses: softprops/action-gh-release@v2
               with:
                   tag_name: ${{ steps.get_version.outputs.version }}
-                  name: 'Monitor Pro v${{ steps.get_version.outputs.version }} (开发版)'
+                  name: 'Monitor Pro v${{ steps.get_version.outputs.version }} (Dev Build)'
                   body: |
-                      # 🚧 开发版本 - 仅供测试
+                      # 🚧 Development Build — For Testing Only
 
-                      这是一个开发版本，用于内部测试。请不要在生产环境中使用。
+                      This is a development build for internal testing. Do not use in production.
 
-                      - **版本号**: ${{ steps.get_version.outputs.version }}
-                      - **构建时间**: ${{ github.run_id }}
-                      - **提交**: ${{ github.sha }}
+                      - **Version**: ${{ steps.get_version.outputs.version }}
+                      - **Build**: ${{ github.run_id }}
+                      - **Commit**: ${{ github.sha }}
 
-                      ⚠️ 此版本不会发布到 VSCode 市场，仅通过 GitHub Release 提供下载。
+                      ⚠️ This build will NOT be published to the VS Code Marketplace. Download via GitHub Release only.
 
-                      📦 **安装方式**: 下载对应平台的 .vsix 文件并在 VSCode 中手动安装
+                      📦 **Installation**: Download the .vsix file for your platform and install manually in VS Code.
 
-                      | 包名 | 适用平台 |
-                      |------|----------|
+                      | Package | Platform |
+                      |---------|----------|
                       | `monitor-pro-universal.vsix` | macOS / Linux |
                       | `monitor-pro-win32-x64.vsix` | Windows x64 |
                       | `monitor-pro-win32-arm64.vsix` | Windows ARM64 |
