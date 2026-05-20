@@ -11,7 +11,7 @@ env:
     FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
-    build:
+    lint:
         strategy:
             matrix:
                 os: [macos-latest, ubuntu-latest, windows-latest]
@@ -22,3 +22,31 @@ jobs:
             - uses: ./.github/actions/setup
 
             - run: pnpm run lint
+
+    go:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-go@v5
+              with:
+                  go-version: '1.26'
+                  cache-dependency-path: go-backend/go.sum
+
+            - run: pnpm run go:test
+              name: Go tests
+
+            - run: pnpm run go:vet
+              name: Go vet
+
+            - name: Cross-compile Windows amd64
+              run: pnpm run go:build:win32-x64
+
+            - name: Verify Windows amd64 binary
+              run: file go-backend/bin/monitor.exe | grep -i "x86-64\|PE32"
+
+            - name: Cross-compile Windows arm64
+              run: pnpm run go:build:win32-arm64
+
+            - name: Verify Windows arm64 binary
+              run: file go-backend/bin/monitor.exe | grep -i "aarch64\|ARM64\|PE32"

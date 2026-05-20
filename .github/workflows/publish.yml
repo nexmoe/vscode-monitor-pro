@@ -26,6 +26,14 @@ jobs:
 
             - uses: ./.github/actions/setup
 
+            - uses: actions/setup-go@v5
+              with:
+                  go-version: '1.26'
+                  cache-dependency-path: go-backend/go.sum
+
+            - name: Verify Go tests
+              run: pnpm run go:test
+
             - name: Get tag version
               id: get_version
               run: |
@@ -51,11 +59,38 @@ jobs:
                     exit 1
                   fi
 
-            - name: Package extension
+            - name: Package universal & publish
               run: pnpm exec vsce package --no-dependencies --out monitor-pro-${{ steps.get_version.outputs.version }}.vsix
+              env:
+                  VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
-            - name: Publish to VSCode Marketplace
+            - name: Publish to VSCode Marketplace (universal)
               run: pnpm run deploy
+              env:
+                  VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+            - name: Build Windows x64 binary
+              run: pnpm run go:build:win32-x64
+
+            - name: Package Windows x64
+              run: sed -i '/^go-backend\/bin/d' .vscodeignore && pnpm exec vsce package --no-dependencies --target win32-x64 -o monitor-pro-win32-x64-${{ steps.get_version.outputs.version }}.vsix
+
+            - name: Publish to VSCode Marketplace (win32-x64)
+              run: pnpm exec vsce publish --no-dependencies --target win32-x64 --packagePath monitor-pro-win32-x64-${{ steps.get_version.outputs.version }}.vsix
+              env:
+                  VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+            - name: Restore .vscodeignore
+              run: git checkout .vscodeignore
+
+            - name: Build Windows arm64 binary
+              run: pnpm run go:build:win32-arm64
+
+            - name: Package Windows arm64
+              run: sed -i '/^go-backend\/bin/d' .vscodeignore && pnpm exec vsce package --no-dependencies --target win32-arm64 -o monitor-pro-win32-arm64-${{ steps.get_version.outputs.version }}.vsix
+
+            - name: Publish to VSCode Marketplace (win32-arm64)
+              run: pnpm exec vsce publish --no-dependencies --target win32-arm64 --packagePath monitor-pro-win32-arm64-${{ steps.get_version.outputs.version }}.vsix
               env:
                   VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
@@ -98,7 +133,10 @@ jobs:
                   tag_name: ${{ steps.get_version.outputs.version }}
                   name: 'Monitor Pro v${{ steps.get_version.outputs.version }}'
                   body_path: release_notes.md
-                  files: '*.vsix'
+                  files: |
+                      monitor-pro-${{ steps.get_version.outputs.version }}.vsix
+                      monitor-pro-win32-x64-${{ steps.get_version.outputs.version }}.vsix
+                      monitor-pro-win32-arm64-${{ steps.get_version.outputs.version }}.vsix
                   draft: false
                   prerelease: false
               env:
@@ -107,5 +145,5 @@ jobs:
             - uses: actions/upload-artifact@v4
               with:
                   name: vsix-${{ steps.get_version.outputs.version }}
-                  path: '*.vsix'
+                  path: 'monitor-pro-*.vsix'
                   retention-days: 90
