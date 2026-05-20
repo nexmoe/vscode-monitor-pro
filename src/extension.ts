@@ -5,12 +5,25 @@ import { getRefreshInterval, isConfigChanged } from "./configuration";
 import { Metric, getEnabledMetrics, setLogger as setMetricsInitLogger } from "./metricsInit";
 import { setLogger as setMetricsLogger, updateGlobalConfig } from "./metrics";
 import { systemData } from "./systemData";
+import { GoBackendManager } from "./goBackend";
+import { GoDataSource, SIDataSource } from "./dataSource";
 import { getUnitSystem, getShowSpace, getSingleUnit, getSignificantDigits } from "./configuration";
 
 const log = window.createOutputChannel("Monitor Pro", { log: true });
 
 let metrics: Metric[] = [];
 let unsubscribeData: (() => void) | null = null;
+let goBackend: GoBackendManager | null = null;
+
+const GO_BINARY_NAME = process.platform === "win32" ? "monitor.exe" : "monitor";
+
+function getGoBinaryPath(ctx: ExtensionContext): string {
+  return `${ctx.extensionPath}/go-backend/bin/${GO_BINARY_NAME}`;
+}
+
+function shouldUseGoBackend(): boolean {
+  return process.platform === "win32";
+}
 
 function applyFormatConfig() {
   const unitSystem = getUnitSystem();
@@ -28,6 +41,28 @@ function rebuildMetrics() {
   log.info(l10n.t("Metrics initialized: {0}", metrics.length));
 }
 
+function tryStartGoBackend(ctx: ExtensionContext) {
+  const binaryPath = getGoBinaryPath(ctx);
+  goBackend = new GoBackendManager(log);
+  goBackend.start(binaryPath).then(() => {
+    systemData.setSource(new GoDataSource(goBackend!));
+    log.info(l10n.t("Go backend started on port {0}, source: {1}", goBackend!.port!, systemData.sourceName));
+  }).catch((err) => {
+    log.warn(l10n.t("Go backend unavailable: {0}, using fallback", String(err)));
+    goBackend?.stop();
+    goBackend = null;
+    systemData.setSource(new SIDataSource());
+  });
+}
+
+function initDataSource(ctx: ExtensionContext) {
+  if (shouldUseGoBackend()) {
+    tryStartGoBackend(ctx);
+  } else {
+    log.info(l10n.t("Using built-in data source: {0}", "systeminformation"));
+  }
+}
+
 export const activate = async (ctx: ExtensionContext) => {
   log.info(l10n.t("Extension activating"));
 
@@ -38,6 +73,7 @@ export const activate = async (ctx: ExtensionContext) => {
   };
   setMetricsLogger(logger);
   setMetricsInitLogger(logger);
+  systemData.setLogger(logger);
 
   if (process.platform === "win32") {
     powerShellStart();
@@ -55,6 +91,8 @@ export const activate = async (ctx: ExtensionContext) => {
     }),
   );
   log.info(l10n.t("Resource Usage view registered"));
+
+  initDataSource(ctx);
 
   systemData.setInterval(getRefreshInterval());
   systemData.start();
@@ -78,7 +116,6 @@ export const activate = async (ctx: ExtensionContext) => {
 
       log.info(l10n.t("Configuration changed, hot-reloading"));
 
-      // 1. Format config: unit system, space, significant digits
       if (event.affectsConfiguration("monitor-pro.unitSystem") ||
           event.affectsConfiguration("monitor-pro.showSpace") ||
           event.affectsConfiguration("monitor-pro.singleUnit") ||
@@ -87,13 +124,11 @@ export const activate = async (ctx: ExtensionContext) => {
         log.debug(l10n.t("Format config updated"));
       }
 
-      // 2. Refresh interval
       if (event.affectsConfiguration("monitor-pro.refresh-interval")) {
         systemData.setInterval(getRefreshInterval());
         log.debug(l10n.t("Refresh interval updated to {0}ms", getRefreshInterval()));
       }
 
-      // 3. Metrics enabled/order changed → rebuild status bar items
       if (event.affectsConfiguration("monitor-pro.metrics") ||
           event.affectsConfiguration("monitor-pro.metricsOrder") ||
           event.affectsConfiguration("monitor-pro.uptimeFormat")) {
@@ -101,12 +136,10 @@ export const activate = async (ctx: ExtensionContext) => {
         log.debug(l10n.t("Metrics rebuilt"));
       }
 
-      // 4. Disk space config changed
       if (event.affectsConfiguration("monitor-pro.diskSpace")) {
         log.debug(l10n.t("Disk space config updated"));
       }
 
-      // 5. Resource Usage view config changed → push to webview
       if (event.affectsConfiguration("monitor-pro.resourceUsage") ||
           event.affectsConfiguration("monitor-pro.metrics.uptime") ||
           event.affectsConfiguration("monitor-pro.metrics.osDistro")) {
@@ -119,6 +152,8 @@ export const activate = async (ctx: ExtensionContext) => {
 
 export const deactivate = () => {
   log.info(l10n.t("Extension deactivating"));
+  goBackend?.stop();
+  goBackend = null;
   unsubscribeData?.();
   systemData.stop();
   if (process.platform === "win32") {
