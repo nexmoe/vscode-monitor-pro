@@ -45,6 +45,9 @@
 	"Disk config: {0}, Found disks: {1}": "ディスク構成: {0}, 検出されたディスク: {1}",
 	"Disk {0} has size=0, skipping": "ディスク {0} のサイズが0です。スキップします",
 	"Metrics initialized: {0}": "{0} 個のメトリックを初期化しました",
+	"Go backend started on port {0}, source: {1}": "Goバックエンドがポート {0} で起動しました。ソース: {1}",
+	"Go backend unavailable: {0}, using fallback": "Goバックエンドを利用できません: {0}、フォールバックを使用します",
+	"Using built-in data source: {0}": "内蔵データソースを使用: {0}",
 	"Extension activating": "拡張機能を有効化中",
 	"Platform: {0}, Architecture: {1}": "プラットフォーム: {0}, アーキテクチャ: {1}",
 	"Resource Usage view registered": "リソース使用状況ビューを登録しました",
@@ -55,7 +58,7 @@
 	"Refresh interval updated to {0}ms": "更新間隔を {0}ms に更新しました",
 	"Metrics rebuilt": "メトリックを再構築しました",
 	"Disk space config updated": "ディスク容量設定を更新しました",
-	"Resource Usage view config pushed": "Resource Usage view config pushed",
+	"Resource Usage view config pushed": "リソース使用状況ビューの設定をプッシュしました",
 	"Extension deactivating": "拡張機能を無効化中",
 	"Disposed {0} metrics": "{0} 個のメトリックを破棄しました"
 }

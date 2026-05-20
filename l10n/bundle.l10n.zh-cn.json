@@ -45,6 +45,9 @@
 	"Disk config: {0}, Found disks: {1}": "磁盘配置: {0}, 发现磁盘: {1}",
 	"Disk {0} has size=0, skipping": "磁盘 {0} 大小为 0，已跳过",
 	"Metrics initialized: {0}": "已初始化 {0} 个度量",
+	"Go backend started on port {0}, source: {1}": "Go 后端已启动于端口 {0}，数据源: {1}",
+	"Go backend unavailable: {0}, using fallback": "Go 后端不可用: {0}，使用备用数据源",
+	"Using built-in data source: {0}": "使用内置数据源: {0}",
 	"Extension activating": "扩展正在激活",
 	"Platform: {0}, Architecture: {1}": "平台: {0}, 架构: {1}",
 	"Resource Usage view registered": "资源占用视图已注册",
@@ -55,7 +58,7 @@
 	"Refresh interval updated to {0}ms": "刷新间隔已更新为 {0}ms",
 	"Metrics rebuilt": "度量已重建",
 	"Disk space config updated": "磁盘空间配置已更新",
-	"Resource Usage view config pushed": "Resource Usage view config pushed",
+	"Resource Usage view config pushed": "已推送资源占用视图配置",
 	"Extension deactivating": "扩展正在停用",
 	"Disposed {0} metrics": "已销毁 {0} 个度量"
 }
