@@ -69,11 +69,7 @@ export class ResourceUsageDataCollector {
   private pushPoint(snap: SystemSnapshot) {
     const disks = snap.fsSize
       .filter((d) => d.size > 0)
-      .sort((a, b) => {
-        if (a.mount === "/") return -1;
-        if (b.mount === "/") return 1;
-        return a.mount.localeCompare(b.mount);
-      });
+      .sort((a, b) => a.mount.localeCompare(b.mount));
     const avgUse = disks.length > 0
       ? disks.reduce((s, d) => s + d.use, 0) / disks.length
       : 0;
