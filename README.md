@@ -16,10 +16,10 @@ Monitor Pro is a comprehensive resource monitoring tool for VS Code that tracks 
 
 ## Architecture & Performance
 
-| Platform | Backend | Data Source |
-|----------|---------|-------------|
-| Windows | Go + gopsutil | Raw OS APIs via native binary |
-| Linux / macOS | Node.js | `systeminformation` library |
+| Platform      | Backend       | Data Source                   |
+| ------------- | ------------- | ----------------------------- |
+| Windows       | Go + gopsutil | Raw OS APIs via native binary |
+| Linux / macOS | Node.js       | `systeminformation` library   |
 
 ### Windows Performance
 
@@ -73,17 +73,17 @@ pnpm run compile
 
 ### Commands
 
-| Command | Description |
-|---------|-------------|
-| `pnpm run lint` | Lint TypeScript sources |
-| `pnpm run go:test` | Run Go backend tests |
-| `pnpm run go:vet` | Run Go vet |
-| `pnpm run go:build:win32-x64` | Cross-compile Go binary for Windows x64 |
-| `pnpm run go:build:win32-arm64` | Cross-compile Go binary for Windows ARM64 |
-| `pnpm run package:vsix:universal` | Package universal VSIX (macOS/Linux) |
-| `pnpm run package:vsix:win32-x64` | Package Windows x64 VSIX |
-| `pnpm run package:vsix:win32-arm64` | Package Windows ARM64 VSIX |
-| `pnpm run gen-l10n` | Regenerate l10n bundle from source |
+| Command                             | Description                               |
+| ----------------------------------- | ----------------------------------------- |
+| `pnpm run lint`                     | Lint TypeScript sources                   |
+| `pnpm run go:test`                  | Run Go backend tests                      |
+| `pnpm run go:vet`                   | Run Go vet                                |
+| `pnpm run go:build:win32-x64`       | Cross-compile Go binary for Windows x64   |
+| `pnpm run go:build:win32-arm64`     | Cross-compile Go binary for Windows ARM64 |
+| `pnpm run package:vsix:universal`   | Package universal VSIX (macOS/Linux)      |
+| `pnpm run package:vsix:win32-x64`   | Package Windows x64 VSIX                  |
+| `pnpm run package:vsix:win32-arm64` | Package Windows ARM64 VSIX                |
+| `pnpm run gen-l10n`                 | Regenerate l10n bundle from source        |
 
 ## Inspired by
 
