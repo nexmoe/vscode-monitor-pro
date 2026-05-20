@@ -123,14 +123,16 @@ class SystemDataProvider {
   private _source: DataSource;
   private _logger?: { warn: (msg: string) => void };
   private _warnedMetrics = new Set<string>();
+  private _t: (msg: string, ...args: (string | number | boolean)[]) => string = (msg) => msg;
 
   constructor(interval = 2000) {
     this._interval = interval;
     this._source = new SIDataSource();
   }
 
-  setLogger(logger: { warn: (msg: string) => void }) {
+  setLogger(logger: { warn: (msg: string) => void }, t?: (msg: string, ...args: (string | number | boolean)[]) => string) {
     this._logger = logger;
+    if (t) this._t = t;
   }
 
   setSource(source: DataSource) {
@@ -175,7 +177,7 @@ class SystemDataProvider {
         for (const metric of data.unavailableMetrics) {
           if (!this._warnedMetrics.has(metric)) {
             this._warnedMetrics.add(metric);
-            this._logger?.warn(`Metric "${metric}" is not available on this system`);
+            this._logger?.warn(this._t('Metric "{0}" is not available on this system', metric));
           }
         }
 
@@ -187,7 +189,7 @@ class SystemDataProvider {
           }
         }
       } catch (e) {
-        this._logger?.warn(`Collection failed: ${e instanceof Error ? e.message : String(e)}`);
+        this._logger?.warn(this._t('Collection failed: {0}', e instanceof Error ? e.message : String(e)));
       }
       const elapsed = Date.now() - t0;
       const delay = Math.max(this._interval - elapsed, 0);
