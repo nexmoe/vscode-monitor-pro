@@ -1,20 +1,118 @@
-import * as SI from "systeminformation";
+import type { DataSource } from "./dataSource";
+import { SIDataSource } from "./dataSource";
 
 export interface SystemSnapshot {
   timestamp: number;
   currentLoad: number;
-  mem: SI.Systeminformation.MemData;
-  osInfo: SI.Systeminformation.OsData;
-  networkStats: SI.Systeminformation.NetworkStatsData[];
-  fsStats: SI.Systeminformation.FsStatsData;
-  fsSize: SI.Systeminformation.FsSizeData[];
-  cpuCurrentSpeed: SI.Systeminformation.CpuCurrentSpeedData;
-  cpuTemperature: SI.Systeminformation.CpuTemperatureData;
-  battery: SI.Systeminformation.BatteryData;
-  time: SI.Systeminformation.TimeData;
+  mem: {
+    total: number;
+    free: number;
+    used: number;
+    active: number;
+    available: number;
+    buffcache: number;
+    buffers: number;
+    cached: number;
+    slab: number;
+    reclaimable: number;
+    swaptotal: number;
+    swapused: number;
+    swapfree: number;
+    writeback: number | null;
+    dirty: number | null;
+  };
+  osInfo: {
+    platform: string;
+    distro: string;
+    release: string;
+    codename: string;
+    kernel: string;
+    arch: string;
+    hostname: string;
+    fqdn: string;
+    codepage: string;
+    logofile: string;
+    serial: string;
+    build: string;
+    servicepack: string;
+    uefi: boolean | null;
+  };
+  networkStats: {
+    iface: string;
+    operstate: string;
+    rx_bytes: number;
+    rx_dropped: number;
+    rx_errors: number;
+    tx_bytes: number;
+    tx_dropped: number;
+    tx_errors: number;
+    rx_sec: number;
+    tx_sec: number;
+    ms: number;
+  }[];
+  fsStats: {
+    rx: number;
+    wx: number;
+    tx: number;
+    rx_sec: number | null;
+    wx_sec: number | null;
+    tx_sec: number | null;
+    ms: number;
+  };
+  fsSize: {
+    fs: string;
+    type: string;
+    size: number;
+    used: number;
+    available: number;
+    use: number;
+    mount: string;
+    rw: boolean | null;
+  }[];
+  cpuCurrentSpeed: {
+    min: number;
+    max: number;
+    avg: number;
+    cores: number[];
+  };
+  cpuTemperature: {
+    main: number;
+    cores: number[];
+    max: number;
+  };
+  battery: {
+    hasBattery: boolean;
+    cycleCount: number;
+    isCharging: boolean;
+    voltage: number;
+    designedCapacity: number;
+    maxCapacity: number;
+    currentCapacity: number;
+    capacityUnit: string;
+    percent: number;
+    timeRemaining: number;
+    acConnected: boolean;
+    type: string;
+    model: string;
+    manufacturer: string;
+    serial: string;
+  };
+  time: {
+    uptime: number;
+    timezone: string;
+    timezoneName: string;
+    current: number;
+  };
+  unavailableMetrics: string[];
 }
 
 type Listener = (data: SystemSnapshot) => void;
+
+const UNAVAILABLE_CHECKERS: Record<string, (s: SystemSnapshot) => boolean> = {
+  battery:  (s) => !s.battery.hasBattery,
+  cpuTemp:  (s) => s.cpuTemperature.main <= 0,
+  cpuSpeed: (s) => s.cpuCurrentSpeed.avg <= 0,
+};
 
 class SystemDataProvider {
   private _snapshot: SystemSnapshot | null = null;
@@ -22,9 +120,26 @@ class SystemDataProvider {
   private _interval: number;
   private _listeners: Set<Listener> = new Set();
   private _collectPromise: Promise<SystemSnapshot> | null = null;
+  private _source: DataSource;
+  private _logger?: { warn: (msg: string) => void };
+  private _warnedMetrics = new Set<string>();
 
   constructor(interval = 2000) {
     this._interval = interval;
+    this._source = new SIDataSource();
+  }
+
+  setLogger(logger: { warn: (msg: string) => void }) {
+    this._logger = logger;
+  }
+
+  setSource(source: DataSource) {
+    this._source = source;
+    this._snapshot = null;
+  }
+
+  get sourceName(): string {
+    return this._source.name;
   }
 
   get snapshot(): SystemSnapshot | null {
@@ -54,7 +169,16 @@ class SystemDataProvider {
       const t0 = Date.now();
       try {
         const data = await this.collect();
+        data.unavailableMetrics = this.computeUnavailableMetrics(data);
         this._snapshot = data;
+
+        for (const metric of data.unavailableMetrics) {
+          if (!this._warnedMetrics.has(metric)) {
+            this._warnedMetrics.add(metric);
+            this._logger?.warn(`Metric "${metric}" is not available on this system`);
+          }
+        }
+
         for (const cb of [...this._listeners]) {
           try {
             cb(data);
@@ -94,47 +218,22 @@ class SystemDataProvider {
     }
   }
 
-  private async collect(): Promise<SystemSnapshot> {
+  private computeUnavailableMetrics(snap: SystemSnapshot): string[] {
+    const result: string[] = [];
+    for (const [key, check] of Object.entries(UNAVAILABLE_CHECKERS)) {
+      if (check(snap)) result.push(key);
+    }
+    return result;
+  }
+
+  private collect(): Promise<SystemSnapshot> {
     if (this._collectPromise) {
       return this._collectPromise;
     }
-    this._collectPromise = this.doCollect();
+    this._collectPromise = this._source.collect(this._snapshot).finally(() => {
+      this._collectPromise = null;
+    });
     return this._collectPromise;
-  }
-
-  private async doCollect(): Promise<SystemSnapshot> {
-    const prev = this._snapshot;
-
-    const [cl, mem, os, ns, fs, fsSize, cpuSpeed, cpuTemp, bat] = await Promise.all([
-      SI.currentLoad().catch(() => null),
-      SI.mem().catch(() => null),
-      SI.osInfo().catch(() => null),
-      SI.networkStats().catch(() => null),
-      SI.fsStats().catch(() => null),
-      SI.fsSize().catch(() => null),
-      SI.cpuCurrentSpeed().catch(() => null),
-      SI.cpuTemperature().catch(() => null),
-      SI.battery().catch(() => null),
-    ]);
-    let tm: SI.Systeminformation.TimeData | null = null;
-    try { tm = SI.time(); } catch { /* ignore */ }
-
-    this._collectPromise = null;
-
-    return {
-      timestamp: Date.now(),
-      currentLoad: cl?.currentLoad ?? prev?.currentLoad ?? 0,
-      mem: mem ?? prev?.mem ?? { total: 0, free: 0, used: 0, active: 0, available: 0, buffcache: 0, buffers: 0, cached: 0, slab: 0, reclaimable: 0, swaptotal: 0, swapused: 0, swapfree: 0, writeback: null, dirty: null },
-      osInfo: os ?? prev?.osInfo ?? { platform: "", distro: "", release: "", codename: "", kernel: "", arch: "", hostname: "", fqdn: "", codepage: "", logofile: "", serial: "", build: "", servicepack: "", uefi: false },
-      networkStats: ns ?? prev?.networkStats ?? [],
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      fsStats: fs ?? prev?.fsStats ?? { rx: 0, wx: 0, tx: 0, rx_sec: null, wx_sec: null, tx_sec: null, ms: 0 },
-      fsSize: fsSize ?? prev?.fsSize ?? [],
-      cpuCurrentSpeed: cpuSpeed ?? prev?.cpuCurrentSpeed ?? { min: 0, max: 0, avg: 0, cores: [] },
-      cpuTemperature: cpuTemp ?? prev?.cpuTemperature ?? { main: 0, cores: [], max: 0 },
-      battery: bat ?? prev?.battery ?? { hasBattery: false, cycleCount: 0, isCharging: false, designedCapacity: 0, maxCapacity: 0, currentCapacity: 0, capacityUnit: "mWh", voltage: 0, percent: 0, timeRemaining: 0, acConnected: false, type: "", model: "", manufacturer: "", serial: "" },
-      time: tm ?? prev?.time ?? { uptime: 0, timezone: "", timezoneName: "", current: 0 },
-    };
   }
 }
 
