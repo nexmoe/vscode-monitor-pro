@@ -23,6 +23,11 @@ jobs:
 
             - uses: ./.github/actions/setup
 
+            - uses: actions/setup-go@v5
+              with:
+                  go-version: '1.26'
+                  cache-dependency-path: go-backend/go.sum
+
             - name: Get version info
               id: get_version
               run: |
@@ -33,8 +38,20 @@ jobs:
                   fi
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-            - name: Package extension
-              run: pnpm exec vsce package --no-dependencies
+            - name: Build universal package
+              run: pnpm run package:vsix:universal
+
+            - name: Build Windows x64 package
+              run: pnpm run package:vsix:win32-x64
+
+            - name: Restore .vscodeignore after Windows x64
+              run: git checkout .vscodeignore
+
+            - name: Build Windows arm64 package
+              run: pnpm run package:vsix:win32-arm64
+
+            - name: List packages
+              run: ls -lh monitor-pro-*.vsix
 
             - name: Create development release
               if: github.event_name != 'workflow_dispatch'
@@ -53,8 +70,17 @@ jobs:
 
                       ⚠️ 此版本不会发布到 VSCode 市场，仅通过 GitHub Release 提供下载。
 
-                      📦 **安装方式**: 下载 .vsix 文件并在 VSCode 中手动安装
-                  files: '*.vsix'
+                      📦 **安装方式**: 下载对应平台的 .vsix 文件并在 VSCode 中手动安装
+
+                      | 包名 | 适用平台 |
+                      |------|----------|
+                      | `monitor-pro-universal.vsix` | macOS / Linux |
+                      | `monitor-pro-win32-x64.vsix` | Windows x64 |
+                      | `monitor-pro-win32-arm64.vsix` | Windows ARM64 |
+                  files: |
+                      monitor-pro-universal.vsix
+                      monitor-pro-win32-x64.vsix
+                      monitor-pro-win32-arm64.vsix
                   draft: false
                   prerelease: true
               env:
@@ -63,5 +89,5 @@ jobs:
             - uses: actions/upload-artifact@v4
               with:
                   name: vsix-${{ steps.get_version.outputs.version }}
-                  path: '*.vsix'
+                  path: 'monitor-pro-*.vsix'
                   retention-days: 30

@@ -19,3 +19,5 @@ renovate.json
 vscode-monitor-pro.code-workspace
 assets/*.png
 !assets/icon.png
+go-backend/
+!go-backend/bin/*
