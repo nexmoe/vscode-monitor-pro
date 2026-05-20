@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"runtime"
 
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
@@ -85,7 +86,7 @@ func getDisk(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if !hasRoot {
+	if runtime.GOOS != "windows" && !hasRoot {
 		if u, err := disk.Usage("/"); err == nil && u.Total > 0 {
 			usage = append(usage, u)
 		}
@@ -146,7 +147,7 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if !hasRoot {
+	if runtime.GOOS != "windows" && !hasRoot {
 		if u, err := disk.Usage("/"); err == nil && u.Total > 0 {
 			usage = append(usage, u)
 		}
