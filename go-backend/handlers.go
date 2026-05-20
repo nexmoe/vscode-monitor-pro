@@ -74,7 +74,7 @@ func getMemory(w http.ResponseWriter, r *http.Request) {
 func getDisk(w http.ResponseWriter, r *http.Request) {
 	partitions, _ := disk.Partitions(false)
 
-	var usage []*disk.UsageStat
+	usage := make([]*disk.UsageStat, 0)
 	hasRoot := false
 	for _, p := range partitions {
 		u, err := disk.Usage(p.Mountpoint)
@@ -135,7 +135,7 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 	smem, _ := mem.SwapMemory()
 	parts, _ := disk.Partitions(false)
 
-	var usage []*disk.UsageStat
+	usage := make([]*disk.UsageStat, 0)
 	hasRoot := false
 	for _, p := range parts {
 		u, err := disk.Usage(p.Mountpoint)

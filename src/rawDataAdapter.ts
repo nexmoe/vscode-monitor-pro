@@ -24,49 +24,54 @@ export class RawDataAdapter {
     const now = Date.now();
     const prev = this.prev;
 
-    const net = pickNonLoopback(raw.network.ioCounters);
-    const firstDisk = pickPhysicalDisk(raw.disk.ioCounters);
+    const netIfaces = raw.network.ioCounters || [];
+    const diskCounters = raw.disk.ioCounters || {};
 
-    const netRates = this.computeNetRates(raw.network.ioCounters, prev, now);
-    const diskRates = this.computeDiskRates(raw.disk.ioCounters, prev, now);
+    const net = pickNonLoopback(netIfaces);
+    const firstDisk = pickPhysicalDisk(diskCounters);
+
+    const netRates = this.computeNetRates(netIfaces, prev, now);
+    const diskRates = this.computeDiskRates(diskCounters, prev, now);
 
     this.prev = {
-      net: new Map(raw.network.ioCounters.map((n) => [n.name, { bytesSent: n.bytesSent, bytesRecv: n.bytesRecv }])),
-      disk: new Map(Object.entries(raw.disk.ioCounters).map(([k, v]) => [k, { readBytes: v.readBytes, writeBytes: v.writeBytes }])),
+      net: new Map(netIfaces.map((n) => [n.name, { bytesSent: n.bytesSent, bytesRecv: n.bytesRecv }])),
+      disk: new Map(Object.entries(diskCounters).map(([k, v]) => [k, { readBytes: v.readBytes, writeBytes: v.writeBytes }])),
       ts: now,
     };
 
     const cpuSpeed = this.getCpuSpeed(raw);
     const cpuTemp = this.getCpuTemp(raw);
 
+    const virt = raw.memory.virtual || { total: 0, free: 0, used: 0, active: 0, available: 0, buffers: 0, cached: 0, slab: 0, sreclaimable: 0, writeBack: null, dirty: null };
+
     return {
       timestamp: now,
-      currentLoad: raw.cpu.percent.length > 0 ? raw.cpu.percent[0] : 0,
+      currentLoad: (raw.cpu.percent || []).length > 0 ? (raw.cpu.percent || [])[0] : 0,
       mem: {
-        total: raw.memory.virtual.total,
-        free: raw.memory.virtual.free,
-        used: raw.memory.virtual.used,
-        active: raw.memory.virtual.active || raw.memory.virtual.used,
-        available: raw.memory.virtual.available,
-        buffcache: raw.memory.virtual.buffers + raw.memory.virtual.cached,
-        buffers: raw.memory.virtual.buffers,
-        cached: raw.memory.virtual.cached,
-        slab: raw.memory.virtual.slab,
-        reclaimable: raw.memory.virtual.sreclaimable,
-        swaptotal: raw.memory.swap.total,
-        swapused: raw.memory.swap.used,
-        swapfree: raw.memory.swap.free,
-        writeback: raw.memory.virtual.writeBack,
-        dirty: raw.memory.virtual.dirty,
+        total: virt.total,
+        free: virt.free,
+        used: virt.used,
+        active: virt.active || virt.used,
+        available: virt.available,
+        buffcache: virt.buffers + virt.cached,
+        buffers: virt.buffers,
+        cached: virt.cached,
+        slab: virt.slab,
+        reclaimable: virt.sreclaimable,
+        swaptotal: (raw.memory.swap || {}).total || 0,
+        swapused: (raw.memory.swap || {}).used || 0,
+        swapfree: (raw.memory.swap || {}).free || 0,
+        writeback: virt.writeBack,
+        dirty: virt.dirty,
       },
       osInfo: {
-        platform: raw.host.info.os,
-        distro: raw.host.info.platform,
-        release: raw.host.info.platformVersion,
-        codename: raw.host.info.platformFamily,
-        kernel: raw.host.info.kernelVersion,
-        arch: raw.host.info.kernelArch,
-        hostname: raw.host.info.hostname,
+        platform: (raw.host.info || {}).os || "",
+        distro: (raw.host.info || {}).platform || "",
+        release: (raw.host.info || {}).platformVersion || "",
+        codename: (raw.host.info || {}).platformFamily || "",
+        kernel: (raw.host.info || {}).kernelVersion || "",
+        arch: (raw.host.info || {}).kernelArch || "",
+        hostname: (raw.host.info || {}).hostname || "",
         fqdn: "",
         codepage: "",
         logofile: "",
@@ -97,7 +102,7 @@ export class RawDataAdapter {
         tx_sec: diskRates.readSec > 0 || diskRates.writeSec > 0 ? diskRates.readSec + diskRates.writeSec : null,
         ms: 0,
       },
-      fsSize: raw.disk.usage
+      fsSize: (raw.disk.usage || [])
         .filter((u) => u.total > 0)
         .map((u) => ({
           fs: u.path,
@@ -129,10 +134,10 @@ export class RawDataAdapter {
         serial: "",
       },
       time: {
-        uptime: raw.host.info.uptime,
+        uptime: (raw.host.info || {}).uptime || 0,
         timezone: "",
         timezoneName: "",
-        current: Math.floor(raw.host.info.bootTime + raw.host.info.uptime) * 1000,
+        current: Math.floor(((raw.host.info || {}).bootTime || 0) + ((raw.host.info || {}).uptime || 0)) * 1000,
       },
       unavailableMetrics: [],
     };
@@ -177,7 +182,7 @@ export class RawDataAdapter {
   }
 
   private getCpuSpeed(raw: GoAllResponse): { avg: number; min: number; max: number; cores: number[] } {
-    const cores = raw.cpu.info.map((c) => c.mhz).filter((m) => m > 0);
+    const cores = (raw.cpu.info || []).map((c) => c.mhz).filter((m) => m > 0);
     if (cores.length === 0) {
       return { avg: 0, min: 0, max: 0, cores: [] };
     }
@@ -193,7 +198,7 @@ export class RawDataAdapter {
   }
 
   private getCpuTemp(raw: GoAllResponse): { main: number; cores: number[]; max: number } {
-    const cpuSensors = raw.host.sensors.filter((s) => {
+    const cpuSensors = (raw.host.sensors || []).filter((s) => {
       const key = s.sensorKey.toLowerCase();
       return key.includes("core") || key.includes("cpu") || key.includes("k8") || key.includes("package");
     });
