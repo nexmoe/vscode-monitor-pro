@@ -45,7 +45,7 @@ func getBasicMetrics(w http.ResponseWriter, r *http.Request) {
 
 func getCPU(w http.ResponseWriter, r *http.Request) {
 	info, _ := cpu.Info()
-	perc, _ := cpu.Percent(0, true)
+	perc, _ := cpu.Percent(0, false)
 	times, _ := cpu.Times(true)
 
 	writeJSON(w, Response{Success: true, Data: struct {
@@ -130,7 +130,7 @@ func getHost(w http.ResponseWriter, r *http.Request) {
 
 func getAll(w http.ResponseWriter, r *http.Request) {
 	cpuInfo, _ := cpu.Info()
-	cpuPerc, _ := cpu.Percent(0, true)
+	cpuPerc, _ := cpu.Percent(0, false)
 	cpuTimes, _ := cpu.Times(true)
 	vmem, _ := mem.VirtualMemory()
 	smem, _ := mem.SwapMemory()
