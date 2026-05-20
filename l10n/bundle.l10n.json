@@ -60,5 +60,7 @@
   "Disk space config updated": "Disk space config updated",
   "Resource Usage view config pushed": "Resource Usage view config pushed",
   "Extension deactivating": "Extension deactivating",
-  "Disposed {0} metrics": "Disposed {0} metrics"
+  "Disposed {0} metrics": "Disposed {0} metrics",
+  "Metric \"{0}\" is not available on this system": "Metric \"{0}\" is not available on this system",
+  "Collection failed: {0}": "Collection failed: {0}"
 }

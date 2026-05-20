@@ -60,5 +60,7 @@
 	"Disk space config updated": "磁盘空间配置已更新",
 	"Resource Usage view config pushed": "已推送资源占用视图配置",
 	"Extension deactivating": "扩展正在停用",
-	"Disposed {0} metrics": "已销毁 {0} 个度量"
+	"Disposed {0} metrics": "已销毁 {0} 个度量",
+	"Metric \"{0}\" is not available on this system": "度量 \"{0}\" 在此系统上不可用",
+	"Collection failed: {0}": "数据采集失败: {0}"
 }

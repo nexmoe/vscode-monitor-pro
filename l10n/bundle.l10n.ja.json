@@ -60,5 +60,7 @@
 	"Disk space config updated": "ディスク容量設定を更新しました",
 	"Resource Usage view config pushed": "リソース使用状況ビューの設定をプッシュしました",
 	"Extension deactivating": "拡張機能を無効化中",
-	"Disposed {0} metrics": "{0} 個のメトリックを破棄しました"
+	"Disposed {0} metrics": "{0} 個のメトリックを破棄しました",
+	"Metric \"{0}\" is not available on this system": "メトリック \"{0}\" はこのシステムでは利用できません",
+	"Collection failed: {0}": "データ収集に失敗しました: {0}"
 }

@@ -73,7 +73,7 @@ export const activate = async (ctx: ExtensionContext) => {
   };
   setMetricsLogger(logger);
   setMetricsInitLogger(logger);
-  systemData.setLogger(logger);
+  systemData.setLogger(logger, l10n.t);
 
   if (process.platform === "win32") {
     powerShellStart();
