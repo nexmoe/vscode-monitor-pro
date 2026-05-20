@@ -130,10 +130,7 @@ jobs:
                   tag_name: ${{ steps.get_version.outputs.version }}
                   name: 'Monitor Pro v${{ steps.get_version.outputs.version }}'
                   body_path: release_notes.md
-                  files: |
-                      monitor-pro-${{ steps.get_version.outputs.version }}.vsix
-                      monitor-pro-win32-x64-${{ steps.get_version.outputs.version }}.vsix
-                      monitor-pro-win32-arm64-${{ steps.get_version.outputs.version }}.vsix
+                  files: monitor-pro-*.vsix
                   draft: false
                   prerelease: false
               env:
