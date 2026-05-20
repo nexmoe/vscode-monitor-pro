@@ -37,6 +37,7 @@ export interface ResourceUsagePayload {
   history: DataPoint[];
   current: DataPoint;
   textMetrics: TextMetrics;
+  unavailableMetrics: string[];
 }
 
 export class ResourceUsageDataCollector {
@@ -66,7 +67,13 @@ export class ResourceUsageDataCollector {
   }
 
   private pushPoint(snap: SystemSnapshot) {
-    const disks = snap.fsSize.filter((d) => d.size > 0);
+    const disks = snap.fsSize
+      .filter((d) => d.size > 0)
+      .sort((a, b) => {
+        if (a.mount === "/") return -1;
+        if (b.mount === "/") return 1;
+        return a.mount.localeCompare(b.mount);
+      });
     const avgUse = disks.length > 0
       ? disks.reduce((s, d) => s + d.use, 0) / disks.length
       : 0;
@@ -94,6 +101,7 @@ export class ResourceUsageDataCollector {
     this.onData?.({
       history: [...this.history],
       current: point,
+      unavailableMetrics: snap.unavailableMetrics,
       textMetrics: {
         battery: {
           hasBattery: snap.battery.hasBattery,
