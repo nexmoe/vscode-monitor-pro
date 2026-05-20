@@ -115,16 +115,13 @@ jobs:
                   fi
 
                   echo "" >> release_notes.md
-                  echo "## Commits" >> release_notes.md
                   if [ -n "$PREV" ]; then
-                    git log "$PREV..$CUR" --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
-                  else
-                    git log --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
+                    echo "[Compare with $PREV](https://github.com/${{ github.repository }}/compare/$PREV...$CUR)" >> release_notes.md
                   fi
 
                   echo "" >> release_notes.md
                   echo "---" >> release_notes.md
-                  echo "📦 **Installation:**" >> release_notes.md
+                  echo "**Installation:**" >> release_notes.md
                   echo "- Install from the VS Code Marketplace by searching for \"Monitor Pro\"" >> release_notes.md
                   echo "- Or download the .vsix file below to install manually" >> release_notes.md
 
