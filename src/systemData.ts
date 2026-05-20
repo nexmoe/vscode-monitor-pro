@@ -186,8 +186,8 @@ class SystemDataProvider {
             // individual listener errors never break the polling loop
           }
         }
-      } catch {
-        // keep the timer alive even on unexpected errors
+      } catch (e) {
+        this._logger?.warn(`Collection failed: ${e instanceof Error ? e.message : String(e)}`);
       }
       const elapsed = Date.now() - t0;
       const delay = Math.max(this._interval - elapsed, 0);

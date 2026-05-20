@@ -4,6 +4,7 @@ import type { OutputChannel } from 'vscode';
 import type { GoAllResponse } from './rawDataTypes';
 
 const BACKEND_START_TIMEOUT = 10000;
+const FETCH_TIMEOUT = 5000;
 
 export interface GoBasicMetrics {
   cpuPercent: number;
@@ -85,17 +86,16 @@ export class GoBackendManager {
     });
   }
 
-  async fetchBasic(): Promise<GoBasicMetrics> {
+  private fetchJSON<T>(url: string): Promise<T> {
     return new Promise((resolve, reject) => {
-      const url = `http://127.0.0.1:${this._port}/api/v1/basic`;
-      http.get(url, (res) => {
+      const req = http.get(url, (res) => {
         let data = '';
         res.on('data', (chunk: Buffer) => { data += chunk.toString(); });
         res.on('end', () => {
           try {
             const parsed = JSON.parse(data);
             if (parsed.success) {
-              resolve(parsed.data as GoBasicMetrics);
+              resolve(parsed.data as T);
             } else {
               reject(new Error('Go backend returned success=false'));
             }
@@ -103,30 +103,21 @@ export class GoBackendManager {
             reject(e);
           }
         });
-      }).on('error', reject);
+      });
+      req.on('error', reject);
+      req.setTimeout(FETCH_TIMEOUT, () => {
+        req.destroy();
+        reject(new Error(`Request timed out after ${FETCH_TIMEOUT}ms`));
+      });
     });
   }
 
+  async fetchBasic(): Promise<GoBasicMetrics> {
+    return this.fetchJSON<GoBasicMetrics>(`http://127.0.0.1:${this._port}/api/v1/basic`);
+  }
+
   async fetchAll(): Promise<GoAllResponse> {
-    return new Promise((resolve, reject) => {
-      const url = `http://127.0.0.1:${this._port}/api/v1/all`;
-      http.get(url, (res) => {
-        let data = '';
-        res.on('data', (chunk: Buffer) => { data += chunk.toString(); });
-        res.on('end', () => {
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.success) {
-              resolve(parsed.data as GoAllResponse);
-            } else {
-              reject(new Error('Go backend returned success=false'));
-            }
-          } catch (e) {
-            reject(e);
-          }
-        });
-      }).on('error', reject);
-    });
+    return this.fetchJSON<GoAllResponse>(`http://127.0.0.1:${this._port}/api/v1/all`);
   }
 
   stop(): void {
