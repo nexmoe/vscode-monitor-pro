@@ -90,6 +90,9 @@ export interface SystemSnapshot {
     currentCapacity: number;
     capacityUnit: string;
     percent: number;
+    health: number;
+    powerRate: number;
+    powerState: "charging" | "discharging" | "full" | "idle" | "none";
     timeRemaining: number;
     acConnected: boolean;
     type: string;
@@ -109,9 +112,10 @@ export interface SystemSnapshot {
 type Listener = (data: SystemSnapshot) => void;
 
 const UNAVAILABLE_CHECKERS: Record<string, (s: SystemSnapshot) => boolean> = {
-  battery:  (s) => !s.battery.hasBattery,
-  cpuTemp:  (s) => s.cpuTemperature.main <= 0,
-  cpuSpeed: (s) => s.cpuCurrentSpeed.avg <= 0,
+  battery:      (s) => !s.battery.hasBattery,
+  batteryPower: (s) => !s.battery.hasBattery,
+  cpuTemp:      (s) => s.cpuTemperature.main <= 0,
+  cpuSpeed:     (s) => s.cpuCurrentSpeed.avg <= 0,
 };
 
 class SystemDataProvider {

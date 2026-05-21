@@ -1,3 +1,15 @@
+export interface GoBatteryData {
+  hasBattery: boolean;
+  state: string;
+  percent: number;
+  powerRate: number;
+  health: number;
+  current: number;
+  full: number;
+  design: number;
+  voltage: number;
+}
+
 export interface GoAllResponse {
   cpu: GoCPUData;
   memory: GoMemoryData;
@@ -5,6 +17,7 @@ export interface GoAllResponse {
   network: GoNetworkData;
   host: GoHostData;
   load: GoLoadData;
+  battery: GoBatteryData | null;
 }
 
 export interface GoCPUData {
