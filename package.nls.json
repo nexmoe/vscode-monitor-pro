@@ -38,6 +38,8 @@
 	"config.resourceUsage.showCpuSpeed": "Show CPU clock speed in the Resource Usage view",
 	"config.resourceUsage.diskSpaceMounts": "Mount points to display for the Disk Space chart. Use [\"all\"] to show every mounted filesystem, or add specific mount paths to filter",
 	"config.resourceUsage.samplingPoints": "Number of sampling points to display on the chart. Increase for a longer history view, decrease for better performance",
+	"config.resourceUsage.showUptime": "Show system uptime in the Resource Usage view info section",
+	"config.resourceUsage.showOsDistro": "Show OS distribution name in the Resource Usage view info section",
 	"resourceUsage.label.cpu": "CPU Usage",
 	"resourceUsage.label.memActive": "Memory (Active)",
 	"resourceUsage.label.memUsed": "Memory (Used)",

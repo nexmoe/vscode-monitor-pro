@@ -38,6 +38,8 @@
 	"config.resourceUsage.showCpuSpeed": "リソース使用状況ビューに CPU クロック速度を表示",
 	"config.resourceUsage.diskSpaceMounts": "ディスク容量チャートに表示するマウントポイント。[\"all\"] ですべてのマウント済みファイルシステムを表示、または特定のパスを指定してフィルタリング",
 	"config.resourceUsage.samplingPoints": "チャートに表示するサンプリングポイントの数。増やすとより長い履歴を表示でき、減らすとパフォーマンスが向上します",
+	"config.resourceUsage.showUptime": "リソース使用状況ビューの情報セクションにシステム稼働時間を表示",
+	"config.resourceUsage.showOsDistro": "リソース使用状況ビューの情報セクションにOSディストリビューション名を表示",
 	"resourceUsage.label.cpu": "CPU使用率",
 	"resourceUsage.label.memActive": "メモリー（アクティブ）",
 	"resourceUsage.label.memUsed": "メモリー（使用済み）",
