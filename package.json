@@ -152,7 +152,7 @@
 			},
 				"monitor-pro.metrics.network": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "%config.metrics.network%"
 				},
 				"monitor-pro.metrics.fileSystem": {
@@ -167,12 +167,12 @@
 				},
 				"monitor-pro.metrics.cpuTemp": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "%config.metrics.cpuTemp%"
 				},
 				"monitor-pro.metrics.cpuSpeed": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "%config.metrics.cpuSpeed%"
 				},
 			"monitor-pro.metrics.osDistro": {
@@ -187,7 +187,7 @@
 				},
 				"monitor-pro.metrics.uptime": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "%config.metrics.uptime%"
 				},
 				"monitor-pro.metricsOrder": {
