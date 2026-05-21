@@ -49,17 +49,17 @@ export class Metric {
 
 function getMetricTitle(section: MetricsExist): string {
   switch (section) {
-    case "cpu": return vscode.l10n.t("metric.cpu.name");
-    case "memoryActive": return vscode.l10n.t("metric.memoryActive.name");
-    case "memoryUsed": return vscode.l10n.t("metric.memoryUsed.name");
-    case "network": return vscode.l10n.t("metric.network.name");
-    case "fileSystem": return vscode.l10n.t("metric.fileSystem.name");
-    case "battery": return vscode.l10n.t("metric.battery.name");
-    case "cpuTemp": return vscode.l10n.t("metric.cpuTemp.name");
-    case "cpuSpeed": return vscode.l10n.t("metric.cpuSpeed.name");
-    case "osDistro": return vscode.l10n.t("metric.osDistro.name");
-    case "diskSpace": return vscode.l10n.t("metric.diskSpace.name");
-    case "uptime": return vscode.l10n.t("metric.uptime.name");
+    case "cpu": return vscode.l10n.t("CPU Usage");
+    case "memoryActive": return vscode.l10n.t("Memory Active");
+    case "memoryUsed": return vscode.l10n.t("Memory Used");
+    case "network": return vscode.l10n.t("Network (Down/Up)");
+    case "fileSystem": return vscode.l10n.t("File System (Read/Write)");
+    case "battery": return vscode.l10n.t("Battery Status");
+    case "cpuTemp": return vscode.l10n.t("CPU Temperature");
+    case "cpuSpeed": return vscode.l10n.t("CPU Speed");
+    case "osDistro": return vscode.l10n.t("OS Distribution");
+    case "diskSpace": return vscode.l10n.t("Storage Space");
+    case "uptime": return vscode.l10n.t("Running Time");
   }
   return section;
 }
