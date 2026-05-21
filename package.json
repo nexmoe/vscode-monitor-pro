@@ -157,7 +157,7 @@
 				},
 				"monitor-pro.metrics.fileSystem": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "%config.metrics.fileSystem%"
 				},
 				"monitor-pro.metrics.battery": {
@@ -182,7 +182,7 @@
 			},
 				"monitor-pro.metrics.diskSpace": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "%config.metrics.diskSpace%"
 				},
 				"monitor-pro.metrics.uptime": {
