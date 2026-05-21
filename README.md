@@ -16,6 +16,8 @@ Monitor Pro provides real-time system resource monitoring directly in your VS Co
 
 A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for 10x faster data collection, while the built-in Node.js (`systeminformation`) fallback ensures seamless compatibility on macOS and Linux.
 
+> **⚠️ Breaking Change (0.7.0):** Status bar defaults have been reduced to only CPU, Memory Active, and Battery. Other metrics (Network, CPU Temperature, CPU Speed, Uptime, Disk I/O, Disk Space, OS Distro) are now opt-in via `monitor-pro.metrics.*` settings. The resource usage webview is unaffected.
+
 ## Features
 
 ### Status Bar

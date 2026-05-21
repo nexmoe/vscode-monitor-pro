@@ -8,12 +8,29 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [0.7.0] - 2025-05-20
 
+### Breaking Changes
+
+- **Status bar defaults reduced**: Only CPU, Memory Active, and Battery are enabled by default. Previously enabled metrics (Network, CPU Temperature, CPU Speed, Uptime, Disk I/O, Disk Space) are now opt-in. Re-enable via `monitor-pro.metrics.*` settings.
+- **Status bar default toggled off**: `fileSystem`, `diskSpace` → `false` (was `true`)
+  -- `network`, `cpuTemp`, `cpuSpeed`, `uptime` → `false` (was `true`)
+
 ### Added
 
+- **Go battery endpoint**: New `/api/v1/battery` endpoint using `github.com/distatus/battery` with 5-sample moving average power rate, signed power (positive = charging, negative = discharging), and health percentage.
+- **PDH-based CPU percent (Windows)**: Uses `\Processor Information(_Total)\% Processor Utility` — same counter as Task Manager (Win8+). Falls back to `\Processor(_Total)\% Processor Time`. Non-blocking, instant results, no gopsutil dependency for percent.
+- **Non-blocking CPU percent (Linux)**: Delta-based calculation from `/proc/stat` with pre-seeded cache. 30x faster than gopsutil's blocking `Percent()` (0.14s vs 4.2s).
+- **Dynamic CPU frequency (Windows)**: Reads `\Processor Information(_Total)\% Processor Performance` via PDH and computes real-time MHz. Replaces static ACPI/registry values in the webview.
+- **Battery power chart**: Signed power display (+/- W) with auto-scaling Y-axis in the resource usage webview.
+- **Battery health, power state, power rate**: Added to data pipeline (Go → RawDataAdapter → SystemSnapshot → webview) and shown in subtitle (Health%, Charging/Discharging/Idle).
+- **samplingPoints config**: `monitor-pro.resourceUsage.samplingPoints` (10–500, default 60) controls chart history length.
+- **batteryPower chart config**: Independent chart in resource usage webview with configurable enable/view/color.
+- **l10n keys**: Health, Charging, Discharging, Idle, Min, Max — translated for zh-cn, zh-tw, ja.
+- **Webview subtitle l10n**: All chart subtitles use pre-formatted `vscode.l10n.t()` strings instead of hardcoded HTML text.
+- **Decoupled metric visibility**: `batteryPower` hidden independently of `battery` via `UNAVAILABLE_CHECKERS` in systemData.ts.
 - **Go + gopsutil backend for Windows**: Native binary that reads system data directly via gopsutil, eliminating PowerShell/WMI overhead. 10x+ faster data collection (from ~200ms to under 20ms per poll cycle).
 - **DataSource strategy pattern**: Pluggable data sources (`GoDataSource` / `SIDataSource`) with automatic fallback when Go binary is unavailable.
 - **RawDataAdapter**: Transforms raw gopsutil JSON into the unified `SystemSnapshot` format with null-safety for all optional fields.
-- **Resource usage webview**: Dedicated view with per-chart cards for CPU, memory, network, disk, battery, CPU temperature, CPU speed, disk space, OS distro, and uptime.
+- **Resource usage webview**: Dedicated view with per-chart cards for CPU, memory, network, disk, battery, battery power, CPU temperature, CPU speed, disk space, OS distro, and uptime.
 - **Cross-platform VSIX packaging**: Platform-specific packages for universal (macOS/Linux), Windows x64, and Windows ARM64 via `vsce --target`.
 - **CI/CD pipeline**: Go cross-compilation verification, lint, automated Marketplace publishing, GitHub Releases with per-target VSIX artifacts.
 - **Localization**: Full translations for 简体中文, 繁體中文, and 日本語 (64 keys each, aligned with English source).
@@ -24,6 +41,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Changed
 
 - **CPU utilization**: Go backend now returns overall (multi-core average) instead of per-core percentage.
+- **Webview subtitle logic**: Min/Max frequency shown only when min < max; otherwise shows single current value (avoids redundant display on Windows where all cores share same PDH value).
+- **Battery percent formatting**: `.toFixed(1)` applied in provider to prevent `97.9987%`-style decimals.
 - **Formatting**: Unified value formatting with `fmtSigNum` — clamps to `"0"` when `|n| < 0.001` to prevent exponential notation.
 - **Disk mount sort**: Removed platform-specific `/` first sort; uses alphabetical `localeCompare` throughout.
 - **Network interface selection**: Automatically picks the first non-loopback interface for rate calculation.
@@ -36,6 +55,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - **CPU frequency**: Corrected MHz → GHz division in status bar display.
 - **Disk percentage**: `Math.round(u.usedPercent * 100) / 100` ensures 0–100 scale (not 0–1).
+- **Webview emoji**: Removed hardcoded ⚡ and ⬇ from battery subtitle.
+- **Battery power coupling**: Power view no longer auto-hides when battery view is hidden.
 - **Fetch timeout**: Go backend HTTP requests have a 5s timeout; prevents polling loop hang.
 - **Polling hang**: `_collectPromise` properly reset via `.finally()`.
 - **Null slices from Go backend**: Empty `[]*disk.UsageStat` slices are initialized as empty arrays (not `null`).
