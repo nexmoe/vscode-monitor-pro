@@ -50,6 +50,7 @@ export function getFormatConfig() {
   return {
     unitSystem: getUnitSystem(),
     showSpace: getShowSpace(),
+    singleUnit: getSingleUnit(),
     significantDigits: getSignificantDigits(),
   };
 }
