@@ -225,18 +225,24 @@
 
                 // -------- formatting --------
 
+                function unitLabel(units, i, suffix) {
+                    const u = units[i];
+                    if (_fmtConfig.singleUnit) return u[0] + suffix;
+                    return u + suffix;
+                }
+
                 function formatRate(v) {
                     if (v < 1) return "0 B/s";
                     const isBinary = _fmtConfig.unitSystem === "binary";
                     const sp = _fmtConfig.showSpace ? " " : "";
                     const divisor = isBinary ? 1024 : 1000;
                     const units = isBinary
-                        ? ["B/s","KiB/s","MiB/s","GiB/s","TiB/s","PiB/s"]
-                        : ["B/s","kB/s","MB/s","GB/s","TB/s","PB/s"];
+                        ? ["B","KiB","MiB","GiB","TiB","PiB"]
+                        : ["B","kB","MB","GB","TB","PB"];
                     let i = 0, val = v;
                     while (val >= divisor && i < units.length-1) { val /= divisor; i++; }
                     const sig = _fmtConfig.significantDigits?.network ?? 3;
-                    return val.toPrecision(sig) + sp + units[i];
+                    return val.toPrecision(sig) + sp + unitLabel(units, i, "/s");
                 }
 
                 function formatBytes(v, sig) {
@@ -250,7 +256,7 @@
                     let i = 0, val = v;
                     while (val >= divisor && i < units.length-1) { val /= divisor; i++; }
                     const s = sig != null ? val.toPrecision(sig) : val.toFixed(1);
-                    return s + sp + units[i];
+                    return s + sp + unitLabel(units, i, "");
                 }
 
                 function formatUptimeSimple(seconds) {
@@ -456,13 +462,14 @@
                     const totalSize = mounts.reduce((s,m) => s + m.size, 0);
                     const totalUsed = mounts.reduce((s,m) => s + m.used, 0);
                     const totalPct = totalSize > 0 ? ((totalUsed / totalSize) * 100).toFixed(1) : "0";
+                    const sp2 = _fmtConfig.showSpace ? " " : "";
                     html +=
                         '<div class="info-mount-row" style="margin-top:6px;border-top:1px solid rgba(128,128,128,0.15);padding-top:4px">'+
                         '<span class="info-mount-name" style="font-weight:600">'+
                         (_labels.diskSpace || "Disk Space")+'</span>'+
                         '<span class="info-bar-label" style="font-weight:600;color:var(--fg)">'+
-                        formatBytes(totalUsed,3) + ' / ' + formatBytes(totalSize,3) +
-                        ' ('+totalPct+'%)</span>'+
+                        formatBytes(totalUsed,3) + sp2 + '/' + sp2 + formatBytes(totalSize,3) +
+                        sp2 + '('+totalPct+'%)</span>'+
                         '</div>';
                     container.innerHTML = html;
                 }
@@ -577,6 +584,18 @@
                         ctx.stroke();
                     }
 
+                    if (isPowerId(id) && dataMin < 0 && dataMax > 0) {
+                        const yZero = yPos(0);
+                        ctx.strokeStyle = rgba(fg, 0.25);
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([3, 3]);
+                        ctx.beginPath();
+                        ctx.moveTo(0, yZero);
+                        ctx.lineTo(w, yZero);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+
                     const grad = ctx.createLinearGradient(0, padTop, 0, padTop+drawH);
                     grad.addColorStop(0, rgba(color, 0.18));
                     grad.addColorStop(1, rgba(color, 0.02));
@@ -597,17 +616,18 @@
                     ctx.stroke();
 
                     const last = history[n-1];
+                    const sep = _fmtConfig.showSpace ? " " : "";
                     let label;
                     if (id === "battery") {
-                        label = last.toFixed(1) + "%";
+                        label = last.toFixed(1) + sep + "%";
                     } else if (id === "batteryPower") {
-                        label = (last >= 0 ? "+" : "") + last.toFixed(1) + "W";
+                        label = (last >= 0 ? "+" : "") + last.toFixed(1) + sep + "W";
                     } else if (id === "cpuTemp") {
-                        label = last.toFixed(1) + "\u00B0C";
+                        label = last.toFixed(1) + sep + "\u00B0C";
                     } else if (id === "cpuSpeed") {
-                        label = last.toFixed(2) + " GHz";
+                        label = last.toFixed(2) + sep + "GHz";
                     } else if (isPercentId(id)) {
-                        label = last.toFixed(1) + "%";
+                        label = last.toFixed(1) + sep + "%";
                     } else {
                         label = formatRate(last);
                     }

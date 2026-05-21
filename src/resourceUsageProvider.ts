@@ -127,20 +127,30 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
     const { current, textMetrics } = data;
     const fmtConfig = getFormatConfig();
     const isBinary = fmtConfig.unitSystem === "binary";
-    const showSpace = fmtConfig.showSpace;
+    const sp = fmtConfig.showSpace ? " " : "";
+    const single = fmtConfig.singleUnit;
     const sigDigits = fmtConfig.significantDigits;
 
-    const fmtMem = (bytes: number) =>
+    const fmtNum = (n: number, sig?: number) =>
+      n.toLocaleString(undefined, {
+        minimumSignificantDigits: sig,
+        maximumSignificantDigits: sig,
+        useGrouping: false,
+      });
+
+    const fmtPct = (n: number, sig?: number) => fmtNum(n, sig ?? 3) + sp + "%";
+
+    const fmtMem = (bytes: number, section?: string) =>
       byteFormat(bytes, {
-        binary: isBinary, space: showSpace,
-        minimumSignificantDigits: sigDigits.memoryActive ?? 4,
-        maximumSignificantDigits: sigDigits.memoryActive ?? 4,
+        binary: isBinary, space: fmtConfig.showSpace, single,
+        minimumSignificantDigits: sigDigits[section ?? "memoryActive"] ?? 4,
+        maximumSignificantDigits: sigDigits[section ?? "memoryActive"] ?? 4,
         useGrouping: false,
       });
 
     const fmtRate = (bytes: number) =>
       byteFormat(bytes, {
-        binary: isBinary, space: showSpace,
+        binary: isBinary, space: fmtConfig.showSpace, single,
         minimumSignificantDigits: sigDigits.network ?? 4,
         maximumSignificantDigits: sigDigits.network ?? 4,
         useGrouping: false,
@@ -148,9 +158,9 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
 
     const fmtSize = (bytes: number) =>
       byteFormat(bytes, {
-        binary: isBinary, space: showSpace,
-        minimumSignificantDigits: 3,
-        maximumSignificantDigits: 3,
+        binary: isBinary, space: fmtConfig.showSpace, single,
+        minimumSignificantDigits: sigDigits.diskSpace ?? 3,
+        maximumSignificantDigits: sigDigits.diskSpace ?? 3,
         useGrouping: false,
       });
 
@@ -160,25 +170,33 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       history: data.history,
       formatConfig: fmtConfig,
       formatted: {
-        cpu: current.cpu.toFixed(1) + "%",
-        memActive: fmtMem(current.memoryActive) + " / " + fmtMem(current.memoryTotal),
-        memActivePercent: ((current.memoryActive / current.memoryTotal) * 100).toFixed(1) + "%",
-        memUsed: fmtMem(current.memoryUsed) + " / " + fmtMem(current.memoryTotal),
-        memUsedPercent: ((current.memoryUsed / current.memoryTotal) * 100).toFixed(1) + "%",
+        cpu: fmtPct(current.cpu, sigDigits.cpu),
+        memActive: fmtMem(current.memoryActive) + sp + "/" + sp + fmtMem(current.memoryTotal),
+        memActivePercent: fmtPct((current.memoryActive / current.memoryTotal) * 100),
+        memUsed: fmtMem(current.memoryUsed) + sp + "/" + sp + fmtMem(current.memoryTotal),
+        memUsedPercent: fmtPct((current.memoryUsed / current.memoryTotal) * 100),
         netRx: fmtRate(current.networkRx) + "/s",
         netTx: fmtRate(current.networkTx) + "/s",
         diskRx: fmtRate(current.diskRx) + "/s",
         diskWx: fmtRate(current.diskWx) + "/s",
-        diskSpace: current.diskSpaceUse.toFixed(1) + "%",
-        battery: t.battery.hasBattery ? `${t.battery.percent.toFixed(1)}%` : vscode.l10n.t("N/A"),
-        batteryPower: t.battery.hasBattery ? `${t.battery.powerRate.toFixed(1)}W` : vscode.l10n.t("N/A"),
-        cpuTemp: t.cpuTemp > 0 ? `${t.cpuTemp.toFixed(1)}°C` : vscode.l10n.t("N/A"),
-        cpuSpeed: t.cpuSpeed.avg > 0 ? `${t.cpuSpeed.avg.toFixed(2)} GHz` : vscode.l10n.t("N/A"),
+        diskSpace: fmtPct(current.diskSpaceUse, sigDigits.diskSpace),
+        battery: t.battery.hasBattery
+          ? fmtNum(t.battery.percent, sigDigits.battery) + sp + "%"
+          : vscode.l10n.t("N/A"),
+        batteryPower: t.battery.hasBattery
+          ? (t.battery.powerRate >= 0 ? "+" : "") + fmtNum(Math.abs(t.battery.powerRate), sigDigits.battery) + sp + "W"
+          : vscode.l10n.t("N/A"),
+        cpuTemp: t.cpuTemp > 0
+          ? fmtNum(t.cpuTemp, sigDigits.cpuTemp) + sp + "°C"
+          : vscode.l10n.t("N/A"),
+        cpuSpeed: t.cpuSpeed.avg > 0
+          ? fmtNum(t.cpuSpeed.avg, sigDigits.cpuSpeed) + sp + "GHz"
+          : vscode.l10n.t("N/A"),
       },
       textMetrics: t,
       formattedText: {
         batterySub: t.battery.hasBattery
-          ? `${vscode.l10n.t("Health")}: ${t.battery.health.toFixed(1)}%`
+          ? `${vscode.l10n.t("Health")}: ${fmtNum(t.battery.health, sigDigits.battery)}${sp}%`
           : "",
         batteryPowerSub: t.battery.hasBattery
           ? t.battery.powerState === "charging" ? vscode.l10n.t("Charging")
@@ -188,8 +206,8 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
         cpuTempSub: "",
         cpuSpeedSub: t.cpuSpeed.avg > 0
           ? t.cpuSpeed.min < t.cpuSpeed.max
-            ? `${vscode.l10n.t("Min")}: ${t.cpuSpeed.min.toFixed(2)} / ${vscode.l10n.t("Max")}: ${t.cpuSpeed.max.toFixed(2)} GHz`
-            : `${t.cpuSpeed.avg.toFixed(2)} GHz`
+            ? `${vscode.l10n.t("Min")}: ${fmtNum(t.cpuSpeed.min, sigDigits.cpuSpeed)} / ${vscode.l10n.t("Max")}: ${fmtNum(t.cpuSpeed.max, sigDigits.cpuSpeed)} ${sp}GHz`
+            : `${fmtNum(t.cpuSpeed.avg, sigDigits.cpuSpeed)}${sp}GHz`
           : "",
         osDistro: t.osDistro || vscode.l10n.t("N/A"),
         uptime: formatUptime(t.uptime, getUptimeFormat()),
