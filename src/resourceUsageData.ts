@@ -11,6 +11,7 @@ export interface DataPoint {
   diskWx: number;
   diskSpaceUse: number;
   batteryPercent: number;
+  batteryPower: number;
   cpuTemperature: number;
   cpuSpeedAvg: number;
 }
@@ -24,7 +25,7 @@ export interface DiskSpaceMount {
 }
 
 export interface TextMetrics {
-  battery: { hasBattery: boolean; percent: number; charging: boolean };
+  battery: { hasBattery: boolean; percent: number; charging: boolean; health: number; powerRate: number; powerState: string };
   cpuTemp: number;
   cpuTemperature: number;
   cpuSpeed: { avg: number; min: number; max: number };
@@ -42,9 +43,16 @@ export interface ResourceUsagePayload {
 
 export class ResourceUsageDataCollector {
   private history: DataPoint[] = [];
-  private maxHistory = 60;
+  private _maxHistory = 60;
   private unsubscribe: (() => void) | null = null;
   private onData: ((data: ResourceUsagePayload) => void) | null = null;
+
+  set maxHistory(n: number) {
+    this._maxHistory = Math.max(10, n);
+    while (this.history.length > this._maxHistory) {
+      this.history.shift();
+    }
+  }
 
   setOnData(cb: (data: ResourceUsagePayload) => void) {
     this.onData = cb;
@@ -85,12 +93,13 @@ export class ResourceUsageDataCollector {
       diskWx: snap.fsStats.wx_sec || 0,
       diskSpaceUse: avgUse,
       batteryPercent: snap.battery.hasBattery ? snap.battery.percent : -1,
+      batteryPower: snap.battery.hasBattery ? snap.battery.powerRate : 0,
       cpuTemperature: snap.cpuTemperature.main ?? 0,
       cpuSpeedAvg: snap.cpuCurrentSpeed.avg,
     };
 
     this.history.push(point);
-    if (this.history.length > this.maxHistory) {
+    if (this.history.length > this._maxHistory) {
       this.history.shift();
     }
 
@@ -103,6 +112,9 @@ export class ResourceUsageDataCollector {
           hasBattery: snap.battery.hasBattery,
           percent: snap.battery.percent,
           charging: snap.battery.isCharging || snap.battery.acConnected,
+          health: snap.battery.health,
+          powerRate: snap.battery.powerRate,
+          powerState: snap.battery.powerState,
         },
         cpuTemp: snap.cpuTemperature.main ?? 0,
         cpuTemperature: snap.cpuTemperature.main ?? 0,
