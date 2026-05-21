@@ -2,7 +2,10 @@ module monitor-pro/go-backend
 
 go 1.26.2
 
-require github.com/shirou/gopsutil/v4 v4.26.4
+require (
+	github.com/distatus/battery v0.11.0
+	github.com/shirou/gopsutil/v4 v4.26.4
+)
 
 require (
 	github.com/ebitengine/purego v0.10.0 // indirect
@@ -13,4 +16,5 @@ require (
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/sys v0.41.0 // indirect
+	howett.net/plist v1.0.0 // indirect
 )
