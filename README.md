@@ -25,12 +25,12 @@ A **hybrid architecture** delivers the best of both worlds: a native Go binary o
 |--------|---------|------|---------|
 | CPU | on | `$(pulse)` | `73.2%` |
 | Memory Active | on | `$(server)` | `4.21 / 15.6 GiB` |
-| Memory Used | off | `$(server)` | `8.15 / 15.6 GiB` |
-| Network | on | `$(cloud-download) $(cloud-upload)` | `125 KiB/s 2.34 MiB/s` |
 | Battery | on | `$(plug)` | `85.2% (Charging)` |
-| CPU Temperature | on | `$(flame)` | `52.3°C` |
-| CPU Speed | on | `$(dashboard)` | `3.81 GHz` |
-| Uptime | on | `$(clock)` | `2d 14h 32m` |
+| Memory Used | off | `$(server)` | `8.15 / 15.6 GiB` |
+| Network | off | `$(cloud-download) $(cloud-upload)` | `125 KiB/s 2.34 MiB/s` |
+| CPU Temperature | off | `$(flame)` | `52.3°C` |
+| CPU Speed | off | `$(dashboard)` | `3.81 GHz` |
+| Uptime | off | `$(clock)` | `2d 14h 32m` |
 | Filesystem I/O | off | `$(log-in) $(log-out)` | `50.2 MiB/s 12.1 MiB/s` |
 | Disk Space | off | `$(database)` | `/ 45.2% 120/256 GiB` |
 | OS Distro | off | — | `Ubuntu 22.04` |

@@ -187,7 +187,9 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
           : "",
         cpuTempSub: t.cpuTemp > 0 ? `${vscode.l10n.t("Min")}: ${t.cpuTemperature.toFixed(1)}°C` : "",
         cpuSpeedSub: t.cpuSpeed.avg > 0
-          ? `${vscode.l10n.t("Min")}: ${t.cpuSpeed.min.toFixed(2)} / ${vscode.l10n.t("Max")}: ${t.cpuSpeed.max.toFixed(2)} GHz`
+          ? t.cpuSpeed.min < t.cpuSpeed.max
+            ? `${vscode.l10n.t("Min")}: ${t.cpuSpeed.min.toFixed(2)} / ${vscode.l10n.t("Max")}: ${t.cpuSpeed.max.toFixed(2)} GHz`
+            : `${t.cpuSpeed.avg.toFixed(2)} GHz`
           : "",
         osDistro: t.osDistro || vscode.l10n.t("N/A"),
         uptime: formatUptime(t.uptime, getUptimeFormat()),
