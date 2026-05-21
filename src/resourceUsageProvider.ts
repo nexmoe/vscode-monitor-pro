@@ -116,8 +116,8 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
         charts: config.charts,
         diskSpaceMounts: config.diskSpaceMounts,
         samplingPoints: config.samplingPoints,
-        showUptime: metricsEnabled.uptime,
-        showOsDistro: metricsEnabled.osDistro,
+        showUptime: config.showUptime,
+        showOsDistro: config.showOsDistro,
         labels,
       },
     });
@@ -185,7 +185,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
           : t.battery.powerState === "discharging" ? vscode.l10n.t("Discharging")
           : vscode.l10n.t("Idle")
           : "",
-        cpuTempSub: t.cpuTemp > 0 ? `${vscode.l10n.t("Min")}: ${t.cpuTemperature.toFixed(1)}°C` : "",
+        cpuTempSub: "",
         cpuSpeedSub: t.cpuSpeed.avg > 0
           ? t.cpuSpeed.min < t.cpuSpeed.max
             ? `${vscode.l10n.t("Min")}: ${t.cpuSpeed.min.toFixed(2)} / ${vscode.l10n.t("Max")}: ${t.cpuSpeed.max.toFixed(2)} GHz`
