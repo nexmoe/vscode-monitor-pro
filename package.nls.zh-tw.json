@@ -38,6 +38,8 @@
 	"config.resourceUsage.showCpuSpeed": "在資源佔用檢視中顯示 CPU 時脈頻率",
 	"config.resourceUsage.diskSpaceMounts": "磁碟容量圖表要顯示的掛載點。使用 [\"all\"] 顯示所有已掛載檔案系統，或新增特定掛載路徑進行過濾",
 	"config.resourceUsage.samplingPoints": "圖表上顯示的採樣點數量。增加可獲得更長歷史檢視，減少可提高效能",
+	"config.resourceUsage.showUptime": "在資源佔用檢視資訊區顯示系統運作時間",
+	"config.resourceUsage.showOsDistro": "在資源佔用檢視資訊區顯示作業系統發行版名稱",
 	"resourceUsage.label.cpu": "CPU 使用率",
 	"resourceUsage.label.memActive": "記憶體使用量（活躍）",
 	"resourceUsage.label.memUsed": "記憶體使用量（已用）",

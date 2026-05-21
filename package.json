@@ -135,6 +135,16 @@
 					"maximum": 500,
 					"description": "%config.resourceUsage.samplingPoints%"
 				},
+				"monitor-pro.resourceUsage.showUptime": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.resourceUsage.showUptime%"
+				},
+				"monitor-pro.resourceUsage.showOsDistro": {
+					"type": "boolean",
+					"default": true,
+					"description": "%config.resourceUsage.showOsDistro%"
+				},
 				"monitor-pro.metrics.cpu": {
 					"type": "boolean",
 					"default": true,

@@ -68,6 +68,8 @@ export interface ResourceUsageConfig {
   charts: Record<string, ResourceUsageChartConfig>;
   diskSpaceMounts: string[];
   samplingPoints: number;
+  showUptime: boolean;
+  showOsDistro: boolean;
 }
 
 const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
@@ -102,6 +104,8 @@ export function getResourceUsageConfig(): ResourceUsageConfig {
     charts,
     diskSpaceMounts: config.get<string[]>(`${CHART_SECTION}.diskSpaceMounts`, ["all"]),
     samplingPoints: config.get<number>(`${CHART_SECTION}.samplingPoints`, 60),
+    showUptime: config.get<boolean>(`${CHART_SECTION}.showUptime`, true),
+    showOsDistro: config.get<boolean>(`${CHART_SECTION}.showOsDistro`, true),
   };
 }
 
