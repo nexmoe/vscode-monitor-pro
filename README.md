@@ -11,11 +11,15 @@
 
 English | [简体中文](./README_ZH.md)
 
-Monitor Pro provides real-time system resource monitoring directly in your VS Code status bar and a dedicated webview dashboard. It supports local, Remote SSH, and WSL environments equally — no GUI required.
+Monitor Pro provides real-time system resource monitoring directly in your VS Code status bar and a dedicated Webview panel. Works on local, Remote SSH, and WSL — no GUI required.
 
 A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for 10x faster data collection, while the built-in Node.js (`systeminformation`) fallback ensures seamless compatibility on macOS and Linux.
 
-> **⚠️ Breaking Change (0.7.0):** Status bar defaults have been reduced to only CPU, Memory Active, and Battery. Other metrics (Network, CPU Temperature, CPU Speed, Uptime, Disk I/O, Disk Space, OS Distro) are now opt-in via `monitor-pro.metrics.*` settings. The resource usage webview is unaffected.
+> [!WARNING]
+>
+> **Breaking Change (0.7.0):** Default status bar metrics have been reduced to CPU, Memory Active, and Battery. All other metrics (Network, CPU Temperature, CPU Speed, Uptime, Disk I/O, Disk Space, OS Distro) are now opt-in via `monitor-pro.metrics.*`.
+>
+> Rationale: the new Resource Usage webview provides a dedicated dashboard for every metric. Keeping the status bar lean avoids clutter and delivers a better out-of-box experience.
 
 ## Features
 
@@ -33,7 +37,7 @@ A **hybrid architecture** delivers the best of both worlds: a native Go binary o
 | CPU Temperature | off     | `$(flame)`                          | `52.3°C`                |
 | CPU Speed       | off     | `$(dashboard)`                      | `3.81 GHz`              |
 | Uptime          | off     | `$(clock)`                          | `2d 14h 32m`            |
-| Filesystem I/O  | off     | `$(log-in) $(log-out)`              | `50.2 MiB/s 12.1 MiB/s` |
+| Disk I/O        | off     | `$(log-in) $(log-out)`              | `50.2 MiB/s 12.1 MiB/s` |
 | Disk Space      | off     | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
 | OS Distro       | off     | —                                   | `Ubuntu 22.04`          |
 
@@ -49,16 +53,27 @@ Each chart features:
 - Subtitle: battery health, charge/discharge state, temperature min, speed range
 - 10–500 configurable history points
 
-A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars.
+A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. Uptime and OS distro can be independently toggled via `resourceUsage.showUptime` / `showOsDistro`.
 
 ### Battery Power Monitoring
 
 Unique to this extension, Monitor Pro reports real-time battery power in watts:
 
 - **Signed values**: positive for charging, negative for discharging
+- **Zero reference**: a dashed guideline always marks 0W
 - **5-sample moving average** for stable readings
 - **Health percentage**: ratio of current full capacity to design capacity
 - **State detection**: Charging / Discharging / Idle
+
+### Formatting Consistency
+
+All formatted values (%, W, °C, GHz, byte rates) uniformly respect three configuration options:
+
+- `showSpace`: whether to insert a space between number and unit
+- `singleUnit`: abbreviate units to first letter (K, M, G)
+- `significantDigits`: per-metric significant digits
+
+These settings apply to the status bar and webview alike.
 
 ### CPU Performance
 
@@ -79,7 +94,7 @@ Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 | ------------------------------------------- | ------------- | --------------------------------------------- |
 | `monitor-pro.metrics.*`                     | varies        | Toggle each status bar metric on/off          |
 | `monitor-pro.metricsOrder`                  | —             | Reorder status bar items                      |
-| `monitor-pro.refresh-interval`              | `2000`ms      | Polling interval (500–30000ms)                |
+| `monitor-pro.refresh-interval`              | `2000` ms     | Polling interval (500–30000ms)                |
 | `monitor-pro.unitSystem`                    | `binary`      | `binary` (KiB/MiB) or `decimal` (kB/MB)       |
 | `monitor-pro.showSpace`                     | `false`       | Space between number and unit                 |
 | `monitor-pro.singleUnit`                    | `false`       | Abbreviate unit to first letter (K, M, G)     |
@@ -87,6 +102,8 @@ Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 | `monitor-pro.uptimeFormat`                  | `auto`        | Custom format with `{d}`, `{h}`, `{m}`, `{s}` |
 | `monitor-pro.resourceUsage.charts`          | —             | Chart enable/view/color per metric            |
 | `monitor-pro.resourceUsage.samplingPoints`  | `60`          | Chart history length (10–500)                 |
+| `monitor-pro.resourceUsage.showUptime`      | `true`        | Show uptime card in resource view             |
+| `monitor-pro.resourceUsage.showOsDistro`    | `true`        | Show OS distro card in resource view          |
 | `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space chart             |
 | `monitor-pro.diskSpace`                     | `["/", "C:"]` | Mount filter for status bar                   |
 
