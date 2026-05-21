@@ -7,12 +7,19 @@
   "resourceUsage.label.diskRx": "resourceUsage.label.diskRx",
   "resourceUsage.label.diskWx": "resourceUsage.label.diskWx",
   "resourceUsage.label.battery": "resourceUsage.label.battery",
+  "resourceUsage.label.batteryPower": "resourceUsage.label.batteryPower",
   "resourceUsage.label.cpuTemp": "resourceUsage.label.cpuTemp",
   "resourceUsage.label.cpuSpeed": "resourceUsage.label.cpuSpeed",
   "resourceUsage.label.diskSpace": "resourceUsage.label.diskSpace",
   "resourceUsage.label.uptime": "resourceUsage.label.uptime",
   "resourceUsage.label.osDistro": "resourceUsage.label.osDistro",
   "N/A": "N/A",
+  "Health": "Health",
+  "Charging": "Charging",
+  "Discharging": "Discharging",
+  "Idle": "Idle",
+  "Min": "Min",
+  "Max": "Max",
   "Metric not initialized": "Metric not initialized",
   "Metric [{0}] updated: {1}": "Metric [{0}] updated: {1}",
   "Metric [{0}] update failed: {1}": "Metric [{0}] update failed: {1}",
@@ -60,7 +67,5 @@
   "Disk space config updated": "Disk space config updated",
   "Resource Usage view config pushed": "Resource Usage view config pushed",
   "Extension deactivating": "Extension deactivating",
-  "Disposed {0} metrics": "Disposed {0} metrics",
-  "Metric \"{0}\" is not available on this system": "Metric \"{0}\" is not available on this system",
-  "Collection failed: {0}": "Collection failed: {0}"
+  "Disposed {0} metrics": "Disposed {0} metrics"
 }
