@@ -9,17 +9,61 @@
 
 [![VSCode Installs](https://img.shields.io/badge/install-10k+-green?logo=visual-studio-code)][vscode-url]
 
-English | [简体中文](./README_ZH.md)
+English | [简体中文](./README_zh-cn.md) | [繁體中文](./README_zh-tw.md) | [日本語](./README_ja.md)
 
-Monitor Pro provides real-time system resource monitoring directly in your VS Code status bar and a dedicated Webview panel. Works on local, Remote SSH, and WSL — no GUI required.
+Monitor Pro is a real-time system resource monitoring tool that works directly in the VS Code status bar and a dedicated Webview panel. From the very beginning, the plugin was designed with cross-platform and remote development machine performance monitoring in mind, with full implementations on local systems, Remote SSH, and WSL.
 
-A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for 10x faster data collection, while the built-in Node.js (`systeminformation`) fallback ensures seamless compatibility on macOS and Linux.
+A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for over 10x faster data collection compared to `systeminformation`; macOS and Linux automatically fall back to the Node.js (`systeminformation`) data source, ensuring full platform compatibility.
 
 > [!WARNING]
 >
-> **Breaking Change (0.7.0):** Default status bar metrics have been reduced to CPU, Memory Active, and Battery. All other metrics (Network, CPU Temperature, CPU Speed, Uptime, Disk I/O, Disk Space, OS Distro) are now opt-in via `monitor-pro.metrics.*`.
+> **Breaking Change 0.7.0**
 >
-> Rationale: the new Resource Usage webview provides a dedicated dashboard for every metric. Keeping the status bar lean avoids clutter and delivers a better out-of-box experience.
+> The status bar now defaults to only CPU, Memory Active, and Battery. Other metrics (Network, CPU Temperature, CPU Speed, Uptime, Disk I/O, Disk Space, OS Distro) must be manually enabled in VSCode settings under `monitor-pro.metrics.*`.
+>
+> Rationale: with the new Resource Usage webview, most metrics are better visualized in their dedicated panel. Keeping the status bar lean avoids clutter for new users.
+
+## 0.7.0 Major Update Overview
+
+Side panel monitoring view:
+
+![Side panel monitoring view](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image.png)
+
+CPU speed, Disk and other info:
+
+![CPU speed, Disk and other info](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-1.png)
+
+Auxiliary panel fullscreen view:
+
+![Auxiliary panel fullscreen view](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-2.png)
+
+Main panel view:
+
+![Main panel view](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-3.png)
+
+Bottom panel sidebar view:
+
+![Bottom panel sidebar view](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-4.png)
+
+Theme adaptive — Dark:
+
+![Theme adaptive — Dark](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-5.png)
+
+Bar chart demo:
+
+![Bar chart demo](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-6.png)
+
+l10n — Japanese source:
+
+![l10n — Japanese source](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-7.png)
+
+l10n — Chinese, battery level, health and power:
+
+![l10n — Chinese, battery level, health and power](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-8.png)
+
+Discharge and charge chart transition:
+
+![Discharge and charge chart transition](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-9.png)
 
 ## Features
 
@@ -43,7 +87,7 @@ A **hybrid architecture** delivers the best of both worlds: a native Go binary o
 
 ### Resource Usage Webview
 
-A dedicated side panel with live line/bar charts for 11 metrics: CPU, Memory (Active/Used), Network (RX/TX), Disk (RX/WX), Battery, Battery Power, CPU Temperature, CPU Speed.
+A dedicated side panel with live line/bar charts for 11 metrics: CPU, Memory (Active/Used), Network (Down/Up), Disk (Read/Write), Battery, Battery Power, CPU Temperature, CPU Speed.
 
 Each chart features:
 
@@ -55,7 +99,7 @@ Each chart features:
 
 A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. Uptime and OS distro can be independently toggled via `resourceUsage.showUptime` / `showOsDistro`.
 
-### Battery Power Monitoring
+### Battery Power Monitoring (currently fully implemented on Windows only)
 
 Unique to this extension, Monitor Pro reports real-time battery power in watts:
 
@@ -107,7 +151,7 @@ Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 | `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space chart             |
 | `monitor-pro.diskSpace`                     | `["/", "C:"]` | Mount filter for status bar                   |
 
-## Screenshots
+## Screenshots (pre-0.6.0, still compatible with the current version)
 
 ![Screenshot 0](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/screenshot0.png)
 ![Screenshot 1](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/screenshot1.png)
