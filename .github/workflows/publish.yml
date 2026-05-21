@@ -76,7 +76,7 @@ jobs:
               run: sed -i '/^go-backend\/bin/d' .vscodeignore && pnpm exec vsce package --no-dependencies --target win32-x64 -o monitor-pro-win32-x64-${{ steps.get_version.outputs.version }}.vsix
 
             - name: Publish to VSCode Marketplace (win32-x64)
-              run: pnpm exec vsce publish --no-dependencies --target win32-x64 --packagePath monitor-pro-win32-x64-${{ steps.get_version.outputs.version }}.vsix
+              run: pnpm exec vsce publish --packagePath monitor-pro-win32-x64-${{ steps.get_version.outputs.version }}.vsix
               env:
                   VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
@@ -90,7 +90,7 @@ jobs:
               run: sed -i '/^go-backend\/bin/d' .vscodeignore && pnpm exec vsce package --no-dependencies --target win32-arm64 -o monitor-pro-win32-arm64-${{ steps.get_version.outputs.version }}.vsix
 
             - name: Publish to VSCode Marketplace (win32-arm64)
-              run: pnpm exec vsce publish --no-dependencies --target win32-arm64 --packagePath monitor-pro-win32-arm64-${{ steps.get_version.outputs.version }}.vsix
+              run: pnpm exec vsce publish --packagePath monitor-pro-win32-arm64-${{ steps.get_version.outputs.version }}.vsix
               env:
                   VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
