@@ -16,6 +16,7 @@ func main() {
 	mux.HandleFunc("/api/v1/disk", getDisk)
 	mux.HandleFunc("/api/v1/network", getNetwork)
 	mux.HandleFunc("/api/v1/host", getHost)
+	mux.HandleFunc("/api/v1/battery", getBattery)
 	mux.HandleFunc("/api/v1/all", getAll)
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
