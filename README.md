@@ -12,42 +12,75 @@
 
 English | [简体中文](./README_ZH.md)
 
-Monitor Pro is a comprehensive resource monitoring tool for VS Code that tracks system metrics in real-time. It features a **hybrid architecture**: a native Go + gopsutil backend on Windows for maximum performance, and a built-in Node.js (`systeminformation`) fallback on other platforms.
+Monitor Pro provides real-time system resource monitoring directly in your VS Code status bar and a dedicated webview dashboard. It supports local, Remote SSH, and WSL environments equally — no GUI required.
 
-## Architecture & Performance
-
-| Platform      | Backend       | Data Source                   |
-| ------------- | ------------- | ----------------------------- |
-| Windows       | Go + gopsutil | Raw OS APIs via native binary |
-| Linux / macOS | Node.js       | `systeminformation` library   |
-
-### Windows Performance
-
-On Windows, the extension spawns a lightweight Go binary (`monitor.exe`) that reads system data directly via [gopsutil](https://github.com/shirou/gopsutil). This eliminates the overhead of PowerShell/WMI queries that the Node.js `systeminformation` library relies on, resulting in **10x+ faster data collection** — typical poll cycles drop from ~200ms to under 20ms.
-
-The Go backend communicates with the extension over HTTP (localhost) using a raw JSON protocol. If the Go binary is unavailable or fails to start, the extension automatically falls back to the `systeminformation` data source.
+A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for 10x faster data collection, while the built-in Node.js (`systeminformation`) fallback ensures seamless compatibility on macOS and Linux.
 
 ## Features
 
-- [x] **CPU Usage** — Overall utilization percentage
-- [x] **CPU Frequency** — Current, average, min, and max frequency
-- [x] **CPU Temperature** — Main and per-core temperatures
-- [x] **Memory Usage** — Active, used, free, available, buffer/cache
-- [x] **Network Usage** — Per-interface receive/transmit rates
-- [x] **Disk Usage** — Per-mountpoint space and I/O rates
-- [x] **Battery Status** — Percentage, charging state, remaining time
-- [x] **OS Distro** — Operating system and platform info
-- [x] **Uptime** — System uptime
-- [ ] **High Occupancy Alerts** _(planned)_
-- [ ] **Dashboard with Charts** _(planned)_
+### Status Bar
+11 individually toggleable metrics shown as status bar items with Codicon icons:
 
-### Customization
+| Metric | Default | Icon | Example |
+|--------|---------|------|---------|
+| CPU | on | `$(pulse)` | `73.2%` |
+| Memory Active | on | `$(server)` | `4.21 / 15.6 GiB` |
+| Memory Used | off | `$(server)` | `8.15 / 15.6 GiB` |
+| Network | on | `$(cloud-download) $(cloud-upload)` | `125 KiB/s 2.34 MiB/s` |
+| Battery | on | `$(plug)` | `85.2% (Charging)` |
+| CPU Temperature | on | `$(flame)` | `52.3°C` |
+| CPU Speed | on | `$(dashboard)` | `3.81 GHz` |
+| Uptime | on | `$(clock)` | `2d 14h 32m` |
+| Filesystem I/O | off | `$(log-in) $(log-out)` | `50.2 MiB/s 12.1 MiB/s` |
+| Disk Space | off | `$(database)` | `/ 45.2% 120/256 GiB` |
+| OS Distro | off | — | `Ubuntu 22.04` |
 
-- [x] **Order** — Reorder metrics displayed in the status bar
-- [x] **Refresh Interval** — Configurable polling interval (default: 2000ms)
-- [x] **No Layout Shift** — Stable status bar widths
-- [x] **Remote SSH** — Monitor remote servers via VS Code Remote SSH
-- [x] **Multi-language** — English, 简体中文, 繁體中文, 日本語
+### Resource Usage Webview
+A dedicated side panel with live line/bar charts for 11 metrics: CPU, Memory (Active/Used), Network (RX/TX), Disk (RX/WX), Battery, Battery Power, CPU Temperature, CPU Speed.
+
+Each chart features:
+- Live 2D canvas rendering with gradient fill and Bezier curves
+- Auto-scaling Y-axis with min/max labels
+- Toggle between line and bar view
+- Subtitle: battery health, charge/discharge state, temperature min, speed range
+- 10–500 configurable history points
+
+A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars.
+
+### Battery Power Monitoring
+Unique to this extension, Monitor Pro reports real-time battery power in watts:
+- **Signed values**: positive for charging, negative for discharging
+- **5-sample moving average** for stable readings
+- **Health percentage**: ratio of current full capacity to design capacity
+- **State detection**: Charging / Discharging / Idle
+
+### CPU Performance
+- **Windows**: Uses the same PDH counters as Task Manager (`% Processor Utility`) for accurate CPU readings. CPU frequency is read dynamically via `% Processor Performance` — reflects actual turbo boost and power-saving states in real time.
+- **Linux**: Non-blocking delta-based calculation from `/proc/stat` with cached initial values — 30x faster than traditional blocking approaches.
+
+### Cross-Platform
+- Works in local, Remote SSH, and WSL environments
+- Go binary for Windows only; transparent fallback to Node.js on all platforms
+- Multi-language: English, 简体中文, 繁體中文, 日本語
+
+## Configuration
+
+Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `monitor-pro.metrics.*` | varies | Toggle each status bar metric on/off |
+| `monitor-pro.metricsOrder` | — | Reorder status bar items |
+| `monitor-pro.refresh-interval` | `2000`ms | Polling interval (500–30000ms) |
+| `monitor-pro.unitSystem` | `binary` | `binary` (KiB/MiB) or `decimal` (kB/MB) |
+| `monitor-pro.showSpace` | `false` | Space between number and unit |
+| `monitor-pro.singleUnit` | `false` | Abbreviate unit to first letter (K, M, G) |
+| `monitor-pro.significantDigits` | per-metric | Significant digits (1–6) per metric |
+| `monitor-pro.uptimeFormat` | `auto` | Custom format with `{d}`, `{h}`, `{m}`, `{s}` |
+| `monitor-pro.resourceUsage.charts` | — | Chart enable/view/color per metric |
+| `monitor-pro.resourceUsage.samplingPoints` | `60` | Chart history length (10–500) |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]` | Mount filter for disk space chart |
+| `monitor-pro.diskSpace` | `["/", "C:"]` | Mount filter for status bar |
 
 ## Screenshots
 
@@ -58,7 +91,7 @@ The Go backend communicates with the extension over HTTP (localhost) using a raw
 ## Requirements
 
 - VS Code 1.104+
-- Windows 10/11 (for Go backend; Linux/macOS use built-in fallback)
+- Windows 10/11 (for native Go backend; Linux/macOS use built-in fallback)
 
 ## Developing
 
@@ -73,17 +106,17 @@ pnpm run compile
 
 ### Commands
 
-| Command                             | Description                               |
-| ----------------------------------- | ----------------------------------------- |
-| `pnpm run lint`                     | Lint TypeScript sources                   |
-| `pnpm run go:test`                  | Run Go backend tests                      |
-| `pnpm run go:vet`                   | Run Go vet                                |
-| `pnpm run go:build:win32-x64`       | Cross-compile Go binary for Windows x64   |
-| `pnpm run go:build:win32-arm64`     | Cross-compile Go binary for Windows ARM64 |
-| `pnpm run package:vsix:universal`   | Package universal VSIX (macOS/Linux)      |
-| `pnpm run package:vsix:win32-x64`   | Package Windows x64 VSIX                  |
-| `pnpm run package:vsix:win32-arm64` | Package Windows ARM64 VSIX                |
-| `pnpm run gen-l10n`                 | Regenerate l10n bundle from source        |
+| Command | Description |
+|---------|-------------|
+| `pnpm run lint` | Lint TypeScript sources |
+| `pnpm run go:test` | Run Go backend tests |
+| `pnpm run go:vet` | Run Go vet |
+| `pnpm run go:build:win32-x64` | Cross-compile Go binary for Windows x64 |
+| `pnpm run go:build:win32-arm64` | Cross-compile Go binary for Windows ARM64 |
+| `pnpm run package:vsix:universal` | Package universal VSIX (macOS/Linux) |
+| `pnpm run package:vsix:win32-x64` | Package Windows x64 VSIX |
+| `pnpm run package:vsix:win32-arm64` | Package Windows ARM64 VSIX |
+| `pnpm run gen-l10n` | Regenerate l10n bundle from source |
 
 ## Inspired by
 
