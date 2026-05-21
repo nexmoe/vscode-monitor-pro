@@ -193,7 +193,7 @@
                     "cpu","memActive","memUsed",
                     "netRx","netTx",
                     "diskRx","diskWx",
-                    "battery","cpuTemp","cpuSpeed",
+                    "battery","batteryPower","cpuTemp","cpuSpeed",
                 ];
 
                 const state = {
@@ -270,6 +270,10 @@
 
                 function isPercentId(id) {
                     return id === "cpu" || id === "memActive" || id === "memUsed" || id === "battery";
+                }
+
+                function isPowerId(id) {
+                    return id === "batteryPower";
                 }
 
                 function colorFor(id) {
@@ -511,6 +515,7 @@
                         else if (id === "diskRx") v = dp.diskRx;
                         else if (id === "diskWx") v = dp.diskWx;
                         else if (id === "battery") v = dp.batteryPercent >= 0 ? dp.batteryPercent : 0;
+                        else if (id === "batteryPower") v = dp.batteryPower;
                         else if (id === "cpuTemp") v = dp.cpuTemperature;
                         else if (id === "cpuSpeed") v = dp.cpuSpeedAvg;
                         else v = 0;
@@ -543,6 +548,10 @@
                     if (isPercentId(id)) {
                         dataMin = 0;
                         dataMax = 100;
+                    } else if (isPowerId(id)) {
+                        const maxVal = Math.max(1, ...(history.map(Math.abs)));
+                        dataMin = -maxVal * 1.15;
+                        dataMax = maxVal * 1.15;
                     } else {
                         dataMin = 0;
                         dataMax = history.length > 0 ? Math.max(1, ...history) * 1.15 : 1;
@@ -591,6 +600,8 @@
                     let label;
                     if (id === "battery") {
                         label = last.toFixed(1) + "%";
+                    } else if (id === "batteryPower") {
+                        label = (last >= 0 ? "+" : "") + last.toFixed(1) + "W";
                     } else if (id === "cpuTemp") {
                         label = last.toFixed(1) + "\u00B0C";
                     } else if (id === "cpuSpeed") {
@@ -696,14 +707,7 @@
                         // subtitles
                         const subEl = document.getElementById("sub-"+id);
                         if (subEl) {
-                            let sub = "";
-                            if (id === "battery" && tm && tm.battery.charging) {
-                                sub = "\u26A1";
-                            }
-                            if (id === "cpuSpeed" && tm && tm.cpuSpeed.avg > 0) {
-                                sub = "Min: " + tm.cpuSpeed.min.toFixed(2) + " / Max: " + tm.cpuSpeed.max.toFixed(2) + " GHz";
-                            }
-                            subEl.textContent = sub;
+                            subEl.textContent = (formattedText || {})[id+"Sub"] || "";
                         }
 
                         if (state.viewMode[id] === "line") {

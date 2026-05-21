@@ -43,6 +43,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
 
   constructor(extensionPath: string) {
     this._collector = new ResourceUsageDataCollector();
+    this._collector.maxHistory = getResourceUsageConfig().samplingPoints;
     this._extensionPath = extensionPath;
   }
 
@@ -85,6 +86,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
 
   pushConfigUpdate() {
     if (this._view) {
+      this._collector.maxHistory = getResourceUsageConfig().samplingPoints;
       this._pushConfig(this._view);
     }
   }
@@ -101,6 +103,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       diskRx: vscode.l10n.t("resourceUsage.label.diskRx"),
       diskWx: vscode.l10n.t("resourceUsage.label.diskWx"),
       battery: vscode.l10n.t("resourceUsage.label.battery"),
+      batteryPower: vscode.l10n.t("resourceUsage.label.batteryPower"),
       cpuTemp: vscode.l10n.t("resourceUsage.label.cpuTemp"),
       cpuSpeed: vscode.l10n.t("resourceUsage.label.cpuSpeed"),
       diskSpace: vscode.l10n.t("resourceUsage.label.diskSpace"),
@@ -112,6 +115,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       data: {
         charts: config.charts,
         diskSpaceMounts: config.diskSpaceMounts,
+        samplingPoints: config.samplingPoints,
         showUptime: metricsEnabled.uptime,
         showOsDistro: metricsEnabled.osDistro,
         labels,
@@ -166,16 +170,24 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
         diskRx: fmtRate(current.diskRx) + "/s",
         diskWx: fmtRate(current.diskWx) + "/s",
         diskSpace: current.diskSpaceUse.toFixed(1) + "%",
-        battery: t.battery.hasBattery ? `${t.battery.percent}%` : vscode.l10n.t("N/A"),
+        battery: t.battery.hasBattery ? `${t.battery.percent.toFixed(1)}%` : vscode.l10n.t("N/A"),
+        batteryPower: t.battery.hasBattery ? `${t.battery.powerRate.toFixed(1)}W` : vscode.l10n.t("N/A"),
         cpuTemp: t.cpuTemp > 0 ? `${t.cpuTemp.toFixed(1)}°C` : vscode.l10n.t("N/A"),
         cpuSpeed: t.cpuSpeed.avg > 0 ? `${t.cpuSpeed.avg.toFixed(2)} GHz` : vscode.l10n.t("N/A"),
       },
       textMetrics: t,
       formattedText: {
-        batterySub: t.battery.hasBattery && t.battery.charging ? "\u26A1" : "",
-        cpuTempSub: t.cpuTemp > 0 ? `Min: ${t.cpuTemperature.toFixed(1)}\u00B0C` : "",
+        batterySub: t.battery.hasBattery
+          ? `${vscode.l10n.t("Health")}: ${t.battery.health.toFixed(1)}%`
+          : "",
+        batteryPowerSub: t.battery.hasBattery
+          ? t.battery.powerState === "charging" ? vscode.l10n.t("Charging")
+          : t.battery.powerState === "discharging" ? vscode.l10n.t("Discharging")
+          : vscode.l10n.t("Idle")
+          : "",
+        cpuTempSub: t.cpuTemp > 0 ? `${vscode.l10n.t("Min")}: ${t.cpuTemperature.toFixed(1)}°C` : "",
         cpuSpeedSub: t.cpuSpeed.avg > 0
-          ? `Min: ${t.cpuSpeed.min.toFixed(2)} / Max: ${t.cpuSpeed.max.toFixed(2)} GHz`
+          ? `${vscode.l10n.t("Min")}: ${t.cpuSpeed.min.toFixed(2)} / ${vscode.l10n.t("Max")}: ${t.cpuSpeed.max.toFixed(2)} GHz`
           : "",
         osDistro: t.osDistro || vscode.l10n.t("N/A"),
         uptime: formatUptime(t.uptime, getUptimeFormat()),

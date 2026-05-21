@@ -67,6 +67,7 @@ export interface ResourceUsageChartConfig {
 export interface ResourceUsageConfig {
   charts: Record<string, ResourceUsageChartConfig>;
   diskSpaceMounts: string[];
+  samplingPoints: number;
 }
 
 const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
@@ -78,6 +79,7 @@ const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
   diskRx:    { enabled: true,  view: "line", color: "--vscode-charts-yellow" },
   diskWx:    { enabled: true,  view: "line", color: "--vscode-charts-red" },
   battery:   { enabled: true,  view: "line", color: "--vscode-textLink-foreground" },
+  batteryPower: { enabled: true,  view: "line", color: "--vscode-charts-green" },
   cpuTemp:   { enabled: true,  view: "line", color: "--vscode-errorForeground" },
   cpuSpeed:  { enabled: true,  view: "line", color: "--vscode-terminal-ansiBrightCyan" },
 };
@@ -99,6 +101,7 @@ export function getResourceUsageConfig(): ResourceUsageConfig {
   return {
     charts,
     diskSpaceMounts: config.get<string[]>(`${CHART_SECTION}.diskSpaceMounts`, ["all"]),
+    samplingPoints: config.get<number>(`${CHART_SECTION}.samplingPoints`, 60),
   };
 }
 
