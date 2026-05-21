@@ -584,9 +584,9 @@
                         ctx.stroke();
                     }
 
-                    if (isPowerId(id) && dataMin < 0 && dataMax > 0) {
+                    if (isPowerId(id)) {
                         const yZero = yPos(0);
-                        ctx.strokeStyle = rgba(fg, 0.25);
+                        ctx.strokeStyle = rgba(fg, 0.15);
                         ctx.lineWidth = 1;
                         ctx.setLineDash([3, 3]);
                         ctx.beginPath();
