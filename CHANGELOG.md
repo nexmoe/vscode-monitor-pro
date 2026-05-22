@@ -4,11 +4,31 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [0.7.2] - 2025-05-22
+## [0.7.2] - 2026-05-22
+
+### Added
+
+- **Worker Thread for system data collection**: Moves systeminformation polling (CPU, memory, disk, network, etc.) off the Extension Host main thread into a dedicated Worker Thread. Prevents blocking `statfs` calls on Linux from delaying other extensions' timers by up to 500ms per tick. Falls back to inline polling transparently if the Worker fails to start.
 
 ### Fixed
 
 - **Windows CPU readings inflated**: Go backend's PDH query issued two back-to-back `PdhCollectQueryData` calls without an interval, producing garbage values for rate-based counters. Replaced with a persistent query handle matching [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor)'s pattern — baseline collection at init + single collection per tick — so readings now match Task Manager exactly. (Fixes [#5](https://github.com/nexmoe/vscode-monitor-pro/issues/5))
+- **Negative battery power rate**: Discharging power now shows a leading "-" sign instead of unsigned positive value.
+- **Worker module resolution**: `systeminformation` is now bundled into the Worker entry to avoid runtime resolution failures in VSIX deployments where `node_modules/` is excluded.
+
+### Performance
+
+- **Ring buffer for history data**: Replaced `Array.shift()` with `RingBuffer<T>` for O(1) enqueue/dequeue in resource usage data collection.
+- **Go backend disk timeout**: Added `context.WithTimeout` guard to Go's `disk.Usage()` call to prevent indefinite hangs on slow/network mounts.
+- **CSS caching**: Inline CSS in the resource usage webview is cached across re-renders instead of rebuilding the style element on each update.
+
+### Changed
+
+- **l10n extraction**: Migrated `systemData.ts` from `this._t()` wrapper to direct `vscode.l10n.t()` calls so all strings are auto-extractable by `@vscode/l10n-dev`. 6 previously missing strings are now available for localization.
+
+### Chore
+
+- **Prettier formatting**: All `.ts`, `.json`, and `.md` files reformatted with Prettier.
 
 ## [0.7.0] - 2025-05-21
 
