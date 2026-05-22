@@ -33,9 +33,9 @@ type pdhFmtCounterValueDouble struct {
 	DoubleValue float64
 }
 
-// cpuMonitor 持有一个常驻 PDH 查询句柄。
+// cpuMonitor 持有一个常驻 PDH 查询句柄
 // 对应 TrafficMonitor 的 CPdhQuery：构造时 Open+AddCounter+初始基线采集，
-// 每次 QueryValue 只做一次 CollectQueryData + GetFormattedCounterValue。
+// 每次 QueryValue 只做一次 CollectQueryData + GetFormattedCounterValue
 type cpuMonitor struct {
 	mu      sync.Mutex
 	query   uintptr
@@ -98,8 +98,8 @@ func initCPU() error {
 	return cpuMonErr
 }
 
-// collect 每次采集一个新样本，PDH 基于与基线（或前一次采集）的差值计算使用率。
-// 对应 TrafficMonitor PdhQuery::QueryValue 的 Collect + GetFormattedCounterValue。
+// collect 每次采集一个新样本，PDH 基于与基线（或前一次采集）的差值计算使用率
+// 对应 TrafficMonitor PdhQuery::QueryValue 的 Collect + GetFormattedCounterValue
 func (m *cpuMonitor) collect() (float64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -121,7 +121,7 @@ func (m *cpuMonitor) collect() (float64, error) {
 	return value.DoubleValue, nil
 }
 
-// getCPUPercent 保持与 unix 版一致的签名，interval/percpu 在 Windows 上忽略。
+// getCPUPercent 保持与 unix 版一致的签名，interval/percpu 在 Windows 上忽略
 func getCPUPercent(_ time.Duration, _ bool) ([]float64, error) {
 	if err := initCPU(); err != nil {
 		return nil, err
@@ -139,7 +139,7 @@ func getCPUPercent(_ time.Duration, _ bool) ([]float64, error) {
 	return []float64{val}, nil
 }
 
-// patchCPUFreq 替换 cpu.Info() 的静态 MHz 为实时 PDH 频率数值。
+// patchCPUFreq 替换 cpu.Info() 的静态 MHz 为实时 PDH 频率数值
 func patchCPUFreq(info []cpu.InfoStat) []cpu.InfoStat {
 	if len(info) == 0 {
 		return info
@@ -166,8 +166,8 @@ func patchCPUFreq(info []cpu.InfoStat) []cpu.InfoStat {
 	return out
 }
 
-// pdhReadCounter 一次性查询 PDH 计数器（用于 patchCPUFreq 等低频查询，非 CPU 使用率路径）。
-// 瞬时计数器只需一次 PdhCollectQueryData。
+// pdhReadCounter 一次性查询 PDH 计数器（用于 patchCPUFreq 等低频查询，非 CPU 使用率路径）
+// 瞬时计数器只需一次 PdhCollectQueryData
 func pdhReadCounter(counterPath string) (float64, error) {
 	var query uintptr
 	ret, _, _ := _PdhOpenQuery.Call(0, 0, uintptr(unsafe.Pointer(&query)))
@@ -194,6 +194,8 @@ func pdhReadCounter(counterPath string) (float64, error) {
 		}
 	}
 
+	// 部分内核模式提供程序（如 Processor Information）需要一次预热采集才能返回有效数据，因此这里必须采集两次，无时间间隔要求
+	_PdhCollectQueryData.Call(query)
 	_PdhCollectQueryData.Call(query)
 
 	var value pdhFmtCounterValueDouble
