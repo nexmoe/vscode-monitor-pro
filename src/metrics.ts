@@ -5,7 +5,11 @@ import { MetricCtrProps } from "./constants";
 import { getDiskSpaceConfig, getUptimeFormat } from "./configuration";
 import { systemData } from "./systemData";
 
-const _logger: { debug: (m: string) => void; warn: (m: string) => void; error: (m: string) => void } = {
+const _logger: {
+  debug: (m: string) => void;
+  warn: (m: string) => void;
+  error: (m: string) => void;
+} = {
   debug: () => {},
   warn: () => {},
   error: () => {},
@@ -20,7 +24,12 @@ let _space = false;
 let _singleUnit = false;
 let _sigDigits: Record<string, number> = {};
 
-export function updateGlobalConfig(binary: boolean, space: boolean, singleUnit: boolean, sigDigits: Record<string, number>) {
+export function updateGlobalConfig(
+  binary: boolean,
+  space: boolean,
+  singleUnit: boolean,
+  sigDigits: Record<string, number>,
+) {
   _binary = binary;
   _space = space;
   _singleUnit = singleUnit;
@@ -65,7 +74,14 @@ const cpuText = async () => {
 const memActiveText = async () => {
   const sig = getSigDigits("memoryActive");
   const m = (await systemData.getSnapshot()).mem;
-  _logger.debug(vscode.l10n.t("Memory - Total: {0}, Active: {1}, Used: {2}", m.total, m.active, m.used));
+  _logger.debug(
+    vscode.l10n.t(
+      "Memory - Total: {0}, Active: {1}, Used: {2}",
+      m.total,
+      m.active,
+      m.used,
+    ),
+  );
   const active = prettySig(m.active, sig);
   const total = prettySig(m.total, sig);
   return `$(server) ${active}/${total}`;
@@ -86,22 +102,44 @@ const netText = async () => {
   const rawTx = ns?.[0]?.tx_sec;
   const rx = rawRx || 0;
   const tx = rawTx || 0;
-  _logger.debug(vscode.l10n.t("Network - RX: {0}/s, TX: {1}/s, Interface: {2}", rawRx, rawTx, ns?.[0]?.iface));
+  _logger.debug(
+    vscode.l10n.t(
+      "Network - RX: {0}/s, TX: {1}/s, Interface: {2}",
+      rawRx,
+      rawTx,
+      ns?.[0]?.iface,
+    ),
+  );
   return `$(cloud-download) ${prettySig(rx, sig)}/s $(cloud-upload) ${prettySig(tx, sig)}/s`;
 };
 
 const fsText = async () => {
   const sig = getSigDigits("fileSystem");
   const fs = (await systemData.getSnapshot()).fsStats;
-  _logger.debug(vscode.l10n.t("Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms",
-    fs.rx_sec?.toString() ?? "null", fs.wx_sec?.toString() ?? "null", fs.rx, fs.wx, fs.ms));
+  _logger.debug(
+    vscode.l10n.t(
+      "Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms",
+      fs.rx_sec?.toString() ?? "null",
+      fs.wx_sec?.toString() ?? "null",
+      fs.rx,
+      fs.wx,
+      fs.ms,
+    ),
+  );
   return `$(log-in) ${prettySig(fs.rx_sec || 0, sig)}/s $(log-out) ${prettySig(fs.wx_sec || 0, sig)}/s`;
 };
 
 const batteryText = async () => {
   const sig = getSigDigits("battery");
   const b = (await systemData.getSnapshot()).battery;
-  _logger.debug(vscode.l10n.t("Battery - Has battery: {0}, Percent: {1}, Charging: {2}", b.hasBattery, b.percent, b.isCharging));
+  _logger.debug(
+    vscode.l10n.t(
+      "Battery - Has battery: {0}, Percent: {1}, Charging: {2}",
+      b.hasBattery,
+      b.percent,
+      b.isCharging,
+    ),
+  );
   if (!b.hasBattery) {
     return "";
   }
@@ -113,7 +151,14 @@ const batteryText = async () => {
 const cpuSpeedText = async () => {
   const sig = getSigDigits("cpuSpeed");
   const cpuCurrentSpeed = (await systemData.getSnapshot()).cpuCurrentSpeed;
-  _logger.debug(vscode.l10n.t("CPU Speed - Avg: {0}GHz, Min: {1}GHz, Max: {2}GHz", cpuCurrentSpeed.avg, cpuCurrentSpeed.min, cpuCurrentSpeed.max));
+  _logger.debug(
+    vscode.l10n.t(
+      "CPU Speed - Avg: {0}GHz, Min: {1}GHz, Max: {2}GHz",
+      cpuCurrentSpeed.avg,
+      cpuCurrentSpeed.min,
+      cpuCurrentSpeed.max,
+    ),
+  );
   if (!cpuCurrentSpeed.avg || cpuCurrentSpeed.avg === 0) {
     return "";
   }
@@ -124,7 +169,12 @@ const cpuSpeedText = async () => {
 const cpuTempText = async () => {
   const sig = getSigDigits("cpuTemp");
   const cl = (await systemData.getSnapshot()).cpuTemperature;
-  _logger.debug(vscode.l10n.t("CPU Temperature: {0}°C", cl.main?.toString() ?? vscode.l10n.t("N/A")));
+  _logger.debug(
+    vscode.l10n.t(
+      "CPU Temperature: {0}°C",
+      cl.main?.toString() ?? vscode.l10n.t("N/A"),
+    ),
+  );
   if (!cl.main) {
     return "";
   }
@@ -141,7 +191,13 @@ const diskSpaceText = async () => {
   const sig = getSigDigits("diskSpace");
   const fsSize = (await systemData.getSnapshot()).fsSize;
   const disksToShow = getDiskSpaceConfig();
-  _logger.debug(vscode.l10n.t("Disk config: {0}, Found disks: {1}", JSON.stringify(disksToShow), fsSize.length));
+  _logger.debug(
+    vscode.l10n.t(
+      "Disk config: {0}, Found disks: {1}",
+      JSON.stringify(disksToShow),
+      fsSize.length,
+    ),
+  );
 
   const formatDisk = (disk: { mount: string; size: number; used: number }) => {
     const total = disk.size;
@@ -151,18 +207,18 @@ const diskSpaceText = async () => {
       return null;
     }
     const sp = _space ? " " : "";
-    const pctVal = fmtSigNum(used / total * 100, sig) + sp + "%";
+    const pctVal = fmtSigNum((used / total) * 100, sig) + sp + "%";
     return `$(database)${disk.mount} ${pctVal} ${prettySig(used, sig)}/${prettySig(total, sig)}`;
   };
 
-  if (disksToShow.includes('all') && fsSize.length > 0) {
-    return fsSize.map(formatDisk).filter(Boolean).join(' | ');
+  if (disksToShow.includes("all") && fsSize.length > 0) {
+    return fsSize.map(formatDisk).filter(Boolean).join(" | ");
   }
   return fsSize
-    .filter(disk => disksToShow.includes(disk.mount))
+    .filter((disk) => disksToShow.includes(disk.mount))
     .map(formatDisk)
     .filter(Boolean)
-    .join(' | ');
+    .join(" | ");
 };
 
 const uptimeText = async () => {

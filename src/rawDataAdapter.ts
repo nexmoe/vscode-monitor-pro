@@ -1,5 +1,9 @@
 import type { SystemSnapshot } from "./systemData";
-import type { GoAllResponse, GoDiskIOCountersStat, GoNetIOCountersStat } from "./rawDataTypes";
+import type {
+  GoAllResponse,
+  GoDiskIOCountersStat,
+  GoNetIOCountersStat,
+} from "./rawDataTypes";
 
 interface PrevRaw {
   net: Map<string, { bytesSent: number; bytesRecv: number }>;
@@ -7,7 +11,9 @@ interface PrevRaw {
   ts: number;
 }
 
-function pickNonLoopback(interfaces: GoNetIOCountersStat[]): GoNetIOCountersStat | undefined {
+function pickNonLoopback(
+  interfaces: GoNetIOCountersStat[],
+): GoNetIOCountersStat | undefined {
   return interfaces.find((n) => n.name !== "lo");
 }
 
@@ -34,19 +40,42 @@ export class RawDataAdapter {
     const diskRates = this.computeDiskRates(diskCounters, prev, now);
 
     this.prev = {
-      net: new Map(netIfaces.map((n) => [n.name, { bytesSent: n.bytesSent, bytesRecv: n.bytesRecv }])),
-      disk: new Map(Object.entries(diskCounters).map(([k, v]) => [k, { readBytes: v.readBytes, writeBytes: v.writeBytes }])),
+      net: new Map(
+        netIfaces.map((n) => [
+          n.name,
+          { bytesSent: n.bytesSent, bytesRecv: n.bytesRecv },
+        ]),
+      ),
+      disk: new Map(
+        Object.entries(diskCounters).map(([k, v]) => [
+          k,
+          { readBytes: v.readBytes, writeBytes: v.writeBytes },
+        ]),
+      ),
       ts: now,
     };
 
     const cpuSpeed = this.getCpuSpeed(raw);
     const cpuTemp = this.getCpuTemp(raw);
 
-    const virt = raw.memory.virtual || { total: 0, free: 0, used: 0, active: 0, available: 0, buffers: 0, cached: 0, slab: 0, sreclaimable: 0, writeBack: null, dirty: null };
+    const virt = raw.memory.virtual || {
+      total: 0,
+      free: 0,
+      used: 0,
+      active: 0,
+      available: 0,
+      buffers: 0,
+      cached: 0,
+      slab: 0,
+      sreclaimable: 0,
+      writeBack: null,
+      dirty: null,
+    };
 
     return {
       timestamp: now,
-      currentLoad: (raw.cpu.percent || []).length > 0 ? (raw.cpu.percent || [])[0] : 0,
+      currentLoad:
+        (raw.cpu.percent || []).length > 0 ? (raw.cpu.percent || [])[0] : 0,
       mem: {
         total: virt.total,
         free: virt.free,
@@ -80,26 +109,33 @@ export class RawDataAdapter {
         servicepack: "",
         uefi: false,
       },
-      networkStats: net ? [{
-        iface: net.name,
-        operstate: "unknown",
-        rx_bytes: net.bytesRecv,
-        rx_dropped: net.dropin,
-        rx_errors: net.errin,
-        tx_bytes: net.bytesSent,
-        tx_dropped: net.dropout,
-        tx_errors: net.errout,
-        rx_sec: netRates.rxSec,
-        tx_sec: netRates.txSec,
-        ms: 0,
-      }] : [],
+      networkStats: net
+        ? [
+            {
+              iface: net.name,
+              operstate: "unknown",
+              rx_bytes: net.bytesRecv,
+              rx_dropped: net.dropin,
+              rx_errors: net.errin,
+              tx_bytes: net.bytesSent,
+              tx_dropped: net.dropout,
+              tx_errors: net.errout,
+              rx_sec: netRates.rxSec,
+              tx_sec: netRates.txSec,
+              ms: 0,
+            },
+          ]
+        : [],
       fsStats: {
         rx: firstDisk?.readBytes || 0,
         wx: firstDisk?.writeBytes || 0,
         tx: (firstDisk?.readBytes || 0) + (firstDisk?.writeBytes || 0),
         rx_sec: diskRates.readSec,
         wx_sec: diskRates.writeSec,
-        tx_sec: diskRates.readSec > 0 || diskRates.writeSec > 0 ? diskRates.readSec + diskRates.writeSec : null,
+        tx_sec:
+          diskRates.readSec > 0 || diskRates.writeSec > 0
+            ? diskRates.readSec + diskRates.writeSec
+            : null,
         ms: 0,
       },
       fsSize: (raw.disk.usage || [])
@@ -129,9 +165,13 @@ export class RawDataAdapter {
             percent: raw.battery.percent,
             health: raw.battery.health,
             powerRate: raw.battery.powerRate,
-            powerState: raw.battery.state === "Charging" || raw.battery.state === "Discharging"
-              ? raw.battery.state.toLowerCase() as "charging" | "discharging"
-              : "idle",
+            powerState:
+              raw.battery.state === "Charging" ||
+              raw.battery.state === "Discharging"
+                ? (raw.battery.state.toLowerCase() as
+                    | "charging"
+                    | "discharging")
+                : "idle",
             timeRemaining: 0,
             acConnected: raw.battery.state === "Charging",
             type: "",
@@ -163,7 +203,11 @@ export class RawDataAdapter {
         uptime: (raw.host.info || {}).uptime || 0,
         timezone: "",
         timezoneName: "",
-        current: Math.floor(((raw.host.info || {}).bootTime || 0) + ((raw.host.info || {}).uptime || 0)) * 1000,
+        current:
+          Math.floor(
+            ((raw.host.info || {}).bootTime || 0) +
+              ((raw.host.info || {}).uptime || 0),
+          ) * 1000,
       },
       unavailableMetrics: [],
     };
@@ -207,7 +251,12 @@ export class RawDataAdapter {
     };
   }
 
-  private getCpuSpeed(raw: GoAllResponse): { avg: number; min: number; max: number; cores: number[] } {
+  private getCpuSpeed(raw: GoAllResponse): {
+    avg: number;
+    min: number;
+    max: number;
+    cores: number[];
+  } {
     const cores = (raw.cpu.info || []).map((c) => c.mhz).filter((m) => m > 0);
     if (cores.length === 0) {
       return { avg: 0, min: 0, max: 0, cores: [] };
@@ -223,10 +272,19 @@ export class RawDataAdapter {
     };
   }
 
-  private getCpuTemp(raw: GoAllResponse): { main: number; cores: number[]; max: number } {
+  private getCpuTemp(raw: GoAllResponse): {
+    main: number;
+    cores: number[];
+    max: number;
+  } {
     const cpuSensors = (raw.host.sensors || []).filter((s) => {
       const key = s.sensorKey.toLowerCase();
-      return key.includes("core") || key.includes("cpu") || key.includes("k8") || key.includes("package");
+      return (
+        key.includes("core") ||
+        key.includes("cpu") ||
+        key.includes("k8") ||
+        key.includes("package")
+      );
     });
     if (!cpuSensors.length) {
       return { main: 0, cores: [], max: 0 };

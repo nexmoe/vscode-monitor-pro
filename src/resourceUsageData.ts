@@ -80,7 +80,14 @@ export interface DiskSpaceMount {
 }
 
 export interface TextMetrics {
-  battery: { hasBattery: boolean; percent: number; charging: boolean; health: number; powerRate: number; powerState: string };
+  battery: {
+    hasBattery: boolean;
+    percent: number;
+    charging: boolean;
+    health: number;
+    powerRate: number;
+    powerState: string;
+  };
   cpuTemp: number;
   cpuSpeed: { avg: number; min: number; max: number };
   osDistro: string;
@@ -128,9 +135,10 @@ export class ResourceUsageDataCollector {
     const disks = snap.fsSize
       .filter((d) => d.size > 0)
       .sort((a, b) => a.mount.localeCompare(b.mount));
-    const avgUse = disks.length > 0
-      ? disks.reduce((s, d) => s + d.use, 0) / disks.length
-      : 0;
+    const avgUse =
+      disks.length > 0
+        ? disks.reduce((s, d) => s + d.use, 0) / disks.length
+        : 0;
 
     const point: DataPoint = {
       cpu: snap.currentLoad,
