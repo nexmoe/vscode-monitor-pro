@@ -1,5 +1,60 @@
 import { systemData, SystemSnapshot } from "./systemData";
 
+class RingBuffer<T> {
+  private buffer: T[];
+  private head = 0;
+  private size = 0;
+  private cap: number;
+
+  constructor(capacity: number) {
+    this.cap = Math.max(10, capacity);
+    this.buffer = new Array<T>(this.cap);
+  }
+
+  get capacity(): number {
+    return this.cap;
+  }
+
+  set capacity(n: number) {
+    const newCap = Math.max(10, n);
+    if (newCap === this.cap) return;
+    const current = this.toArray();
+    this.cap = newCap;
+    this.buffer = new Array<T>(this.cap);
+    this.head = 0;
+    this.size = Math.min(current.length, this.cap);
+    for (let i = 0; i < this.size; i++) {
+      this.buffer[i] = current[current.length - this.size + i];
+    }
+  }
+
+  get length(): number {
+    return this.size;
+  }
+
+  push(item: T): void {
+    this.buffer[(this.head + this.size) % this.cap] = item;
+    if (this.size < this.cap) {
+      this.size++;
+    } else {
+      this.head = (this.head + 1) % this.cap;
+    }
+  }
+
+  toArray(): T[] {
+    const result = new Array<T>(this.size);
+    for (let i = 0; i < this.size; i++) {
+      result[i] = this.buffer[(this.head + i) % this.cap];
+    }
+    return result;
+  }
+
+  clear(): void {
+    this.head = 0;
+    this.size = 0;
+  }
+}
+
 export interface DataPoint {
   cpu: number;
   memoryActive: number;
@@ -27,7 +82,6 @@ export interface DiskSpaceMount {
 export interface TextMetrics {
   battery: { hasBattery: boolean; percent: number; charging: boolean; health: number; powerRate: number; powerState: string };
   cpuTemp: number;
-  cpuTemperature: number;
   cpuSpeed: { avg: number; min: number; max: number };
   osDistro: string;
   uptime: number;
@@ -42,16 +96,12 @@ export interface ResourceUsagePayload {
 }
 
 export class ResourceUsageDataCollector {
-  private history: DataPoint[] = [];
-  private _maxHistory = 60;
+  private history = new RingBuffer<DataPoint>(60);
   private unsubscribe: (() => void) | null = null;
   private onData: ((data: ResourceUsagePayload) => void) | null = null;
 
   set maxHistory(n: number) {
-    this._maxHistory = Math.max(10, n);
-    while (this.history.length > this._maxHistory) {
-      this.history.shift();
-    }
+    this.history.capacity = n;
   }
 
   setOnData(cb: (data: ResourceUsagePayload) => void) {
@@ -99,12 +149,9 @@ export class ResourceUsageDataCollector {
     };
 
     this.history.push(point);
-    if (this.history.length > this._maxHistory) {
-      this.history.shift();
-    }
 
     this.onData?.({
-      history: [...this.history],
+      history: this.history.toArray(),
       current: point,
       unavailableMetrics: snap.unavailableMetrics,
       textMetrics: {
@@ -117,7 +164,6 @@ export class ResourceUsageDataCollector {
           powerState: snap.battery.powerState,
         },
         cpuTemp: snap.cpuTemperature.main ?? 0,
-        cpuTemperature: snap.cpuTemperature.main ?? 0,
         cpuSpeed: {
           avg: snap.cpuCurrentSpeed.avg,
           min: snap.cpuCurrentSpeed.min,

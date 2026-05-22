@@ -17,6 +17,8 @@ import (
 	"github.com/shirou/gopsutil/v4/sensors"
 )
 
+const diskUsageTimeout = 2 * time.Second
+
 const sampleWindow = 5
 
 var (
@@ -105,6 +107,26 @@ func getBatteryData() batteryInfo {
 	}
 }
 
+func usageWithTimeout(mountpoint string) *disk.UsageStat {
+	type result struct {
+		u *disk.UsageStat
+	}
+	ch := make(chan result, 1)
+	go func() {
+		u, err := disk.Usage(mountpoint)
+		if err == nil && u.Total > 0 {
+			ch <- result{u}
+		}
+		close(ch)
+	}()
+	select {
+	case r := <-ch:
+		return r.u
+	case <-time.After(diskUsageTimeout):
+		return nil
+	}
+}
+
 func getBattery(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, Response{Success: true, Data: getBatteryData()})
 }
@@ -174,8 +196,8 @@ func getDisk(w http.ResponseWriter, r *http.Request) {
 	usage := make([]*disk.UsageStat, 0)
 	hasRoot := false
 	for _, p := range partitions {
-		u, err := disk.Usage(p.Mountpoint)
-		if err == nil && u.Total > 0 {
+		u := usageWithTimeout(p.Mountpoint)
+		if u != nil {
 			usage = append(usage, u)
 			if p.Mountpoint == "/" {
 				hasRoot = true
@@ -183,7 +205,7 @@ func getDisk(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if runtime.GOOS != "windows" && !hasRoot {
-		if u, err := disk.Usage("/"); err == nil && u.Total > 0 {
+		if u := usageWithTimeout("/"); u != nil {
 			usage = append(usage, u)
 		}
 	}
@@ -236,8 +258,8 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 	usage := make([]*disk.UsageStat, 0)
 	hasRoot := false
 	for _, p := range parts {
-		u, err := disk.Usage(p.Mountpoint)
-		if err == nil && u.Total > 0 {
+		u := usageWithTimeout(p.Mountpoint)
+		if u != nil {
 			usage = append(usage, u)
 			if p.Mountpoint == "/" {
 				hasRoot = true
@@ -245,7 +267,7 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if runtime.GOOS != "windows" && !hasRoot {
-		if u, err := disk.Usage("/"); err == nil && u.Total > 0 {
+		if u := usageWithTimeout("/"); u != nil {
 			usage = append(usage, u)
 		}
 	}
