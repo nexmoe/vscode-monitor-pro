@@ -145,7 +145,7 @@ async function tick() {
   const t0 = Date.now();
   try {
     const data = await collect();
-    parentPort?.postMessage({ type: "data", data });
+    parentPort?.postMessage({ type: "data", data: JSON.parse(JSON.stringify(data)) });
   } catch (e) {
     parentPort?.postMessage({ type: "error", error: String(e) });
   }
