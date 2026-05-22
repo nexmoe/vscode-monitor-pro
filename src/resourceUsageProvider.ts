@@ -184,7 +184,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
           ? fmtNum(t.battery.percent, sigDigits.battery) + sp + "%"
           : vscode.l10n.t("N/A"),
         batteryPower: t.battery.hasBattery
-          ? (t.battery.powerRate >= 0 ? "+" : "") + fmtNum(Math.abs(t.battery.powerRate), sigDigits.battery) + sp + "W"
+          ? (t.battery.powerRate >= 0 ? "+" : "-") + fmtNum(Math.abs(t.battery.powerRate), sigDigits.battery) + sp + "W"
           : vscode.l10n.t("N/A"),
         cpuTemp: t.cpuTemp > 0
           ? fmtNum(t.cpuTemp, sigDigits.cpuTemp) + sp + "°C"
