@@ -20,7 +20,7 @@ const esbuildProblemMatcherPlugin = {
 };
 
 async function main() {
-	const ctx = await esbuild.context({
+	const extCtx = await esbuild.context({
 		entryPoints: [
 			'src/extension.ts'
 		],
@@ -37,11 +37,27 @@ async function main() {
 			esbuildProblemMatcherPlugin,
 		],
 	});
+
+	const workerCtx = await esbuild.context({
+		entryPoints: [
+			'src/collector.worker.ts'
+		],
+		bundle: true,
+		format: 'cjs',
+		minify: production,
+		sourcemap: !production,
+		sourcesContent: false,
+		platform: 'node',
+		outfile: 'dist/collector.worker.js',
+		external: ['systeminformation'],
+		logLevel: 'silent',
+	});
+
 	if (watch) {
-		await ctx.watch();
+		await Promise.all([extCtx.watch(), workerCtx.watch()]);
 	} else {
-		await ctx.rebuild();
-		await ctx.dispose();
+		await Promise.all([extCtx.rebuild(), workerCtx.rebuild()]);
+		await Promise.all([extCtx.dispose(), workerCtx.dispose()]);
 	}
 }
 

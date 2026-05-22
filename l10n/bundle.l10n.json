@@ -1,4 +1,10 @@
 {
+  "Metric \"{0}\" is not available on this system": "Metric \"{0}\" is not available on this system",
+  "Collection failed: {0}": "Collection failed: {0}",
+  "Worker collection failed: {0}": "Worker collection failed: {0}",
+  "Worker error: {0}, falling back to inline polling": "Worker error: {0}, falling back to inline polling",
+  "Worker exited with code {0}, falling back to inline polling": "Worker exited with code {0}, falling back to inline polling",
+  "Failed to create worker: {0}, falling back to inline polling": "Failed to create worker: {0}, falling back to inline polling",
   "CPU": "CPU",
   "Mem Active": "Mem Active",
   "Mem Used": "Mem Used",
