@@ -205,13 +205,41 @@
 
                 // -------- color resolution --------
 
+                var _cssCache = {};
+
                 function resolveColorValue(val) {
                     if (!val) return "";
                     if (val.startsWith("--")) {
-                        return getComputedStyle(document.documentElement).getPropertyValue(val).trim();
+                        if (_cssCache[val] === undefined) {
+                            _cssCache[val] = getComputedStyle(document.documentElement).getPropertyValue(val).trim();
+                        }
+                        return _cssCache[val];
                     }
                     return val;
                 }
+
+                function resetCSSCache() {
+                    _cssCache = {};
+                }
+
+                function getCachedCSSVar(name) {
+                    if (_cssCache[name] === undefined) {
+                        _cssCache[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+                    }
+                    return _cssCache[name];
+                }
+
+                var _themeObserver = new MutationObserver(function () {
+                    resetCSSCache();
+                    for (const id of ALL_CHART_IDS) {
+                        const c = _charts[id];
+                        if (!c || !c.enabled) continue;
+                        if (state.viewMode[id] === "line" && state.history[id] && state.history[id].length >= 2) {
+                            drawChart(id, state.history[id], colorFor(id));
+                        }
+                    }
+                });
+                _themeObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
 
                 function hexToRgb(hex) {
                     const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -285,12 +313,13 @@
                 function colorFor(id) {
                     const c = resolveColorValue(_chartColors[id]);
                     if (c) return c;
-                    return getComputedStyle(document.documentElement).getPropertyValue("--vscode-editor-foreground").trim();
+                    return getCachedCSSVar("--vscode-editor-foreground");
                 }
 
                 // -------- config handler --------
 
                 function handleConfig(cfg) {
+                    resetCSSCache();
                     _charts = cfg.charts || {};
                     _diskSpaceMounts = cfg.diskSpaceMounts || ["all"];
 
@@ -572,7 +601,7 @@
 
                     const xStep = w / (n - 1);
 
-                    const fg = getComputedStyle(document.documentElement).getPropertyValue("--vscode-editor-foreground").trim();
+                    const fg = getCachedCSSVar("--vscode-editor-foreground");
 
                     ctx.strokeStyle = rgba(fg, 0.06);
                     ctx.lineWidth = 1;
@@ -632,7 +661,7 @@
                         label = formatRate(last);
                     }
 
-                    const bg = getComputedStyle(document.documentElement).getPropertyValue("--vscode-editor-background").trim();
+                    const bg = getCachedCSSVar("--vscode-editor-background");
                     ctx.font = "bold "+Math.round(h*0.24)+"px var(--vscode-font-family, sans-serif)";
                     ctx.textAlign = "right";
                     ctx.textBaseline = "top";
