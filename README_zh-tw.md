@@ -187,10 +187,16 @@ pnpm run compile
 | `pnpm run package:vsix:win32-arm64` | 打包 Windows ARM64 VSIX          |
 | `pnpm run gen-l10n`                 | 從原始碼重新產生在地化檔案       |
 
-## 靈感來源
+## 靈感來源與致謝
+
+### 靈感
 
 - [vscode-resource-monitor](https://github.com/chneau/vscode-resource-monitor)
 - [resmon](https://github.com/Njanderson/resmon)
+
+### 致謝
+
+- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor)：參考其 PDH 查詢生命週期（常駐控制代碼 + 初始基線採集 + 逐次單次採集）重構了 Windows CPU 使用率監控，使讀數與工作管理員完全一致
 
 ## 回饋
 

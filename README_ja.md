@@ -187,10 +187,16 @@ pnpm run compile
 | `pnpm run package:vsix:win32-arm64` | Windows ARM64 VSIX をパッケージ化      |
 | `pnpm run gen-l10n`                 | ソースからローカライゼーションファイルを再生成 |
 
-## インスピレーション
+## インスピレーションと謝辞
+
+### インスピレーション
 
 - [vscode-resource-monitor](https://github.com/chneau/vscode-resource-monitor)
 - [resmon](https://github.com/Njanderson/resmon)
+
+### 謝辞
+
+- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor)：その PDH クエリライフサイクル（常駐ハンドル + 初期ベースライン収集 + 毎回の単一収集）を採用し、Windows Go バックエンドの CPU 使用率監視を再構築。読み取り値がタスクマネージャーと完全に一致するようになりました。
 
 ## フィードバック
 

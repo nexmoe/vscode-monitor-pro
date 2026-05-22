@@ -4,6 +4,12 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.2] - 2025-05-22
+
+### Fixed
+
+- **Windows CPU readings inflated**: Go backend's PDH query issued two back-to-back `PdhCollectQueryData` calls without an interval, producing garbage values for rate-based counters. Replaced with a persistent query handle matching [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor)'s pattern — baseline collection at init + single collection per tick — so readings now match Task Manager exactly. (Fixes [#5](https://github.com/nexmoe/vscode-monitor-pro/issues/5))
+
 ## [0.7.0] - 2025-05-21
 
 ### Breaking Changes
@@ -29,17 +35,6 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **CPU utilization**: Go backend returns overall (multi-core average) instead of per-core percentage.
 - **CPU frequency subtitle**: Shows "Min / Max" only when min < max; single value otherwise (avoids redundancy on Windows where all cores share the same PDH value).
 - **Build system**: Migrated from webpack to esbuild for faster compilation.
-
-### Fixed
-
-- **Zero reference line**: Battery power chart now always draws a dashed horizontal line at 0W.
-- **CPU frequency**: Corrected MHz → GHz division in status bar display.
-- **Disk percentage**: Ensured 0–100 scale (not 0–1).
-- **Webview emoji**: Removed hardcoded ⚡ and ⬇ from battery subtitle.
-- **Battery power coupling**: Power view no longer auto-hides when battery view is hidden.
-- **Fetch timeout**: Go backend HTTP requests have a 5s timeout; prevents polling loop hang.
-- **Null slices from Go backend**: Empty disk slices initialized as empty arrays (not `null`).
-- **l10n gaps**: Hardcoded warning strings now use `l10n.t()`.
 
 ## [0.2.0] - 2023-10-05
 
