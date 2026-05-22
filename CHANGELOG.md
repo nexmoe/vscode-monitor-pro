@@ -4,6 +4,16 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.3] - 2026-05-22
+
+### Fixed
+
+- **Windows CPU frequency stuck at static MHz**: Go backend's `pdhReadCounter` performed only one `PdhCollectQueryData` call, but the Processor Information kernel provider requires a priming collection before returning valid frequency data. Restored the second collection to match the proven pattern. (Fixes Windows dynamic frequency regression from 0.7.2.)
+
+### Changed
+
+- **CPU Speed chart disabled by default**: The CPU frequency line chart in the Resource Usage webview is now disabled by default due to this is not very useful. Users can enable it by `monitor-pro.resourceUsage.charts` settings.
+
 ## [0.7.2] - 2026-05-22
 
 ### Added
