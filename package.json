@@ -159,7 +159,7 @@
               "color": "--vscode-errorForeground"
             },
             "cpuSpeed": {
-              "enabled": true,
+              "enabled": false,
               "view": "line",
               "color": "--vscode-terminal-ansiBrightCyan"
             }

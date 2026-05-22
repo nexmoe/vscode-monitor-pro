@@ -112,7 +112,7 @@ const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
   batteryPower: { enabled: true, view: "line", color: "--vscode-charts-green" },
   cpuTemp: { enabled: true, view: "line", color: "--vscode-errorForeground" },
   cpuSpeed: {
-    enabled: true,
+    enabled: false,
     view: "line",
     color: "--vscode-terminal-ansiBrightCyan",
   },
