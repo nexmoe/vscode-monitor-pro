@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"syscall"
 	"time"
 	"unsafe"
@@ -26,55 +27,106 @@ const (
 	errorSuccess = 0
 )
 
-// patchCPUFreq replaces static MHz values from cpu.Info() with the current
-// real-time frequency read via PDH. This makes the CPU speed indicator in
-// resource-usage views dynamic instead of showing a fixed nominal value.
-//
-// It reads \Processor Information(_Total)\% Processor Performance which
-// expresses the current frequency as a percentage of the base frequency, then
-// computes: current MHz = base MHz × (performance% / 100).
-func patchCPUFreq(info []cpu.InfoStat) []cpu.InfoStat {
-	if len(info) == 0 {
-		return info
-	}
-
-	pct, err := pdhQueryCounter(`\Processor Information(_Total)\% Processor Performance`)
-	if err != nil {
-		return info
-	}
-	if pct <= 0 {
-		return info
-	}
-
-	baseMHz := info[0].Mhz
-	if baseMHz <= 0 {
-		return info
-	}
-
-	curMHz := baseMHz * (pct / 100.0)
-	out := make([]cpu.InfoStat, len(info))
-	for i, v := range info {
-		out[i] = v
-		out[i].Mhz = curMHz
-	}
-	return out
-}
-
-// pdhFmtCounterValueDouble matches Windows PDH_FMT_COUNTERVALUE_DOUBLE exactly.
-// DWORD (4 bytes) + padding (4 bytes for 8-byte alignment of double) + double (8 bytes)
 type pdhFmtCounterValueDouble struct {
 	CStatus     uint32
 	_           uint32
 	DoubleValue float64
 }
 
-// getCPUPercent returns CPU usage matching Windows Task Manager via PDH API.
-// Only the PDH \Processor Information(_Total)\% Processor Utility counter is used,
-// which is the same source Windows Task Manager reads from (Win8+).
-// Interval and percpu parameters are ignored on Windows — PDH returns instant
-// system-wide CPU utilization without blocking.
-func getCPUPercent(time.Duration, bool) ([]float64, error) {
-	val, err := pdhGetCPUPercent()
+// cpuMonitor 持有一个常驻 PDH 查询句柄。
+// 对应 TrafficMonitor 的 CPdhQuery：构造时 Open+AddCounter+初始基线采集，
+// 每次 QueryValue 只做一次 CollectQueryData + GetFormattedCounterValue。
+type cpuMonitor struct {
+	mu      sync.Mutex
+	query   uintptr
+	counter uintptr
+	ok      bool
+}
+
+var (
+	cpuMon    cpuMonitor
+	cpuMonErr error
+	cpuMonSet sync.Once
+)
+
+func initCPU() error {
+	cpuMonSet.Do(func() {
+		var query uintptr
+		ret, _, _ := _PdhOpenQuery.Call(0, 0, uintptr(unsafe.Pointer(&query)))
+		if ret != errorSuccess {
+			cpuMonErr = fmt.Errorf("PdhOpenQuery: 0x%x", uint32(ret))
+			return
+		}
+
+		// Step 1: 先尝试 Win8+ 任务管理器同源计数器，失败则回退到经典计数器
+		// 对应 TrafficMonitor CPdhCPUUsage 构造时根据系统版本选择计数器
+		var counter uintptr
+		for _, path := range []string{
+			`\Processor Information(_Total)\% Processor Utility`,
+			`\Processor(_Total)\% Processor Time`,
+		} {
+			pathPtr, err := syscall.UTF16PtrFromString(path)
+			if err != nil {
+				continue
+			}
+			ret, _, _ = _PdhAddEnglishCounter.Call(
+				query, uintptr(unsafe.Pointer(pathPtr)), 0, uintptr(unsafe.Pointer(&counter)),
+			)
+			if ret != errorSuccess {
+				ret, _, _ = _PdhAddCounter.Call(
+					query, uintptr(unsafe.Pointer(pathPtr)), 0, uintptr(unsafe.Pointer(&counter)),
+				)
+			}
+			if ret == errorSuccess {
+				break
+			}
+		}
+		if ret != errorSuccess {
+			_PdhCloseQuery.Call(query)
+			cpuMonErr = fmt.Errorf("all PDH CPU counters failed")
+			return
+		}
+
+		// Step 2: 初始基线采集
+		// 对应 TrafficMonitor PdhQuery::Initialize() 最后的 PdhCollectQueryData
+		_PdhCollectQueryData.Call(query)
+
+		cpuMon.query = query
+		cpuMon.counter = counter
+		cpuMon.ok = true
+	})
+	return cpuMonErr
+}
+
+// collect 每次采集一个新样本，PDH 基于与基线（或前一次采集）的差值计算使用率。
+// 对应 TrafficMonitor PdhQuery::QueryValue 的 Collect + GetFormattedCounterValue。
+func (m *cpuMonitor) collect() (float64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if !m.ok {
+		return 0, fmt.Errorf("PDH CPU monitor not initialized")
+	}
+
+	_PdhCollectQueryData.Call(m.query)
+
+	var value pdhFmtCounterValueDouble
+	ret, _, _ := _PdhGetFormattedCounterValue.Call(
+		m.counter, pdhFmtDouble, 0, uintptr(unsafe.Pointer(&value)),
+	)
+	if ret != errorSuccess {
+		return 0, fmt.Errorf("PdhGetFormattedCounterValue: 0x%x", uint32(ret))
+	}
+
+	return value.DoubleValue, nil
+}
+
+// getCPUPercent 保持与 unix 版一致的签名，interval/percpu 在 Windows 上忽略。
+func getCPUPercent(_ time.Duration, _ bool) ([]float64, error) {
+	if err := initCPU(); err != nil {
+		return nil, err
+	}
+	val, err := cpuMon.collect()
 	if err != nil {
 		return nil, err
 	}
@@ -87,21 +139,36 @@ func getCPUPercent(time.Duration, bool) ([]float64, error) {
 	return []float64{val}, nil
 }
 
-func pdhGetCPUPercent() (float64, error) {
-	// Try the Task-Marker-matching counter first (Win8+), fall back to the classic
-	for _, path := range []string{
-		`\Processor Information(_Total)\% Processor Utility`,
-		`\Processor(_Total)\% Processor Time`,
-	} {
-		val, err := pdhQueryCounter(path)
-		if err == nil {
-			return val, nil
-		}
+// patchCPUFreq 替换 cpu.Info() 的静态 MHz 为实时 PDH 频率数值。
+func patchCPUFreq(info []cpu.InfoStat) []cpu.InfoStat {
+	if len(info) == 0 {
+		return info
 	}
-	return 0, fmt.Errorf("all PDH CPU counters failed")
+	val, err := pdhReadCounter(`\Processor Information(_Total)\% Processor Performance`)
+	if err != nil {
+		return info
+	}
+	if val <= 0 {
+		return info
+	}
+
+	baseMHz := info[0].Mhz
+	if baseMHz <= 0 {
+		return info
+	}
+
+	curMHz := baseMHz * (val / 100.0)
+	out := make([]cpu.InfoStat, len(info))
+	for i, v := range info {
+		out[i] = v
+		out[i].Mhz = curMHz
+	}
+	return out
 }
 
-func pdhQueryCounter(counterPath string) (float64, error) {
+// pdhReadCounter 一次性查询 PDH 计数器（用于 patchCPUFreq 等低频查询，非 CPU 使用率路径）。
+// 瞬时计数器只需一次 PdhCollectQueryData。
+func pdhReadCounter(counterPath string) (float64, error) {
 	var query uintptr
 	ret, _, _ := _PdhOpenQuery.Call(0, 0, uintptr(unsafe.Pointer(&query)))
 	if ret != errorSuccess {
@@ -119,7 +186,6 @@ func pdhQueryCounter(counterPath string) (float64, error) {
 		query, uintptr(unsafe.Pointer(pathPtr)), 0, uintptr(unsafe.Pointer(&counter)),
 	)
 	if ret != errorSuccess {
-		// Fallback to locale-specific counter if English API is unavailable
 		ret, _, _ = _PdhAddCounter.Call(
 			query, uintptr(unsafe.Pointer(pathPtr)), 0, uintptr(unsafe.Pointer(&counter)),
 		)
@@ -128,8 +194,6 @@ func pdhQueryCounter(counterPath string) (float64, error) {
 		}
 	}
 
-	// Two collections required for rate-type counters
-	_PdhCollectQueryData.Call(query)
 	_PdhCollectQueryData.Call(query)
 
 	var value pdhFmtCounterValueDouble
