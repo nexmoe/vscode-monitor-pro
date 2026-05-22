@@ -4,13 +4,24 @@ import { MetricsExist } from "./constants";
 const CONFIG_SECTION = "monitor-pro";
 
 const allMetrics: MetricsExist[] = [
-  "cpu", "memoryActive", "memoryUsed", "network", "fileSystem",
-  "battery", "cpuTemp", "cpuSpeed", "osDistro", "diskSpace", "uptime",
+  "cpu",
+  "memoryActive",
+  "memoryUsed",
+  "network",
+  "fileSystem",
+  "battery",
+  "cpuTemp",
+  "cpuSpeed",
+  "osDistro",
+  "diskSpace",
+  "uptime",
 ];
 
 export function getRefreshInterval(): number {
   return (
-    workspace.getConfiguration(CONFIG_SECTION).get<number>("refresh-interval") ?? 2000
+    workspace
+      .getConfiguration(CONFIG_SECTION)
+      .get<number>("refresh-interval") ?? 2000
   );
 }
 
@@ -30,20 +41,30 @@ export function getMetricsOrder(): MetricsExist[] {
 
 export function getUnitSystem(): "binary" | "decimal" {
   return (
-    workspace.getConfiguration(CONFIG_SECTION).get<"binary" | "decimal">("unitSystem") ?? "binary"
+    workspace
+      .getConfiguration(CONFIG_SECTION)
+      .get<"binary" | "decimal">("unitSystem") ?? "binary"
   );
 }
 
 export function getShowSpace(): boolean {
-  return workspace.getConfiguration(CONFIG_SECTION).get<boolean>("showSpace", false);
+  return workspace
+    .getConfiguration(CONFIG_SECTION)
+    .get<boolean>("showSpace", false);
 }
 
 export function getSingleUnit(): boolean {
-  return workspace.getConfiguration(CONFIG_SECTION).get<boolean>("singleUnit", false);
+  return workspace
+    .getConfiguration(CONFIG_SECTION)
+    .get<boolean>("singleUnit", false);
 }
 
 export function getSignificantDigits(): Record<string, number> {
-  return workspace.getConfiguration(CONFIG_SECTION).get<Record<string, number>>("significantDigits") ?? {};
+  return (
+    workspace
+      .getConfiguration(CONFIG_SECTION)
+      .get<Record<string, number>>("significantDigits") ?? {}
+  );
 }
 
 export function getFormatConfig() {
@@ -56,7 +77,9 @@ export function getFormatConfig() {
 }
 
 export function getUptimeFormat(): string {
-  return workspace.getConfiguration(CONFIG_SECTION).get<string>("uptimeFormat", "auto");
+  return workspace
+    .getConfiguration(CONFIG_SECTION)
+    .get<string>("uptimeFormat", "auto");
 }
 
 export interface ResourceUsageChartConfig {
@@ -74,24 +97,35 @@ export interface ResourceUsageConfig {
 }
 
 const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
-  cpu:       { enabled: true,  view: "line", color: "--vscode-charts-blue" },
-  memActive: { enabled: true,  view: "line", color: "--vscode-charts-green" },
-  memUsed:   { enabled: false, view: "line", color: "--vscode-charts-green" },
-  netRx:     { enabled: true,  view: "line", color: "--vscode-charts-orange" },
-  netTx:     { enabled: true,  view: "line", color: "--vscode-charts-purple" },
-  diskRx:    { enabled: true,  view: "line", color: "--vscode-charts-yellow" },
-  diskWx:    { enabled: true,  view: "line", color: "--vscode-charts-red" },
-  battery:   { enabled: true,  view: "line", color: "--vscode-textLink-foreground" },
-  batteryPower: { enabled: true,  view: "line", color: "--vscode-charts-green" },
-  cpuTemp:   { enabled: true,  view: "line", color: "--vscode-errorForeground" },
-  cpuSpeed:  { enabled: true,  view: "line", color: "--vscode-terminal-ansiBrightCyan" },
+  cpu: { enabled: true, view: "line", color: "--vscode-charts-blue" },
+  memActive: { enabled: true, view: "line", color: "--vscode-charts-green" },
+  memUsed: { enabled: false, view: "line", color: "--vscode-charts-green" },
+  netRx: { enabled: true, view: "line", color: "--vscode-charts-orange" },
+  netTx: { enabled: true, view: "line", color: "--vscode-charts-purple" },
+  diskRx: { enabled: true, view: "line", color: "--vscode-charts-yellow" },
+  diskWx: { enabled: true, view: "line", color: "--vscode-charts-red" },
+  battery: {
+    enabled: true,
+    view: "line",
+    color: "--vscode-textLink-foreground",
+  },
+  batteryPower: { enabled: true, view: "line", color: "--vscode-charts-green" },
+  cpuTemp: { enabled: true, view: "line", color: "--vscode-errorForeground" },
+  cpuSpeed: {
+    enabled: true,
+    view: "line",
+    color: "--vscode-terminal-ansiBrightCyan",
+  },
 };
 
 const CHART_SECTION = "resourceUsage";
 
 export function getResourceUsageConfig(): ResourceUsageConfig {
   const config = workspace.getConfiguration(CONFIG_SECTION);
-  const charts = config.get<Record<string, ResourceUsageChartConfig>>(`${CHART_SECTION}.charts`, {});
+  const charts = config.get<Record<string, ResourceUsageChartConfig>>(
+    `${CHART_SECTION}.charts`,
+    {},
+  );
   for (const key of Object.keys(DEFAULT_CHARTS)) {
     if (!charts[key]) {
       charts[key] = { ...DEFAULT_CHARTS[key] };
@@ -103,19 +137,20 @@ export function getResourceUsageConfig(): ResourceUsageConfig {
   }
   return {
     charts,
-    diskSpaceMounts: config.get<string[]>(`${CHART_SECTION}.diskSpaceMounts`, ["all"]),
+    diskSpaceMounts: config.get<string[]>(`${CHART_SECTION}.diskSpaceMounts`, [
+      "all",
+    ]),
     samplingPoints: config.get<number>(`${CHART_SECTION}.samplingPoints`, 60),
     showUptime: config.get<boolean>(`${CHART_SECTION}.showUptime`, true),
     showOsDistro: config.get<boolean>(`${CHART_SECTION}.showOsDistro`, true),
   };
 }
 
-
-
 export function getDiskSpaceConfig(): string[] {
   return (
     workspace.getConfiguration(CONFIG_SECTION).get<string[]>("diskSpace") ?? [
-      "/", "C:",
+      "/",
+      "C:",
     ]
   );
 }
