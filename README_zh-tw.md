@@ -143,7 +143,7 @@ l10n — 中文、電量、電池健康度與功率：
 | `monitor-pro.showSpace`                     | `false`       | 數字與單位間是否加空格                   |
 | `monitor-pro.singleUnit`                    | `false`       | 單位縮寫為首字母（K, M, G）              |
 | `monitor-pro.significantDigits`             | 各指標不同    | 有效數字位數（1~6）                      |
-| `monitor-pro.uptimeFormat`                  | `auto`        | 自訂格式，支援 `{d}` `{h}` `{m}` `{s}` |
+| `monitor-pro.uptimeFormat`                  | `auto`        | 自訂格式，支援 `{d}` `{h}` `{m}` `{s}`   |
 | `monitor-pro.resourceUsage.charts`          | —             | 圖表啟用/檢視/顏色                       |
 | `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 圖表歷史點數（10~500）                   |
 | `monitor-pro.resourceUsage.showUptime`      | `true`        | 資源檢視顯示執行時間卡片                 |
