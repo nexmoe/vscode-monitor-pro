@@ -187,10 +187,16 @@ pnpm run compile
 | `pnpm run package:vsix:win32-arm64` | Package Windows ARM64 VSIX                |
 | `pnpm run gen-l10n`                 | Regenerate l10n bundle from source        |
 
-## Inspired by
+## Inspiration & Acknowledgments
+
+### Inspiration
 
 - [vscode-resource-monitor](https://github.com/chneau/vscode-resource-monitor)
 - [resmon](https://github.com/Njanderson/resmon)
+
+### Acknowledgments
+
+- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor): Adopted its PDH query lifecycle pattern (persistent handle + baseline collection + single collection per tick) for the Windows Go backend CPU monitoring, ensuring readings match Task Manager exactly.
 
 ## Feedback
 
