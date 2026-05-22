@@ -66,5 +66,11 @@
 	"Update cycle completed in {0}ms": "更新周期完成，耗时 {0}ms",
 	"Update cycle failed: {0}": "更新周期失败: {0}",
 	"Uptime": "运行时间",
-	"Using built-in data source: {0}": "使用内置数据源: {0}"
+	"Using built-in data source: {0}": "使用内置数据源: {0}",
+	"Metric \"{0}\" is not available on this system": "该系统上不提供度量 \"{0}\"",
+	"Collection failed: {0}": "数据采集失败: {0}",
+	"Worker collection failed: {0}": "Worker 数据采集失败: {0}",
+	"Worker error: {0}, falling back to inline polling": "Worker 错误: {0}，回退到内联轮询",
+	"Worker exited with code {0}, falling back to inline polling": "Worker 以退出码 {0} 终止，回退到内联轮询",
+	"Failed to create worker: {0}, falling back to inline polling": "创建 Worker 失败: {0}，回退到内联轮询"
 }

@@ -66,5 +66,11 @@
 	"Update cycle completed in {0}ms": "更新サイクルが完了しました ({0}ms)",
 	"Update cycle failed: {0}": "更新サイクルに失敗しました: {0}",
 	"Uptime": "稼働時間",
-	"Using built-in data source: {0}": "内蔵データソースを使用: {0}"
+	"Using built-in data source: {0}": "内蔵データソースを使用: {0}",
+	"Metric \"{0}\" is not available on this system": "このシステムではメトリック \"{0}\" は利用できません",
+	"Collection failed: {0}": "データ収集に失敗しました: {0}",
+	"Worker collection failed: {0}": "Worker データ収集に失敗しました: {0}",
+	"Worker error: {0}, falling back to inline polling": "Worker エラー: {0}、インラインポーリングにフォールバックします",
+	"Worker exited with code {0}, falling back to inline polling": "Worker が終了コード {0} で終了しました、インラインポーリングにフォールバックします",
+	"Failed to create worker: {0}, falling back to inline polling": "Worker の作成に失敗しました: {0}、インラインポーリングにフォールバックします"
 }
