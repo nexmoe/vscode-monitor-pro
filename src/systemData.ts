@@ -172,7 +172,6 @@ class SystemDataProvider {
       return;
     }
     const tick = async () => {
-      const t0 = Date.now();
       try {
         const data = await this.collect();
         data.unavailableMetrics = this.computeUnavailableMetrics(data);
@@ -195,9 +194,7 @@ class SystemDataProvider {
       } catch (e) {
         this._logger?.warn(this._t('Collection failed: {0}', e instanceof Error ? e.message : String(e)));
       }
-      const elapsed = Date.now() - t0;
-      const delay = Math.max(this._interval - elapsed, 0);
-      this._timer = setTimeout(tick, delay);
+      this._timer = setTimeout(tick, this._interval);
     };
     tick();
   }
