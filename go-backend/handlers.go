@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"runtime"
@@ -127,6 +128,44 @@ func usageWithTimeout(mountpoint string) *disk.UsageStat {
 	}
 }
 
+func partitionsWithTimeout(timeout time.Duration) []disk.PartitionStat {
+	type result struct {
+		p []disk.PartitionStat
+	}
+	ch := make(chan result, 1)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		p, _ := disk.PartitionsWithContext(ctx, false)
+		ch <- result{p}
+	}()
+	select {
+	case r := <-ch:
+		return r.p
+	case <-time.After(timeout + time.Second):
+		return nil
+	}
+}
+
+func ioCountersWithTimeout(timeout time.Duration) map[string]disk.IOCountersStat {
+	type result struct {
+		m map[string]disk.IOCountersStat
+	}
+	ch := make(chan result, 1)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		m, _ := disk.IOCountersWithContext(ctx)
+		ch <- result{m}
+	}()
+	select {
+	case r := <-ch:
+		return r.m
+	case <-time.After(timeout + time.Second):
+		return nil
+	}
+}
+
 func getBattery(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, Response{Success: true, Data: getBatteryData()})
 }
@@ -163,7 +202,7 @@ func getBasicMetrics(w http.ResponseWriter, r *http.Request) {
 func getCPU(w http.ResponseWriter, r *http.Request) {
 	info, _ := cpu.Info()
 	info = patchCPUFreq(info)
-	perc, _ := getCPUPercent(1*time.Second, false)
+	perc, _ := getCPUPercent(2*time.Second, false)
 	times, _ := cpu.Times(true)
 
 	writeJSON(w, Response{Success: true, Data: struct {
@@ -191,14 +230,16 @@ func getMemory(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDisk(w http.ResponseWriter, r *http.Request) {
-	partitions, _ := disk.Partitions(false)
+	partitions := partitionsWithTimeout(10 * time.Second)
 
 	usage := make([]*disk.UsageStat, 0)
+	validParts := make([]disk.PartitionStat, 0, len(partitions))
 	hasRoot := false
 	for _, p := range partitions {
 		u := usageWithTimeout(p.Mountpoint)
 		if u != nil {
 			usage = append(usage, u)
+			validParts = append(validParts, p)
 			if p.Mountpoint == "/" {
 				hasRoot = true
 			}
@@ -210,14 +251,14 @@ func getDisk(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	ioCounters, _ := disk.IOCounters()
+	ioCounters := ioCountersWithTimeout(2 * time.Second)
 
 	writeJSON(w, Response{Success: true, Data: struct {
-		Partitions []disk.PartitionStat            `json:"partitions"`
-		Usage      []*disk.UsageStat               `json:"usage"`
-		IOCounters map[string]disk.IOCountersStat  `json:"ioCounters"`
+		Partitions []disk.PartitionStat           `json:"partitions"`
+		Usage      []*disk.UsageStat              `json:"usage"`
+		IOCounters map[string]disk.IOCountersStat `json:"ioCounters"`
 	}{
-		Partitions: partitions,
+		Partitions: validParts,
 		Usage:      usage,
 		IOCounters: ioCounters,
 	}})
@@ -238,8 +279,8 @@ func getHost(w http.ResponseWriter, r *http.Request) {
 	sensorData, _ := sensors.SensorsTemperatures()
 
 	writeJSON(w, Response{Success: true, Data: struct {
-		Info    *host.InfoStat              `json:"info"`
-		Sensors []sensors.TemperatureStat    `json:"sensors"`
+		Info    *host.InfoStat            `json:"info"`
+		Sensors []sensors.TemperatureStat `json:"sensors"`
 	}{
 		Info:    info,
 		Sensors: sensorData,
@@ -247,38 +288,153 @@ func getHost(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAll(w http.ResponseWriter, r *http.Request) {
-	cpuInfo, _ := cpu.Info()
-	cpuInfo = patchCPUFreq(cpuInfo)
-	cpuPerc, _ := getCPUPercent(1*time.Second, false)
-	cpuTimes, _ := cpu.Times(true)
-	vmem, _ := mem.VirtualMemory()
-	smem, _ := mem.SwapMemory()
-	parts, _ := disk.Partitions(false)
+	var (
+		mu sync.Mutex
+		wg sync.WaitGroup
 
-	usage := make([]*disk.UsageStat, 0)
-	hasRoot := false
-	for _, p := range parts {
-		u := usageWithTimeout(p.Mountpoint)
-		if u != nil {
-			usage = append(usage, u)
-			if p.Mountpoint == "/" {
-				hasRoot = true
+		cpuInfo     []cpu.InfoStat
+		cpuPerc     []float64
+		cpuTimes    []cpu.TimesStat
+		vmem        *mem.VirtualMemoryStat
+		smem        *mem.SwapMemoryStat
+		parts       []disk.PartitionStat
+		usage       []*disk.UsageStat
+		ioCounters  map[string]disk.IOCountersStat
+		netCounters []net.IOCountersStat
+		hostInfo    *host.InfoStat
+		sensorData  []sensors.TemperatureStat
+		loadAvg     *load.AvgStat
+		loadMisc    *load.MiscStat
+		batData     batteryInfo
+	)
+
+	// CPU group
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		info, _ := cpu.InfoWithContext(ctx)
+		info = patchCPUFreq(info)
+		perc, _ := getCPUPercent(2*time.Second, false)
+		times, _ := cpu.TimesWithContext(ctx, true)
+
+		mu.Lock()
+		cpuInfo = info
+		cpuPerc = perc
+		cpuTimes = times
+		mu.Unlock()
+	}()
+
+	// Memory group
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		virtual, _ := mem.VirtualMemoryWithContext(ctx)
+		swap, _ := mem.SwapMemoryWithContext(ctx)
+
+		mu.Lock()
+		vmem = virtual
+		smem = swap
+		mu.Unlock()
+	}()
+
+	// Disk group
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		partitions := partitionsWithTimeout(10 * time.Second)
+
+		diskUsage := make([]*disk.UsageStat, 0)
+		validParts := make([]disk.PartitionStat, 0, len(partitions))
+		hasRoot := false
+		for _, p := range partitions {
+			u := usageWithTimeout(p.Mountpoint)
+			if u != nil {
+				diskUsage = append(diskUsage, u)
+				validParts = append(validParts, p)
+				if p.Mountpoint == "/" {
+					hasRoot = true
+				}
 			}
 		}
-	}
-	if runtime.GOOS != "windows" && !hasRoot {
-		if u := usageWithTimeout("/"); u != nil {
-			usage = append(usage, u)
+		if runtime.GOOS != "windows" && !hasRoot {
+			if u := usageWithTimeout("/"); u != nil {
+				diskUsage = append(diskUsage, u)
+			}
 		}
-	}
 
-	ioCounters, _ := disk.IOCounters()
-	netCounters, _ := net.IOCounters(true)
-	hostInfo, _ := host.Info()
-	sensorData, _ := sensors.SensorsTemperatures()
-	loadAvg, _ := load.Avg()
-	loadMisc, _ := load.Misc()
-	batData := getBatteryData()
+		ioMap := ioCountersWithTimeout(2 * time.Second)
+
+		mu.Lock()
+		parts = validParts
+		usage = diskUsage
+		ioCounters = ioMap
+		mu.Unlock()
+	}()
+
+	// Network group
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		counters, _ := net.IOCountersWithContext(ctx, true)
+
+		mu.Lock()
+		netCounters = counters
+		mu.Unlock()
+	}()
+
+	// Host group
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		info, _ := host.InfoWithContext(ctx)
+		sensors, _ := sensors.TemperaturesWithContext(ctx)
+
+		mu.Lock()
+		hostInfo = info
+		sensorData = sensors
+		mu.Unlock()
+	}()
+
+	// Load group
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		avg, _ := load.AvgWithContext(ctx)
+		misc, _ := load.MiscWithContext(ctx)
+
+		mu.Lock()
+		loadAvg = avg
+		loadMisc = misc
+		mu.Unlock()
+	}()
+
+	// Battery group
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data := getBatteryData()
+		mu.Lock()
+		batData = data
+		mu.Unlock()
+	}()
+
+	wg.Wait()
 
 	writeJSON(w, Response{Success: true, Data: struct {
 		CPU     interface{} `json:"cpu"`
@@ -315,8 +471,8 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 			IOCounters: netCounters,
 		},
 		Host: struct {
-			Info    *host.InfoStat              `json:"info"`
-			Sensors []sensors.TemperatureStat    `json:"sensors"`
+			Info    *host.InfoStat            `json:"info"`
+			Sensors []sensors.TemperatureStat `json:"sensors"`
 		}{
 			Info: hostInfo, Sensors: sensorData,
 		},
