@@ -123,6 +123,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       diskSpace: vscode.l10n.t("Disk Space"),
       uptime: vscode.l10n.t("Uptime"),
       osDistro: vscode.l10n.t("OS Distro"),
+      gpuTotalVram: vscode.l10n.t("Total VRAM"),
     };
     webviewView.webview.postMessage({
       type: "config",

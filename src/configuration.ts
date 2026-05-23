@@ -9,6 +9,7 @@ const allMetrics: MetricsExist[] = [
   "memoryUsed",
   "network",
   "fileSystem",
+  "gpu",
   "battery",
   "cpuTemp",
   "cpuSpeed",

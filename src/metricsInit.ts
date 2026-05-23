@@ -68,6 +68,8 @@ function getMetricTitle(section: MetricsExist): string {
       return vscode.l10n.t("File System (Read/Write)");
     case "battery":
       return vscode.l10n.t("Battery Status");
+    case "gpu":
+      return vscode.l10n.t("GPU Status");
     case "cpuTemp":
       return vscode.l10n.t("CPU Temperature");
     case "cpuSpeed":

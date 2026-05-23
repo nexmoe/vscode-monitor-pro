@@ -1,12 +1,15 @@
 import { parentPort } from "worker_threads";
 import * as SI from "systeminformation";
+import { SIGPUDataSource } from "./gpu";
 
 let interval = 2000;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let prev: Record<string, any> | null = null;
 
+const gpuSource = new SIGPUDataSource();
+
 async function collect() {
-  const [cl, mem, os, ns, fs, fsSize, cpuSpeed, cpuTemp, bat] =
+  const [cl, mem, os, ns, fs, fsSize, cpuSpeed, cpuTemp, bat, gpu] =
     await Promise.all([
       SI.currentLoad().catch(() => null),
       SI.mem().catch(() => null),
@@ -17,6 +20,7 @@ async function collect() {
       SI.cpuCurrentSpeed().catch(() => null),
       SI.cpuTemperature().catch(() => null),
       SI.battery().catch(() => null),
+      gpuSource.collect().catch(() => ({ controllers: [] })),
     ]);
   let tm: SI.Systeminformation.TimeData | null = null;
   try {
@@ -79,6 +83,7 @@ async function collect() {
       prev?.cpuCurrentSpeed ?? { min: 0, max: 0, avg: 0, cores: [] },
     cpuTemperature: cpuTemp ??
       prev?.cpuTemperature ?? { main: 0, cores: [], max: 0 },
+    gpu: gpu ?? prev?.gpu ?? { controllers: [] },
     battery: bat
       ? {
           hasBattery: bat.hasBattery,

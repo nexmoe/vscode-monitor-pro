@@ -3,6 +3,7 @@ import * as path from "path";
 import { l10n } from "vscode";
 import type { DataSource } from "./dataSource";
 import { SIDataSource } from "./dataSource";
+import type { SystemGPUData } from "./gpu";
 import { getLogger } from "./logger";
 
 export interface SystemSnapshot {
@@ -84,6 +85,7 @@ export interface SystemSnapshot {
     cores: number[];
     max: number;
   };
+  gpu: SystemGPUData;
   battery: {
     hasBattery: boolean;
     cycleCount: number;
@@ -120,6 +122,7 @@ const UNAVAILABLE_CHECKERS: Record<string, (s: SystemSnapshot) => boolean> = {
   batteryPower: (s) => !s.battery.hasBattery,
   cpuTemp: (s) => s.cpuTemperature.main <= 0,
   cpuSpeed: (s) => s.cpuCurrentSpeed.avg <= 0,
+  gpu: (s) => !s.gpu.controllers.length,
 };
 
 class SystemDataProvider {

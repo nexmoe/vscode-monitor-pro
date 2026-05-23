@@ -213,12 +213,55 @@
 
         .info-bar-label {
             font-size: calc(var(--font-size) - 2px);
-            color: var(--fg-muted);
+            font-weight: 500;
+            color: var(--fg);
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
             flex-shrink: 0;
-            min-width: 48px;
+            min-width: 36px;
             text-align: right;
+        }
+
+        .gpu-row {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-top: 2px;
+            font-size: calc(var(--font-size) - 1px);
+        }
+
+        .gpu-index {
+            font-weight: 600;
+            color: var(--fg-muted);
+            min-width: 22px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .gpu-stat {
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .gpu-stat-pct {
+            min-width: 28px;
+            text-align: right;
+        }
+
+        .gpu-stat-temp {
+            min-width: 34px;
+            text-align: center;
+        }
+
+        .gpu-stat-vram {
+            min-width: 88px;
+            text-align: right;
+            font-size: calc(var(--font-size) - 2px);
+        }
+
+        .gpu-row .info-bar-track {
+            min-width: 28px;
         }
     </style>
 </head>
@@ -509,6 +552,17 @@
                     '<div class="info-card" id="info-diskSpace">' +
                     '<div class="info-header">' + (_labels.diskSpace || "Disk Space") + '</div>' +
                     '<div id="disk-mount-list"></div>' +
+                    '</div>';
+
+                // GPU
+                html +=
+                    '<div class="info-card" id="info-gpu" style="display:none">' +
+                    '<div class="info-header" id="info-gpu-header">GPU</div>' +
+                    '<div id="gpu-controller-list"></div>' +
+                    '<div id="gpu-footer" style="display:none;margin-top:6px;border-top:1px solid rgba(128,128,128,0.15);padding-top:4px" class="info-mount-row">' +
+                    '<span class="info-mount-name" style="font-weight:600">' + (_labels.gpuTotalVram || "Total VRAM") + '</span>' +
+                    '<span id="gpu-total-vram" class="info-bar-label" style="font-weight:600;color:var(--fg)"></span>' +
+                    '</div>' +
                     '</div>';
 
                 container.innerHTML = html;
@@ -829,6 +883,94 @@
                 }
             }
 
+            function renderGPUCards(tm) {
+                const card = document.getElementById("info-gpu");
+                const list = document.getElementById("gpu-controller-list");
+                const footer = document.getElementById("gpu-footer");
+                const totalVramEl = document.getElementById("gpu-total-vram");
+                if (!card || !list) return;
+
+                const controllers = tm.gpu?.controllers;
+                if (!controllers || controllers.length === 0) {
+                    card.style.display = "none";
+                    return;
+                }
+
+                card.style.display = "";
+
+                const header = document.getElementById("info-gpu-header");
+                const modelShort = controllers[0].model.replace(/GeForce /g, "");
+                const count = controllers.length;
+                if (header) {
+                    const baseLabel = _labels.gpu || "GPU";
+                    header.textContent = count > 1
+                        ? baseLabel + " (" + count + "\u00D7" + modelShort + ")"
+                        : baseLabel;
+                }
+
+                let html = "";
+                for (const c of controllers) {
+                    const utilPct = Math.max(0, Math.min(100, c.utilization));
+                    const vramPct = c.vramTotal > 0
+                        ? Math.max(0, Math.min(100, (c.vramUsed / c.vramTotal) * 100))
+                        : 0;
+
+                    let utilColor;
+                    if (utilPct >= 80) {
+                        utilColor = resolveColorValue("--vscode-charts-red");
+                    } else if (utilPct >= 60) {
+                        utilColor = resolveColorValue("--vscode-charts-yellow");
+                    } else {
+                        utilColor = resolveColorValue("--vscode-charts-green");
+                    }
+                    if (!utilColor) utilColor = colorFor("cpu");
+
+                    let vramColor;
+                    if (vramPct >= 90) {
+                        vramColor = resolveColorValue("--vscode-charts-red");
+                    } else if (vramPct >= 75) {
+                        vramColor = resolveColorValue("--vscode-charts-yellow");
+                    } else {
+                        vramColor = resolveColorValue("--vscode-charts-green");
+                    }
+                    if (!vramColor) vramColor = colorFor("memActive");
+
+                    const tempStr = c.temperature >= 0 ? c.temperature + "\u00B0C" : "\u2014";
+                    const vramStr = c.vramTotal > 0
+                        ? formatBytes(c.vramUsed * 1024 * 1024, 2) + "/" + formatBytes(c.vramTotal * 1024 * 1024, 2)
+                        : "\u2014";
+
+                    const vramPctDisplay = Math.round(vramPct);
+
+                    html +=
+                        '<div class="gpu-row">' +
+                        '<span class="gpu-index">#' + c.index + '</span>' +
+                        '<div class="info-bar-track"><div class="info-bar-fill" style="width:' + utilPct + '%;background:' + utilColor + '"></div></div>' +
+                        '<span class="gpu-stat gpu-stat-pct">' + utilPct + '%</span>' +
+                        '<span class="gpu-stat gpu-stat-temp">' + tempStr + '</span>' +
+                        '<span class="gpu-stat gpu-stat-vram">' + vramStr + '</span>' +
+                        '<div class="info-bar-track"><div class="info-bar-fill" style="width:' + vramPct + '%;background:' + vramColor + '"></div></div>' +
+                        '<span class="gpu-stat gpu-stat-pct">' + vramPctDisplay + '%</span>' +
+                        '</div>';
+                }
+
+                list.innerHTML = html;
+
+                if (count > 1) {
+                    const totalVRAM = controllers.reduce((s, c) => s + c.vramTotal, 0);
+                    const usedVRAM = controllers.reduce((s, c) => s + c.vramUsed, 0);
+                    if (totalVRAM > 0 && footer && totalVramEl) {
+                        footer.style.display = "";
+                        const pct = ((usedVRAM / totalVRAM) * 100).toFixed(1);
+                        totalVramEl.textContent =
+                            formatBytes(usedVRAM * 1024 * 1024, 3) + " / " + formatBytes(totalVRAM * 1024 * 1024, 3) +
+                            " (" + pct + "%)";
+                    }
+                } else {
+                    if (footer) footer.style.display = "none";
+                }
+            }
+
             function updateTextMetrics(tm, formattedText) {
                 const ft = formattedText || {};
 
@@ -841,6 +983,8 @@
                 if (tm.diskSpace) {
                     renderDiskMountBars(tm.diskSpace);
                 }
+
+                renderGPUCards(tm);
             }
 
             // -------- message handler --------
