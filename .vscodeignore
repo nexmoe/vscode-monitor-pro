@@ -1,18 +1,20 @@
+# vscode files
 .vscode/**
 .vscode-test/**
-out/**
+
+# source code
 src/**
+
+# github files
 .github/**
+
 .eslintrc.json
 .gitignore
 .yarnrc
 pnpm-lock.yaml
 pnpm-workspace.yaml
 esbuild.js
-vsc-extension-quickstart.md
-RELEASE.md
 **/tsconfig.json
-**/*.map
 **/*.ts
 docs
 renovate.json
@@ -21,3 +23,7 @@ assets/*.png
 !assets/icon.png
 go-backend/
 !go-backend/bin/*
+
+# other md files
+*.md
+!README.md
