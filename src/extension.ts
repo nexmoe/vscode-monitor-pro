@@ -2,12 +2,8 @@ import { commands, ExtensionContext, l10n, window, workspace } from "vscode";
 import { ResourceUsageProvider } from "./resourceUsageProvider";
 import { powerShellRelease, powerShellStart } from "systeminformation";
 import { getRefreshInterval, isConfigChanged } from "./configuration";
-import {
-  Metric,
-  getEnabledMetrics,
-  setLogger as setMetricsInitLogger,
-} from "./metricsInit";
-import { setLogger as setMetricsLogger, updateGlobalConfig } from "./metrics";
+import { Metric, getEnabledMetrics } from "./metricsInit";
+import { updateGlobalConfig } from "./metrics";
 import { systemData } from "./systemData";
 import { GoBackendManager } from "./goBackend";
 import { GoDataSource, SIDataSource } from "./dataSource";
@@ -17,8 +13,8 @@ import {
   getSingleUnit,
   getSignificantDigits,
 } from "./configuration";
-
-const log = window.createOutputChannel("Monitor Pro", { log: true });
+import { getLogger, initLogger } from "./logger";
+import sourceMapSupport from "source-map-support";
 
 let metrics: Metric[] = [];
 let unsubscribeData: (() => void) | null = null;
@@ -47,17 +43,17 @@ function applyFormatConfig() {
 function rebuildMetrics() {
   metrics.forEach((x) => x.dispose());
   metrics = getEnabledMetrics();
-  log.info(l10n.t("Metrics initialized: {0}", metrics.length));
+  getLogger().info(l10n.t("Metrics initialized: {0}", metrics.length));
 }
 
 function tryStartGoBackend(ctx: ExtensionContext) {
   const binaryPath = getGoBinaryPath(ctx);
-  goBackend = new GoBackendManager(log);
+  goBackend = new GoBackendManager();
   goBackend
     .start(binaryPath)
     .then(() => {
       systemData.setSource(new GoDataSource(goBackend!));
-      log.info(
+      getLogger().info(
         l10n.t(
           "Go backend started on port {0}, source: {1}",
           goBackend!.port!,
@@ -66,7 +62,7 @@ function tryStartGoBackend(ctx: ExtensionContext) {
       );
     })
     .catch((err) => {
-      log.warn(
+      getLogger().warn(
         l10n.t("Go backend unavailable: {0}, using fallback", String(err)),
       );
       goBackend?.stop();
@@ -79,22 +75,15 @@ function initDataSource(ctx: ExtensionContext) {
   if (shouldUseGoBackend()) {
     tryStartGoBackend(ctx);
   } else {
-    log.info(l10n.t("Using built-in data source: {0}", "systeminformation"));
+    getLogger().info(l10n.t("Using built-in data source: {0}", "systeminformation"));
     systemData.useWorker();
   }
 }
 
 export const activate = async (ctx: ExtensionContext) => {
-  log.info(l10n.t("Extension activating"));
-
-  const logger = {
-    debug: (msg: string) => log.debug(msg),
-    warn: (msg: string) => log.warn(msg),
-    error: (msg: string) => log.error(msg),
-  };
-  setMetricsLogger(logger);
-  setMetricsInitLogger(logger);
-  systemData.setLogger(logger);
+  sourceMapSupport.install();
+  initLogger("Monitor Pro");
+  getLogger().info(l10n.t("Extension activating"));
 
   if (process.platform === "win32") {
     powerShellStart();
@@ -102,7 +91,7 @@ export const activate = async (ctx: ExtensionContext) => {
 
   applyFormatConfig();
   rebuildMetrics();
-  log.info(
+  getLogger().info(
     l10n.t("Platform: {0}, Architecture: {1}", process.platform, process.arch),
   );
 
@@ -116,7 +105,7 @@ export const activate = async (ctx: ExtensionContext) => {
       commands.executeCommand("workbench.view.extension.monitor-pro");
     }),
   );
-  log.info(l10n.t("Resource Usage view registered"));
+  getLogger().info(l10n.t("Resource Usage view registered"));
 
   initDataSource(ctx);
 
@@ -128,10 +117,10 @@ export const activate = async (ctx: ExtensionContext) => {
     Promise.all(metrics.map((x) => x.update()))
       .then(() => {
         const elapsed = Date.now() - t0;
-        log.debug(l10n.t("Update cycle completed in {0}ms", elapsed));
+        getLogger().debug(l10n.t("Update cycle completed in {0}ms", elapsed));
       })
       .catch((e) => {
-        log.error(l10n.t("Update cycle failed: {0}", String(e)));
+        getLogger().error(l10n.t("Update cycle failed: {0}", String(e)));
       });
   });
 
@@ -142,7 +131,7 @@ export const activate = async (ctx: ExtensionContext) => {
         return;
       }
 
-      log.info(l10n.t("Configuration changed, hot-reloading"));
+      getLogger().info(l10n.t("Configuration changed, hot-reloading"));
 
       if (
         event.affectsConfiguration("monitor-pro.unitSystem") ||
@@ -151,12 +140,12 @@ export const activate = async (ctx: ExtensionContext) => {
         event.affectsConfiguration("monitor-pro.significantDigits")
       ) {
         applyFormatConfig();
-        log.debug(l10n.t("Format config updated"));
+        getLogger().debug(l10n.t("Format config updated"));
       }
 
       if (event.affectsConfiguration("monitor-pro.refresh-interval")) {
         systemData.setInterval(getRefreshInterval());
-        log.debug(
+        getLogger().debug(
           l10n.t("Refresh interval updated to {0}ms", getRefreshInterval()),
         );
       }
@@ -167,11 +156,11 @@ export const activate = async (ctx: ExtensionContext) => {
         event.affectsConfiguration("monitor-pro.uptimeFormat")
       ) {
         rebuildMetrics();
-        log.debug(l10n.t("Metrics rebuilt"));
+        getLogger().debug(l10n.t("Metrics rebuilt"));
       }
 
       if (event.affectsConfiguration("monitor-pro.diskSpace")) {
-        log.debug(l10n.t("Disk space config updated"));
+        getLogger().debug(l10n.t("Disk space config updated"));
       }
 
       if (
@@ -180,14 +169,14 @@ export const activate = async (ctx: ExtensionContext) => {
         event.affectsConfiguration("monitor-pro.metrics.osDistro")
       ) {
         resourceUsageProvider.pushConfigUpdate();
-        log.debug(l10n.t("Resource Usage view config pushed"));
+        getLogger().debug(l10n.t("Resource Usage view config pushed"));
       }
     }),
   );
 };
 
 export const deactivate = () => {
-  log.info(l10n.t("Extension deactivating"));
+  getLogger().info(l10n.t("Extension deactivating"));
   goBackend?.stop();
   goBackend = null;
   unsubscribeData?.();
@@ -196,5 +185,5 @@ export const deactivate = () => {
     powerShellRelease();
   }
   metrics.forEach((x) => x.dispose());
-  log.info(l10n.t("Disposed {0} metrics", metrics.length));
+  getLogger().info(l10n.t("Disposed {0} metrics", metrics.length));
 };

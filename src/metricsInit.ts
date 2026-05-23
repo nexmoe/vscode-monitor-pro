@@ -6,20 +6,7 @@ import {
   MetricsExist,
 } from "./configuration";
 import { MetricCtrProps } from "./constants";
-
-const _logger: {
-  debug: (m: string) => void;
-  warn: (m: string) => void;
-  error: (m: string) => void;
-} = {
-  debug: () => {},
-  warn: () => {},
-  error: () => {},
-};
-
-export function setLogger(l: typeof _logger) {
-  Object.assign(_logger, l);
-}
+import { getLogger } from "./logger";
 
 export class Metric {
   #func: () => Promise<string>;
@@ -43,7 +30,7 @@ export class Metric {
     }
     try {
       this.#bar.text = await this.#func();
-      _logger.debug(
+      getLogger().debug(
         vscode.l10n.t(
           "Metric [{0}] updated: {1}",
           this.#section,
@@ -51,7 +38,7 @@ export class Metric {
         ),
       );
     } catch (e) {
-      _logger.error(
+      getLogger().error(
         vscode.l10n.t(
           "Metric [{0}] update failed: {1}",
           this.#section,
@@ -119,19 +106,19 @@ const newBarItem = ({
 export const getEnabledMetrics = () => {
   const enabled = getMetricsEnabled();
   const order = getMetricsOrder();
-  _logger.debug(vscode.l10n.t("Enabled metrics: {0}", JSON.stringify(enabled)));
-  _logger.debug(vscode.l10n.t("Metrics order: {0}", JSON.stringify(order)));
+  getLogger().debug(vscode.l10n.t("Enabled metrics: {0}", JSON.stringify(enabled)));
+  getLogger().debug(vscode.l10n.t("Metrics order: {0}", JSON.stringify(order)));
 
   return order.flatMap((section, index) => {
     if (!enabled[section]) {
-      _logger.debug(
+      getLogger().debug(
         vscode.l10n.t('Metric "{0}" disabled by user, skipping', section),
       );
       return [];
     }
     const metric = metrics.find((m) => m.section === section);
     if (metric) {
-      _logger.debug(
+      getLogger().debug(
         vscode.l10n.t(
           "Creating metric [{0}] at priority {1}",
           section,
@@ -140,7 +127,7 @@ export const getEnabledMetrics = () => {
       );
       return new Metric(metric).init(index);
     }
-    _logger.warn(
+    getLogger().warn(
       vscode.l10n.t('Metric section "{0}" not found, skipping', section),
     );
     return [];
