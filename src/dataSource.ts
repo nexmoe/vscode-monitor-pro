@@ -2,6 +2,7 @@ import * as SI from "systeminformation";
 import type { GoBackendManager } from "./goBackend";
 import { RawDataAdapter } from "./rawDataAdapter";
 import type { SystemSnapshot } from "./systemData";
+import { SIGPUDataSource } from "./gpu";
 
 export interface DataSource {
   readonly name: string;
@@ -22,9 +23,10 @@ export class GoDataSource implements DataSource {
 
 export class SIDataSource implements DataSource {
   readonly name = "systeminformation";
+  private gpuSource = new SIGPUDataSource();
 
   async collect(prev: SystemSnapshot | null): Promise<SystemSnapshot> {
-    const [cl, mem, os, ns, fs, fsSize, cpuSpeed, cpuTemp, bat] =
+    const [cl, mem, os, ns, fs, fsSize, cpuSpeed, cpuTemp, bat, gpu] =
       await Promise.all([
         SI.currentLoad().catch(() => null),
         SI.mem().catch(() => null),
@@ -35,6 +37,7 @@ export class SIDataSource implements DataSource {
         SI.cpuCurrentSpeed().catch(() => null),
         SI.cpuTemperature().catch(() => null),
         SI.battery().catch(() => null),
+        this.gpuSource.collect().catch(() => ({ controllers: [] })),
       ]);
     let tm: SI.Systeminformation.TimeData | null = null;
     try {
@@ -97,6 +100,7 @@ export class SIDataSource implements DataSource {
         prev?.cpuCurrentSpeed ?? { min: 0, max: 0, avg: 0, cores: [] },
       cpuTemperature: cpuTemp ??
         prev?.cpuTemperature ?? { main: 0, cores: [], max: 0 },
+      gpu: gpu ?? prev?.gpu ?? { controllers: [] },
       battery: bat
         ? {
             hasBattery: bat.hasBattery,

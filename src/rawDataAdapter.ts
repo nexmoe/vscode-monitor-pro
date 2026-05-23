@@ -152,6 +152,7 @@ export class RawDataAdapter {
         })),
       cpuCurrentSpeed: cpuSpeed,
       cpuTemperature: cpuTemp,
+      gpu: { controllers: [] },
       battery: raw.battery?.hasBattery
         ? {
             hasBattery: true,

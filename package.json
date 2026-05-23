@@ -220,6 +220,11 @@
           "default": false,
           "description": "%config.metrics.fileSystem%"
         },
+        "monitor-pro.metrics.gpu": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.metrics.gpu%"
+        },
         "monitor-pro.metrics.battery": {
           "type": "boolean",
           "default": true,
@@ -260,6 +265,7 @@
               "memoryUsed",
               "network",
               "fileSystem",
+              "gpu",
               "battery",
               "cpuTemp",
               "cpuSpeed",
@@ -274,6 +280,7 @@
             "memoryUsed",
             "network",
             "fileSystem",
+            "gpu",
             "battery",
             "cpuTemp",
             "cpuSpeed",
@@ -322,6 +329,7 @@
             "memoryUsed": 4,
             "network": 4,
             "fileSystem": 4,
+            "gpu": 3,
             "battery": 3,
             "cpuTemp": 3,
             "cpuSpeed": 3,

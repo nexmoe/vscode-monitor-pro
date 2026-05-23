@@ -69,6 +69,8 @@ export interface DataPoint {
   batteryPower: number;
   cpuTemperature: number;
   cpuSpeedAvg: number;
+  gpuUtilization: number;
+  gpuTemperature: number;
 }
 
 export interface DiskSpaceMount {
@@ -90,6 +92,17 @@ export interface TextMetrics {
   };
   cpuTemp: number;
   cpuSpeed: { avg: number; min: number; max: number };
+  gpu: {
+    controllers: Array<{
+      index: number;
+      vendor: string;
+      model: string;
+      utilization: number;
+      temperature: number;
+      vramUsed: number;
+      vramTotal: number;
+    }>;
+  };
   osDistro: string;
   uptime: number;
   diskSpace: DiskSpaceMount[];
@@ -140,6 +153,16 @@ export class ResourceUsageDataCollector {
         ? disks.reduce((s, d) => s + d.use, 0) / disks.length
         : 0;
 
+    const controllers = snap.gpu.controllers || [];
+
+    const avgGpuUtil =
+      controllers.length > 0
+        ? controllers.reduce((s, c) => s + Math.max(c.utilization, 0), 0) / controllers.length
+        : -1;
+    const avgGpuTemp =
+      controllers.length > 0
+        ? controllers.reduce((s, c) => s + Math.max(c.temperature, 0), 0) / controllers.length
+        : -1;
     const point: DataPoint = {
       cpu: snap.currentLoad,
       memoryActive: snap.mem.active,
@@ -154,6 +177,8 @@ export class ResourceUsageDataCollector {
       batteryPower: snap.battery.hasBattery ? snap.battery.powerRate : 0,
       cpuTemperature: snap.cpuTemperature.main ?? 0,
       cpuSpeedAvg: snap.cpuCurrentSpeed.avg,
+      gpuUtilization: avgGpuUtil,
+      gpuTemperature: avgGpuTemp,
     };
 
     this.history.push(point);
@@ -176,6 +201,17 @@ export class ResourceUsageDataCollector {
           avg: snap.cpuCurrentSpeed.avg,
           min: snap.cpuCurrentSpeed.min,
           max: snap.cpuCurrentSpeed.max,
+        },
+        gpu: {
+          controllers: controllers.map((c, i) => ({
+            index: i,
+            vendor: c.vendor,
+            model: c.model,
+            utilization: c.utilization,
+            temperature: c.temperature,
+            vramUsed: c.vramUsed,
+            vramTotal: c.vramTotal,
+          })),
         },
         osDistro: snap.osInfo.distro
           ? `${snap.osInfo.distro} ${snap.osInfo.release}`

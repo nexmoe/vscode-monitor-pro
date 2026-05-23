@@ -208,6 +208,53 @@ const diskSpaceText = async () => {
     .join(" | ");
 };
 
+const gpuText = async () => {
+  const sig = getSigDigits("gpu");
+  const gpu = (await systemData.getSnapshot()).gpu;
+  const controllers = gpu.controllers;
+  if (!controllers?.length) return "";
+  const sp = _space ? " " : "";
+
+  const count = controllers.length;
+  const modelShort = controllers[0].model.replace(/GeForce /g, "");
+
+  if (count === 1) {
+    const c = controllers[0];
+    let parts = `$(share-window) ${modelShort}`;
+    if (c.utilization >= 0) {
+      parts += ` ${fmtSigNum(c.utilization, sig) + sp + "%"}`;
+    }
+    if (c.temperature >= 0) {
+      parts += ` ${fmtSigNum(c.temperature, sig) + sp + "°C"}`;
+    }
+    if (c.vramTotal > 0) {
+      const used = prettySig(c.vramUsed * 1024 * 1024, sig);
+      const total = prettySig(c.vramTotal * 1024 * 1024, sig);
+      parts += ` ${used}/${total}`;
+    }
+    return parts;
+  }
+
+  const avgUtil = controllers.reduce((s, c) => s + Math.max(c.utilization, 0), 0) / count;
+  const avgTemp = controllers.reduce((s, c) => s + Math.max(c.temperature, 0), 0) / count;
+  const totalVRAM = controllers.reduce((s, c) => s + c.vramTotal, 0);
+  const usedVRAM = controllers.reduce((s, c) => s + c.vramUsed, 0);
+
+  let parts = `$(share-window) ${count}\u00D7${modelShort}`;
+  if (avgUtil > 0) {
+    parts += ` ${fmtSigNum(avgUtil, sig) + sp + "%"}`;
+  }
+  if (avgTemp > 0) {
+    parts += ` ${fmtSigNum(avgTemp, sig) + sp + "°C"}`;
+  }
+  if (totalVRAM > 0) {
+    const used = prettySig(usedVRAM * 1024 * 1024, sig);
+    const total = prettySig(totalVRAM * 1024 * 1024, sig);
+    parts += ` ${used}/${total}`;
+  }
+  return parts;
+};
+
 const uptimeText = async () => {
   const uptime = os.uptime();
   const fmt = getUptimeFormat();
@@ -244,6 +291,10 @@ const metrics: MetricCtrProps[] = [
   {
     func: fsText,
     section: "fileSystem",
+  },
+  {
+    func: gpuText,
+    section: "gpu",
   },
   {
     func: batteryText,
