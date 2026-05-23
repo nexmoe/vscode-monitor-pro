@@ -38,7 +38,7 @@
     "compile": "pnpm run check-types && node esbuild.js",
     "compile-tests": "pnpm tsc -p . --outDir out",
     "deploy": "vsce publish --no-dependencies",
-    "gen-l10n": "npx @vscode/l10n-dev export -o ./l10n ./src",
+    "gen-l10n": "npx @vscode/l10n-dev export -o ./l10n ./src && node scripts/sort-l10n.mjs",
     "go:build:win32-x64": "cd go-backend && GOOS=windows GOARCH=amd64 go build -ldflags=\"-s -w\" -o bin/monitor.exe .",
     "go:build:win32-arm64": "cd go-backend && GOOS=windows GOARCH=arm64 go build -ldflags=\"-s -w\" -o bin/monitor.exe .",
     "go:test": "cd go-backend && go test ./...",
@@ -60,6 +60,7 @@
   "devDependencies": {
     "@types/mocha": "10.0.10",
     "@types/node": "18.19.127",
+    "@types/source-map-support": "^0.5.10",
     "@types/vscode": "1.104.0",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
@@ -74,6 +75,7 @@
     "typescript": "5.9.2"
   },
   "dependencies": {
+    "source-map-support": "^0.5.21",
     "systeminformation": "5.31.6"
   },
   "contributes": {
