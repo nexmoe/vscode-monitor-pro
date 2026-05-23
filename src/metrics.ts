@@ -4,20 +4,7 @@ import byteFormat from "./byteFormat";
 import { MetricCtrProps } from "./constants";
 import { getDiskSpaceConfig, getUptimeFormat } from "./configuration";
 import { systemData } from "./systemData";
-
-const _logger: {
-  debug: (m: string) => void;
-  warn: (m: string) => void;
-  error: (m: string) => void;
-} = {
-  debug: () => {},
-  warn: () => {},
-  error: () => {},
-};
-
-export function setLogger(l: typeof _logger) {
-  Object.assign(_logger, l);
-}
+import { getLogger } from "./logger";
 
 let _binary = true;
 let _space = false;
@@ -67,14 +54,14 @@ const cpuText = async () => {
   const data = await systemData.getSnapshot();
   const sp = _space ? " " : "";
   const val = fmtSigNum(data.currentLoad, sig) + sp + "%";
-  _logger.debug(vscode.l10n.t("CPU load: {0}%", data.currentLoad.toFixed(2)));
+  getLogger().debug(vscode.l10n.t("CPU load: {0}%", data.currentLoad.toFixed(2)));
   return `$(pulse) ${val}`;
 };
 
 const memActiveText = async () => {
   const sig = getSigDigits("memoryActive");
   const m = (await systemData.getSnapshot()).mem;
-  _logger.debug(
+  getLogger().debug(
     vscode.l10n.t(
       "Memory - Total: {0}, Active: {1}, Used: {2}",
       m.total,
@@ -102,7 +89,7 @@ const netText = async () => {
   const rawTx = ns?.[0]?.tx_sec;
   const rx = rawRx || 0;
   const tx = rawTx || 0;
-  _logger.debug(
+  getLogger().debug(
     vscode.l10n.t(
       "Network - RX: {0}/s, TX: {1}/s, Interface: {2}",
       rawRx,
@@ -116,7 +103,7 @@ const netText = async () => {
 const fsText = async () => {
   const sig = getSigDigits("fileSystem");
   const fs = (await systemData.getSnapshot()).fsStats;
-  _logger.debug(
+  getLogger().debug(
     vscode.l10n.t(
       "Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms",
       fs.rx_sec?.toString() ?? "null",
@@ -132,7 +119,7 @@ const fsText = async () => {
 const batteryText = async () => {
   const sig = getSigDigits("battery");
   const b = (await systemData.getSnapshot()).battery;
-  _logger.debug(
+  getLogger().debug(
     vscode.l10n.t(
       "Battery - Has battery: {0}, Percent: {1}, Charging: {2}",
       b.hasBattery,
@@ -151,7 +138,7 @@ const batteryText = async () => {
 const cpuSpeedText = async () => {
   const sig = getSigDigits("cpuSpeed");
   const cpuCurrentSpeed = (await systemData.getSnapshot()).cpuCurrentSpeed;
-  _logger.debug(
+  getLogger().debug(
     vscode.l10n.t(
       "CPU Speed - Avg: {0}GHz, Min: {1}GHz, Max: {2}GHz",
       cpuCurrentSpeed.avg,
@@ -169,7 +156,7 @@ const cpuSpeedText = async () => {
 const cpuTempText = async () => {
   const sig = getSigDigits("cpuTemp");
   const cl = (await systemData.getSnapshot()).cpuTemperature;
-  _logger.debug(
+  getLogger().debug(
     vscode.l10n.t(
       "CPU Temperature: {0}°C",
       cl.main?.toString() ?? vscode.l10n.t("N/A"),
@@ -191,7 +178,7 @@ const diskSpaceText = async () => {
   const sig = getSigDigits("diskSpace");
   const fsSize = (await systemData.getSnapshot()).fsSize;
   const disksToShow = getDiskSpaceConfig();
-  _logger.debug(
+  getLogger().debug(
     vscode.l10n.t(
       "Disk config: {0}, Found disks: {1}",
       JSON.stringify(disksToShow),
@@ -203,7 +190,7 @@ const diskSpaceText = async () => {
     const total = disk.size;
     const used = disk.used;
     if (total === 0) {
-      _logger.warn(vscode.l10n.t("Disk {0} has size=0, skipping", disk.mount));
+      getLogger().warn(vscode.l10n.t("Disk {0} has size=0, skipping", disk.mount));
       return null;
     }
     const sp = _space ? " " : "";

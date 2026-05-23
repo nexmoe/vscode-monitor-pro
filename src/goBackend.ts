@@ -1,7 +1,8 @@
 import { spawn, ChildProcess } from "child_process";
 import * as http from "http";
-import type { OutputChannel } from "vscode";
+import { l10n } from "vscode";
 import type { GoAllResponse } from "./rawDataTypes";
+import { getLogger } from "./logger";
 
 const BACKEND_START_TIMEOUT = 10000;
 const FETCH_TIMEOUT = 5000;
@@ -20,11 +21,6 @@ export class GoBackendManager {
   private _process: ChildProcess | null = null;
   private _port: number | null = null;
   private _ready = false;
-  private _log: OutputChannel;
-
-  constructor(log: OutputChannel) {
-    this._log = log;
-  }
 
   get ready(): boolean {
     return this._ready;
@@ -57,18 +53,18 @@ export class GoBackendManager {
           if (trimmed.startsWith("SERVER_READY:")) {
             this._port = parseInt(trimmed.split(":")[1], 10);
             this._ready = true;
-            this._log.appendLine(`[GoBackend] Ready on port ${this._port}`);
+            getLogger().info(l10n.t("Go backend ready on port {0}", this._port!));
             resolve();
           }
         }
       });
 
       this._process.stderr!.on("data", (chunk: Buffer) => {
-        this._log.append(chunk.toString());
+        getLogger().warn(`[stderr] ${chunk.toString()}`);
       });
 
       this._process.on("error", (err: Error) => {
-        this._log.appendLine(`[GoBackend] Process error: ${err.message}`);
+        getLogger().error(l10n.t("Go backend process error: {0}", err.message));
         reject(err);
       });
 
