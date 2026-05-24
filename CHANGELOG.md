@@ -4,6 +4,22 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.4] - 2026-05-24
+
+### Fixed
+
+- Fixes [#473](https://github.com/nexmoe/vscode-monitor-pro/issues/473)
+
+- **Worker thread crash with systeminformation**: Fixed `DataCloneError` in the collector worker by normalizing data before posting to the main thread.
+- **Polling stops after "Reload Window"**: Resolved a race condition where async ticks from a previous session would block the new polling cycle from starting.
+- **Data collection could hang indefinitely**: Added a timeout guard to `collect()` to prevent a stuck promise from permanently halting updates.
+
+### Changed
+
+- **Concurrent data collection in Go backend**: CPU, memory, disk, network, host, load, and battery are now collected in parallel, with per-group context timeouts to prevent any single slow call from blocking the whole response.
+- **Exponential backoff on collection failures**: The polling interval backs off (up to 30s) after consecutive failures, recovering automatically when the system stabilizes.
+- **Centralized logging**: All logging consolidated into a shared logger with automatic caller location tracking for easier debugging.
+
 ## [0.7.3] - 2026-05-22
 
 ### Fixed
