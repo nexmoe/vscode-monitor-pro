@@ -1,62 +1,285 @@
 {
-  "name": "monitor-pro",
-  "displayName": "Monitor Pro",
-  "description": "Monitor all the resources you care about.",
-  "publisher": "nexmoe",
-  "keywords": [
-    "performance",
-    "resource",
-    "resources",
-    "monitor",
-    "memory",
-    "cpu",
-    "io",
-    "network",
-    "disk",
-    "storage"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nexmoe/vscode-monitor-pro"
-  },
-  "icon": "assets/icon.png",
-  "version": "0.7.3",
-  "engines": {
-    "vscode": "^1.104.1"
-  },
-  "categories": [
-    "Other"
-  ],
   "activationEvents": [
     "onStartupFinished"
   ],
-  "main": "./dist/extension.js",
-  "l10n": "./l10n",
-  "scripts": {
-    "vscode:prepublish": "pnpm run package",
-    "check-types": "pnpm tsc --noEmit",
-    "compile": "pnpm run check-types && node esbuild.js",
-    "compile-tests": "pnpm tsc -p . --outDir out",
-    "deploy": "vsce publish --no-dependencies",
-    "gen-l10n": "npx @vscode/l10n-dev export -o ./l10n ./src && node scripts/sort-l10n.mjs",
-    "go:build:win32-x64": "cd go-backend && GOOS=windows GOARCH=amd64 go build -ldflags=\"-s -w\" -o bin/monitor.exe .",
-    "go:build:win32-arm64": "cd go-backend && GOOS=windows GOARCH=arm64 go build -ldflags=\"-s -w\" -o bin/monitor.exe .",
-    "go:test": "cd go-backend && go test ./...",
-    "go:vet": "cd go-backend && go vet ./...",
-    "lint": "eslint src --ext ts",
-    "package": "pnpm run check-types && node esbuild.js --production",
-    "package:vsix": "vsce package --no-dependencies",
-    "package:vsix:all": "rm -f go-backend/bin/* && pnpm run package:vsix:universal && pnpm run package:vsix:win32-x64 && pnpm run package:vsix:win32-arm64",
-    "package:vsix:universal": "pnpm exec vsce package --no-dependencies -o monitor-pro-$(node -p \"require('./package.json').version\")-universal.vsix",
-    "package:vsix:win32-x64": "pnpm run go:build:win32-x64 && pnpm exec vsce package --no-dependencies --target win32-x64 -o monitor-pro-$(node -p \"require('./package.json').version\")-win32-x64.vsix",
-    "package:vsix:win32-arm64": "pnpm run go:build:win32-arm64 && pnpm exec vsce package --no-dependencies --target win32-arm64 -o monitor-pro-$(node -p \"require('./package.json').version\")-win32-arm64.vsix",
-    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
-    "test": "node ./out/test/runTest.js",
-    "watch": "npm-run-all -p watch:*",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "watch:esbuild": "node esbuild.js --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json"
+  "categories": [
+    "Other"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "monitor-pro.focusResourceUsage",
+        "title": "%command.focusResourceUsage%"
+      }
+    ],
+    "configuration": {
+      "properties": {
+        "monitor-pro.diskSpace": {
+          "default": [
+            "/",
+            "C:"
+          ],
+          "description": "%config.diskSpace%",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "monitor-pro.metrics.battery": {
+          "default": true,
+          "description": "%config.metrics.battery%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.cpu": {
+          "default": true,
+          "description": "%config.metrics.cpu%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.cpuSpeed": {
+          "default": false,
+          "description": "%config.metrics.cpuSpeed%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.cpuTemp": {
+          "default": false,
+          "description": "%config.metrics.cpuTemp%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.diskSpace": {
+          "default": false,
+          "description": "%config.metrics.diskSpace%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.fileSystem": {
+          "default": false,
+          "description": "%config.metrics.fileSystem%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.memoryActive": {
+          "default": true,
+          "description": "%config.metrics.memoryActive%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.memoryUsed": {
+          "default": false,
+          "description": "%config.metrics.memoryUsed%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.network": {
+          "default": false,
+          "description": "%config.metrics.network%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.osDistro": {
+          "default": false,
+          "description": "%config.metrics.osDistro%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.uptime": {
+          "default": false,
+          "description": "%config.metrics.uptime%",
+          "type": "boolean"
+        },
+        "monitor-pro.metricsOrder": {
+          "default": [
+            "cpu",
+            "memoryActive",
+            "memoryUsed",
+            "network",
+            "fileSystem",
+            "battery",
+            "cpuTemp",
+            "cpuSpeed",
+            "osDistro",
+            "diskSpace",
+            "uptime"
+          ],
+          "description": "%config.metricsOrder%",
+          "items": {
+            "enum": [
+              "cpu",
+              "memoryActive",
+              "memoryUsed",
+              "network",
+              "fileSystem",
+              "battery",
+              "cpuTemp",
+              "cpuSpeed",
+              "osDistro",
+              "diskSpace",
+              "uptime"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "monitor-pro.refresh-interval": {
+          "default": 2000,
+          "description": "%config.refresh-interval%",
+          "maximum": 30000,
+          "minimum": 500,
+          "type": "number"
+        },
+        "monitor-pro.resourceUsage.charts": {
+          "default": {
+            "battery": {
+              "color": "--vscode-textLink-foreground",
+              "enabled": true,
+              "view": "line"
+            },
+            "batteryPower": {
+              "color": "--vscode-charts-green",
+              "enabled": true,
+              "view": "line"
+            },
+            "cpu": {
+              "color": "--vscode-charts-blue",
+              "enabled": true,
+              "view": "line"
+            },
+            "cpuSpeed": {
+              "color": "--vscode-terminal-ansiBrightCyan",
+              "enabled": false,
+              "view": "line"
+            },
+            "cpuTemp": {
+              "color": "--vscode-errorForeground",
+              "enabled": true,
+              "view": "line"
+            },
+            "diskRx": {
+              "color": "--vscode-charts-yellow",
+              "enabled": true,
+              "view": "line"
+            },
+            "diskWx": {
+              "color": "--vscode-charts-red",
+              "enabled": true,
+              "view": "line"
+            },
+            "memActive": {
+              "color": "--vscode-charts-green",
+              "enabled": true,
+              "view": "line"
+            },
+            "memUsed": {
+              "color": "--vscode-charts-green",
+              "enabled": false,
+              "view": "line"
+            },
+            "netRx": {
+              "color": "--vscode-charts-orange",
+              "enabled": true,
+              "view": "line"
+            },
+            "netTx": {
+              "color": "--vscode-charts-purple",
+              "enabled": true,
+              "view": "line"
+            }
+          },
+          "description": "%config.resourceUsage.charts%",
+          "type": "object"
+        },
+        "monitor-pro.resourceUsage.diskSpaceMounts": {
+          "default": [
+            "all"
+          ],
+          "description": "%config.resourceUsage.diskSpaceMounts%",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "monitor-pro.resourceUsage.samplingPoints": {
+          "default": 60,
+          "description": "%config.resourceUsage.samplingPoints%",
+          "maximum": 500,
+          "minimum": 10,
+          "type": "number"
+        },
+        "monitor-pro.resourceUsage.showOsDistro": {
+          "default": true,
+          "description": "%config.resourceUsage.showOsDistro%",
+          "type": "boolean"
+        },
+        "monitor-pro.resourceUsage.showUptime": {
+          "default": true,
+          "description": "%config.resourceUsage.showUptime%",
+          "type": "boolean"
+        },
+        "monitor-pro.showSpace": {
+          "default": false,
+          "description": "%config.showSpace%",
+          "type": "boolean"
+        },
+        "monitor-pro.significantDigits": {
+          "additionalProperties": {
+            "maximum": 6,
+            "minimum": 1,
+            "type": "number"
+          },
+          "default": {
+            "battery": 3,
+            "cpu": 3,
+            "cpuSpeed": 3,
+            "cpuTemp": 3,
+            "diskSpace": 3,
+            "fileSystem": 4,
+            "memoryActive": 4,
+            "memoryUsed": 4,
+            "network": 4
+          },
+          "description": "%config.significantDigits%",
+          "type": "object"
+        },
+        "monitor-pro.singleUnit": {
+          "default": false,
+          "description": "%config.singleUnit%",
+          "type": "boolean"
+        },
+        "monitor-pro.unitSystem": {
+          "default": "binary",
+          "description": "%config.unitSystem%",
+          "enum": [
+            "binary",
+            "decimal"
+          ],
+          "type": "string"
+        },
+        "monitor-pro.uptimeFormat": {
+          "default": "auto",
+          "description": "%config.uptimeFormat%",
+          "type": "string"
+        }
+      },
+      "title": "Monitor Pro"
+    },
+    "views": {
+      "monitor-pro": [
+        {
+          "icon": "$(pulse)",
+          "id": "monitor-pro.resourceUsage",
+          "name": "%views.resourceUsage%",
+          "type": "webview"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "icon": "$(pulse)",
+          "id": "monitor-pro",
+          "title": "%viewContainer.monitor-pro.title%"
+        }
+      ]
+    }
   },
+  "dependencies": {
+    "source-map-support": "^0.5.21",
+    "systeminformation": "5.31.6"
+  },
+  "description": "Monitor all the resources you care about.",
   "devDependencies": {
     "@types/mocha": "10.0.10",
     "@types/node": "18.19.127",
@@ -74,278 +297,55 @@
     "npm-run-all2": "5.0.2",
     "typescript": "5.9.2"
   },
-  "dependencies": {
-    "source-map-support": "^0.5.21",
-    "systeminformation": "5.31.6"
+  "displayName": "Monitor Pro",
+  "engines": {
+    "vscode": "^1.104.1"
   },
-  "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "monitor-pro",
-          "title": "%viewContainer.monitor-pro.title%",
-          "icon": "$(pulse)"
-        }
-      ]
-    },
-    "views": {
-      "monitor-pro": [
-        {
-          "icon": "$(pulse)",
-          "type": "webview",
-          "id": "monitor-pro.resourceUsage",
-          "name": "%views.resourceUsage%"
-        }
-      ]
-    },
-    "commands": [
-      {
-        "command": "monitor-pro.focusResourceUsage",
-        "title": "%command.focusResourceUsage%"
-      }
-    ],
-    "configuration": {
-      "title": "Monitor Pro",
-      "properties": {
-        "monitor-pro.resourceUsage.charts": {
-          "type": "object",
-          "default": {
-            "cpu": {
-              "enabled": true,
-              "view": "line",
-              "color": "--vscode-charts-blue"
-            },
-            "memActive": {
-              "enabled": true,
-              "view": "line",
-              "color": "--vscode-charts-green"
-            },
-            "memUsed": {
-              "enabled": false,
-              "view": "line",
-              "color": "--vscode-charts-green"
-            },
-            "netRx": {
-              "enabled": true,
-              "view": "line",
-              "color": "--vscode-charts-orange"
-            },
-            "netTx": {
-              "enabled": true,
-              "view": "line",
-              "color": "--vscode-charts-purple"
-            },
-            "diskRx": {
-              "enabled": true,
-              "view": "line",
-              "color": "--vscode-charts-yellow"
-            },
-            "diskWx": {
-              "enabled": true,
-              "view": "line",
-              "color": "--vscode-charts-red"
-            },
-            "battery": {
-              "enabled": true,
-              "view": "line",
-              "color": "--vscode-textLink-foreground"
-            },
-            "batteryPower": {
-              "enabled": true,
-              "view": "line",
-              "color": "--vscode-charts-green"
-            },
-            "cpuTemp": {
-              "enabled": true,
-              "view": "line",
-              "color": "--vscode-errorForeground"
-            },
-            "cpuSpeed": {
-              "enabled": false,
-              "view": "line",
-              "color": "--vscode-terminal-ansiBrightCyan"
-            }
-          },
-          "description": "%config.resourceUsage.charts%"
-        },
-        "monitor-pro.resourceUsage.diskSpaceMounts": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": [
-            "all"
-          ],
-          "description": "%config.resourceUsage.diskSpaceMounts%"
-        },
-        "monitor-pro.resourceUsage.samplingPoints": {
-          "type": "number",
-          "default": 60,
-          "minimum": 10,
-          "maximum": 500,
-          "description": "%config.resourceUsage.samplingPoints%"
-        },
-        "monitor-pro.resourceUsage.showUptime": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.resourceUsage.showUptime%"
-        },
-        "monitor-pro.resourceUsage.showOsDistro": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.resourceUsage.showOsDistro%"
-        },
-        "monitor-pro.metrics.cpu": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.metrics.cpu%"
-        },
-        "monitor-pro.metrics.memoryActive": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.metrics.memoryActive%"
-        },
-        "monitor-pro.metrics.memoryUsed": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.metrics.memoryUsed%"
-        },
-        "monitor-pro.metrics.network": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.metrics.network%"
-        },
-        "monitor-pro.metrics.fileSystem": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.metrics.fileSystem%"
-        },
-        "monitor-pro.metrics.battery": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.metrics.battery%"
-        },
-        "monitor-pro.metrics.cpuTemp": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.metrics.cpuTemp%"
-        },
-        "monitor-pro.metrics.cpuSpeed": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.metrics.cpuSpeed%"
-        },
-        "monitor-pro.metrics.osDistro": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.metrics.osDistro%"
-        },
-        "monitor-pro.metrics.diskSpace": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.metrics.diskSpace%"
-        },
-        "monitor-pro.metrics.uptime": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.metrics.uptime%"
-        },
-        "monitor-pro.metricsOrder": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "cpu",
-              "memoryActive",
-              "memoryUsed",
-              "network",
-              "fileSystem",
-              "battery",
-              "cpuTemp",
-              "cpuSpeed",
-              "osDistro",
-              "diskSpace",
-              "uptime"
-            ]
-          },
-          "default": [
-            "cpu",
-            "memoryActive",
-            "memoryUsed",
-            "network",
-            "fileSystem",
-            "battery",
-            "cpuTemp",
-            "cpuSpeed",
-            "osDistro",
-            "diskSpace",
-            "uptime"
-          ],
-          "description": "%config.metricsOrder%"
-        },
-        "monitor-pro.refresh-interval": {
-          "type": "number",
-          "default": 2000,
-          "minimum": 500,
-          "maximum": 30000,
-          "description": "%config.refresh-interval%"
-        },
-        "monitor-pro.unitSystem": {
-          "type": "string",
-          "enum": [
-            "binary",
-            "decimal"
-          ],
-          "default": "binary",
-          "description": "%config.unitSystem%"
-        },
-        "monitor-pro.showSpace": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.showSpace%"
-        },
-        "monitor-pro.singleUnit": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.singleUnit%"
-        },
-        "monitor-pro.significantDigits": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "number",
-            "minimum": 1,
-            "maximum": 6
-          },
-          "default": {
-            "cpu": 3,
-            "memoryActive": 4,
-            "memoryUsed": 4,
-            "network": 4,
-            "fileSystem": 4,
-            "battery": 3,
-            "cpuTemp": 3,
-            "cpuSpeed": 3,
-            "diskSpace": 3
-          },
-          "description": "%config.significantDigits%"
-        },
-        "monitor-pro.uptimeFormat": {
-          "type": "string",
-          "default": "auto",
-          "description": "%config.uptimeFormat%"
-        },
-        "monitor-pro.diskSpace": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": [
-            "/",
-            "C:"
-          ],
-          "description": "%config.diskSpace%"
-        }
-      }
-    }
-  }
+  "icon": "assets/icon.png",
+  "keywords": [
+    "performance",
+    "resource",
+    "resources",
+    "monitor",
+    "memory",
+    "cpu",
+    "io",
+    "network",
+    "disk",
+    "storage"
+  ],
+  "l10n": "./l10n",
+  "main": "./dist/extension.js",
+  "name": "monitor-pro",
+  "publisher": "nexmoe",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nexmoe/vscode-monitor-pro"
+  },
+  "scripts": {
+    "check-types": "pnpm tsc --noEmit",
+    "compile": "pnpm run check-types && node esbuild.js",
+    "compile-tests": "pnpm tsc -p . --outDir out",
+    "deploy": "vsce publish --no-dependencies",
+    "gen-l10n": "npx @vscode/l10n-dev export -o ./l10n ./src && node scripts/sort-l10n.mjs",
+    "go:build:win32-arm64": "cd go-backend && GOOS=windows GOARCH=arm64 go build -ldflags=\"-s -w\" -o bin/monitor.exe .",
+    "go:build:win32-x64": "cd go-backend && GOOS=windows GOARCH=amd64 go build -ldflags=\"-s -w\" -o bin/monitor.exe .",
+    "go:test": "cd go-backend && go test ./...",
+    "go:vet": "cd go-backend && go vet ./...",
+    "lint": "eslint src --ext ts",
+    "package": "pnpm run check-types && node esbuild.js --production",
+    "package:vsix": "vsce package --no-dependencies",
+    "package:vsix:all": "rm -f go-backend/bin/* && pnpm run package:vsix:universal && pnpm run package:vsix:win32-x64 && pnpm run package:vsix:win32-arm64",
+    "package:vsix:universal": "pnpm exec vsce package --no-dependencies -o monitor-pro-$(node -p \"require('./package.json').version\")-universal.vsix",
+    "package:vsix:win32-arm64": "pnpm run go:build:win32-arm64 && pnpm exec vsce package --no-dependencies --target win32-arm64 -o monitor-pro-$(node -p \"require('./package.json').version\")-win32-arm64.vsix",
+    "package:vsix:win32-x64": "pnpm run go:build:win32-x64 && pnpm exec vsce package --no-dependencies --target win32-x64 -o monitor-pro-$(node -p \"require('./package.json').version\")-win32-x64.vsix",
+    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "test": "node ./out/test/runTest.js",
+    "vscode:prepublish": "pnpm run package",
+    "watch": "npm-run-all -p watch:*",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json"
+  },
+  "version": "0.7.4"
 }
