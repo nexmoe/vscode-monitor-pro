@@ -32,7 +32,9 @@ jobs:
                   if [ "${{ github.ref_type }}" = "tag" ]; then
                     VERSION=${GITHUB_REF#refs/tags/}
                   else
-                    VERSION=$(node -p "require('./package.json').version")
+                    PKG_VERSION=$(node -p "require('./package.json').version")
+                    SAFE_BRANCH="${GITHUB_REF_NAME//\//-}"
+                    VERSION="${PKG_VERSION}.dev.${SAFE_BRANCH}$(date +%Y%m%d)"
                   fi
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
 
@@ -93,4 +95,4 @@ jobs:
               with:
                   name: vsix-${{ steps.get_version.outputs.version }}
                   path: 'monitor-pro-*.vsix'
-                  retention-days: 30
+                  retention-days: 90
