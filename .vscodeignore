@@ -27,3 +27,4 @@ go-backend/
 # other md files
 *.md
 !README.md
+!CHANGELOG.md
