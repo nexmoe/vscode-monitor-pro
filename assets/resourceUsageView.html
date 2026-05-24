@@ -24,6 +24,10 @@
             box-sizing: border-box;
         }
 
+        html {
+            scrollbar-width: none;
+        }
+
         body {
             font-family: var(--font);
             font-size: var(--font-size);
@@ -32,6 +36,10 @@
             padding: 8px;
             overflow-x: hidden;
             user-select: none;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
         }
 
         .section-title {
