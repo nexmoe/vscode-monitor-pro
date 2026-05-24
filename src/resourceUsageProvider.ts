@@ -317,7 +317,10 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       "resourceUsageView.html",
     );
     let html = fs.readFileSync(htmlPath, "utf-8");
-    return html.replace(/__NONCE__/g, nonce);
+    return html
+      .replace(/__NONCE__/g, nonce)
+      .replace(/__LINE_CHART_TITLE__/g, vscode.l10n.t("Line chart"))
+      .replace(/__BAR_CHART_TITLE__/g, vscode.l10n.t("Bar chart"));
   }
 }
 

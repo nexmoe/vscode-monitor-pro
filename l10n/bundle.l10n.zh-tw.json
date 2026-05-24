@@ -1,6 +1,7 @@
 {
     " (Charging)": " (充電中)",
     "$(error) {0}": "$(error) {0}",
+    "Bar chart": "條形圖",
     "Battery": "電量",
     "Battery - Has battery: {0}, Percent: {1}, Charging: {2}": "電池 - 有電池: {0}, 電量: {1}%, 充電中: {2}",
     "Battery Status": "電池狀態",
@@ -40,6 +41,7 @@
     "Go backend unavailable: {0}, using fallback": "Go 後端不可用: {0}，使用備用資料來源",
     "Health": "健康度",
     "Idle": "空閒",
+    "Line chart": "折線圖",
     "Max": "最高",
     "Mem Active": "記憶體使用量（活躍）",
     "Mem Used": "記憶體使用量（已用）",

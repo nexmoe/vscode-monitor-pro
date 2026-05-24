@@ -1,6 +1,7 @@
 {
     " (Charging)": " (Charging)",
     "$(error) {0}": "$(error) {0}",
+    "Bar chart": "Bar chart",
     "Battery": "Battery",
     "Battery - Has battery: {0}, Percent: {1}, Charging: {2}": "Battery - Has battery: {0}, Percent: {1}, Charging: {2}",
     "Battery Status": "Battery Status",
@@ -40,6 +41,7 @@
     "Go backend unavailable: {0}, using fallback": "Go backend unavailable: {0}, using fallback",
     "Health": "Health",
     "Idle": "Idle",
+    "Line chart": "Line chart",
     "Max": "Max",
     "Mem Active": "Mem Active",
     "Mem Used": "Mem Used",
