@@ -344,6 +344,52 @@
             "C:"
           ],
           "description": "%config.diskSpace%"
+        },
+        "monitor-pro.notifications.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.notifications.enabled%"
+        },
+        "monitor-pro.notifications.cpu": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 80,
+          "description": "%config.notifications.cpu%"
+        },
+        "monitor-pro.notifications.memoryActive": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 80,
+          "description": "%config.notifications.memoryActive%"
+        },
+        "monitor-pro.notifications.memoryUsed": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0,
+          "description": "%config.notifications.memoryUsed%"
+        },
+        "monitor-pro.notifications.cpuTemp": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0,
+          "description": "%config.notifications.cpuTemp%"
+        },
+        "monitor-pro.notifications.batteryLow": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 20,
+          "description": "%config.notifications.batteryLow%"
+        },
+        "monitor-pro.notifications.batteryHigh": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0,
+          "description": "%config.notifications.batteryHigh%"
         }
       }
     }
