@@ -55,7 +55,7 @@ const cpuText = async () => {
   const sp = _space ? " " : "";
   const val = fmtSigNum(data.currentLoad, sig) + sp + "%";
   getLogger().debug(vscode.l10n.t("CPU load: {0}%", data.currentLoad.toFixed(2)));
-  return `$(pulse) ${val}`;
+  return `$(chip) ${val}`;
 };
 
 const memActiveText = async () => {
@@ -71,7 +71,7 @@ const memActiveText = async () => {
   );
   const active = prettySig(m.active, sig);
   const total = prettySig(m.total, sig);
-  return `$(server) ${active}/${total}`;
+  return `$(pie-chart) ${active}/${total}`;
 };
 
 const memUsedText = async () => {
@@ -79,7 +79,7 @@ const memUsedText = async () => {
   const m = (await systemData.getSnapshot()).mem;
   const used = prettySig(m.used, sig);
   const total = prettySig(m.total, sig);
-  return `$(server) ${used}/${total}`;
+  return `$(pie-chart) ${used}/${total}`;
 };
 
 const netText = async () => {
