@@ -1,6 +1,18 @@
 import { workspace, ConfigurationChangeEvent } from "vscode";
 import { MetricsExist } from "./constants";
 
+export type NotificationMetric = "cpu" | "memoryActive" | "memoryUsed" | "cpuTemp" | "battery";
+
+export interface NotificationConfig {
+  enabled: boolean;
+  cpu: number;
+  memoryActive: number;
+  memoryUsed: number;
+  cpuTemp: number;
+  batteryLow: number;
+  batteryHigh: number;
+}
+
 const CONFIG_SECTION = "monitor-pro";
 
 const allMetrics: MetricsExist[] = [
@@ -153,6 +165,19 @@ export function getDiskSpaceConfig(): string[] {
       "C:",
     ]
   );
+}
+
+export function getNotificationConfig(): NotificationConfig {
+  const config = workspace.getConfiguration(CONFIG_SECTION);
+  return {
+    enabled: config.get<boolean>("notifications.enabled", true),
+    cpu: config.get<number>("notifications.cpu", 80),
+    memoryActive: config.get<number>("notifications.memoryActive", 80),
+    memoryUsed: config.get<number>("notifications.memoryUsed", 0),
+    cpuTemp: config.get<number>("notifications.cpuTemp", 0),
+    batteryLow: config.get<number>("notifications.batteryLow", 20),
+    batteryHigh: config.get<number>("notifications.batteryHigh", 0),
+  };
 }
 
 export function isConfigChanged(event: ConfigurationChangeEvent): boolean {

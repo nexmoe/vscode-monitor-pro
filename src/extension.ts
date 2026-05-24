@@ -14,6 +14,7 @@ import {
   getSignificantDigits,
 } from "./configuration";
 import { getLogger, initLogger } from "./logger";
+import { notificationManager } from "./notifications";
 import sourceMapSupport from "source-map-support";
 
 let metrics: Metric[] = [];
@@ -114,6 +115,7 @@ export const activate = async (ctx: ExtensionContext) => {
 
   unsubscribeData = systemData.subscribe(() => {
     const t0 = Date.now();
+    notificationManager.check();
     Promise.all(metrics.map((x) => x.update()))
       .then(() => {
         const elapsed = Date.now() - t0;
@@ -171,6 +173,11 @@ export const activate = async (ctx: ExtensionContext) => {
         resourceUsageProvider.pushConfigUpdate();
         getLogger().debug(l10n.t("Resource Usage view config pushed"));
       }
+
+      if (event.affectsConfiguration("monitor-pro.notifications")) {
+        notificationManager.refreshConfig();
+        getLogger().debug(l10n.t("Notification config updated"));
+      }
     }),
   );
 };
@@ -181,6 +188,7 @@ export const deactivate = () => {
   goBackend = null;
   unsubscribeData?.();
   systemData.stop();
+  notificationManager.dispose();
   if (process.platform === "win32") {
     powerShellRelease();
   }

@@ -13,13 +13,13 @@ import (
 )
 
 var (
-	modpdh                        = syscall.NewLazyDLL("pdh.dll")
-	_PdhOpenQuery                 = modpdh.NewProc("PdhOpenQuery")
-	_PdhAddEnglishCounter         = modpdh.NewProc("PdhAddEnglishCounterW")
-	_PdhAddCounter                = modpdh.NewProc("PdhAddCounterW")
-	_PdhCollectQueryData          = modpdh.NewProc("PdhCollectQueryData")
-	_PdhGetFormattedCounterValue  = modpdh.NewProc("PdhGetFormattedCounterValue")
-	_PdhCloseQuery                = modpdh.NewProc("PdhCloseQuery")
+	modpdh                       = syscall.NewLazyDLL("pdh.dll")
+	_PdhOpenQuery                = modpdh.NewProc("PdhOpenQuery")
+	_PdhAddEnglishCounter        = modpdh.NewProc("PdhAddEnglishCounterW")
+	_PdhAddCounter               = modpdh.NewProc("PdhAddCounterW")
+	_PdhCollectQueryData         = modpdh.NewProc("PdhCollectQueryData")
+	_PdhGetFormattedCounterValue = modpdh.NewProc("PdhGetFormattedCounterValue")
+	_PdhCloseQuery               = modpdh.NewProc("PdhCloseQuery")
 )
 
 const (
@@ -51,49 +51,56 @@ var (
 
 func initCPU() error {
 	cpuMonSet.Do(func() {
-		var query uintptr
-		ret, _, _ := _PdhOpenQuery.Call(0, 0, uintptr(unsafe.Pointer(&query)))
-		if ret != errorSuccess {
-			cpuMonErr = fmt.Errorf("PdhOpenQuery: 0x%x", uint32(ret))
-			return
-		}
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
 
-		// Step 1: 先尝试 Win8+ 任务管理器同源计数器，失败则回退到经典计数器
-		// 对应 TrafficMonitor CPdhCPUUsage 构造时根据系统版本选择计数器
-		var counter uintptr
-		for _, path := range []string{
-			`\Processor Information(_Total)\% Processor Utility`,
-			`\Processor(_Total)\% Processor Time`,
-		} {
-			pathPtr, err := syscall.UTF16PtrFromString(path)
-			if err != nil {
-				continue
-			}
-			ret, _, _ = _PdhAddEnglishCounter.Call(
-				query, uintptr(unsafe.Pointer(pathPtr)), 0, uintptr(unsafe.Pointer(&counter)),
-			)
+			var query uintptr
+			ret, _, _ := _PdhOpenQuery.Call(0, 0, uintptr(unsafe.Pointer(&query)))
 			if ret != errorSuccess {
-				ret, _, _ = _PdhAddCounter.Call(
+				cpuMonErr = fmt.Errorf("PdhOpenQuery: 0x%x", uint32(ret))
+				return
+			}
+
+			var counter uintptr
+			for _, path := range []string{
+				`\Processor Information(_Total)\% Processor Utility`,
+				`\Processor(_Total)\% Processor Time`,
+			} {
+				pathPtr, err := syscall.UTF16PtrFromString(path)
+				if err != nil {
+					continue
+				}
+				ret, _, _ = _PdhAddEnglishCounter.Call(
 					query, uintptr(unsafe.Pointer(pathPtr)), 0, uintptr(unsafe.Pointer(&counter)),
 				)
+				if ret != errorSuccess {
+					ret, _, _ = _PdhAddCounter.Call(
+						query, uintptr(unsafe.Pointer(pathPtr)), 0, uintptr(unsafe.Pointer(&counter)),
+					)
+				}
+				if ret == errorSuccess {
+					break
+				}
 			}
-			if ret == errorSuccess {
-				break
+			if ret != errorSuccess {
+				_PdhCloseQuery.Call(query)
+				cpuMonErr = fmt.Errorf("all PDH CPU counters failed")
+				return
 			}
-		}
-		if ret != errorSuccess {
-			_PdhCloseQuery.Call(query)
-			cpuMonErr = fmt.Errorf("all PDH CPU counters failed")
-			return
-		}
 
-		// Step 2: 初始基线采集
-		// 对应 TrafficMonitor PdhQuery::Initialize() 最后的 PdhCollectQueryData
-		_PdhCollectQueryData.Call(query)
+			_PdhCollectQueryData.Call(query)
 
-		cpuMon.query = query
-		cpuMon.counter = counter
-		cpuMon.ok = true
+			cpuMon.query = query
+			cpuMon.counter = counter
+			cpuMon.ok = true
+		}()
+
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+			cpuMonErr = fmt.Errorf("PDH init timed out after 2s")
+		}
 	})
 	return cpuMonErr
 }
