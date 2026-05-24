@@ -2,8 +2,6 @@ name: Package Extension
 
 on:
     push:
-        tags:
-            - '[0-9]+.[0-9]+.[0-9]+.dev.[0-9]+'
     workflow_dispatch:
 
 permissions:
@@ -31,10 +29,10 @@ jobs:
             - name: Get version info
               id: get_version
               run: |
-                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-                    VERSION=$(node -p "require('./package.json').version")
-                  else
+                  if [ "${{ github.ref_type }}" = "tag" ]; then
                     VERSION=${GITHUB_REF#refs/tags/}
+                  else
+                    VERSION=$(node -p "require('./package.json').version")
                   fi
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
 
@@ -60,7 +58,7 @@ jobs:
                   echo "previous_stable_tag=$PREV" >> $GITHUB_OUTPUT
 
             - name: Create development release
-              if: github.event_name != 'workflow_dispatch'
+              if: github.ref_type == 'tag'
               uses: softprops/action-gh-release@v2
               with:
                   tag_name: ${{ steps.get_version.outputs.version }}
