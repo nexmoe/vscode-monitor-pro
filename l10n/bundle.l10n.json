@@ -21,6 +21,8 @@
     "Disk Read": "Disk Read",
     "Disk Space": "Disk Space",
     "Disk Write": "Disk Write",
+    "Est. {0}h {1}m until empty": "Est. {0}h {1}m until empty",
+    "Est. {0}h {1}m until full": "Est. {0}h {1}m until full",
     "Disk config: {0}, Found disks: {1}": "Disk config: {0}, Found disks: {1}",
     "Disk space config updated": "Disk space config updated",
     "Disk {0} has size=0, skipping": "Disk {0} has size=0, skipping",

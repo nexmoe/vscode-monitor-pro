@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import byteFormat from "./byteFormat";
 import { MetricCtrProps } from "./constants";
 import { getDiskSpaceConfig, getUptimeFormat } from "./configuration";
-import { systemData } from "./systemData";
+import { systemData, SystemSnapshot } from "./systemData";
 import { getLogger } from "./logger";
 
 let _binary = true;
@@ -116,6 +116,35 @@ const fsText = async () => {
   return `$(log-in) ${prettySig(fs.rx_sec || 0, sig)}/s $(log-out) ${prettySig(fs.wx_sec || 0, sig)}/s`;
 };
 
+function formatEstimatedBatteryTime(b: SystemSnapshot["battery"]): string {
+  if (
+    b.powerRate === 0 ||
+    b.maxCapacity <= 0 ||
+    b.currentCapacity <= 0
+  ) {
+    return "";
+  }
+
+  const isCharging = b.isCharging || b.acConnected;
+  const powerMw = Math.abs(b.powerRate) * 1000;
+  if (powerMw < 1) return "";
+
+  const remainingHours = isCharging
+    ? (b.maxCapacity - b.currentCapacity) / powerMw
+    : b.currentCapacity / powerMw;
+
+  if (remainingHours <= 0 || remainingHours > 48) return "";
+
+  const totalMinutes = Math.round(remainingHours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+
+  if (isCharging) {
+    return vscode.l10n.t("Est. {0}h {1}m until full", h, m);
+  }
+  return vscode.l10n.t("Est. {0}h {1}m until empty", h, m);
+}
+
 const batteryText = async () => {
   const sig = getSigDigits("battery");
   const b = (await systemData.getSnapshot()).battery;
@@ -130,9 +159,21 @@ const batteryText = async () => {
   if (!b.hasBattery) {
     return "";
   }
-  const charging = b.isCharging ? vscode.l10n.t(" (Charging)") : "";
+
   const sp = _space ? " " : "";
-  return `$(plug) ${fmtSigNum(b.percent, sig) + sp + "%"}${charging}`;
+  const pct = fmtSigNum(b.percent, sig) + sp + "%";
+
+  const powerState =
+    b.isCharging
+      ? vscode.l10n.t("Charging")
+      : b.hasBattery
+        ? vscode.l10n.t("Discharging")
+        : "";
+
+  const estTime = formatEstimatedBatteryTime(b);
+  const status = estTime ? `${powerState} · ${estTime}` : powerState;
+
+  return `$(plug) ${pct} (${status})`;
 };
 
 const cpuSpeedText = async () => {

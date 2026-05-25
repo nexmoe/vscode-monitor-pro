@@ -87,6 +87,8 @@ export interface TextMetrics {
     health: number;
     powerRate: number;
     powerState: string;
+    currentCapacity: number;
+    maxCapacity: number;
   };
   cpuTemp: number;
   cpuSpeed: { avg: number; min: number; max: number };
@@ -170,6 +172,8 @@ export class ResourceUsageDataCollector {
           health: snap.battery.health,
           powerRate: snap.battery.powerRate,
           powerState: snap.battery.powerState,
+          currentCapacity: snap.battery.currentCapacity,
+          maxCapacity: snap.battery.maxCapacity,
         },
         cpuTemp: snap.cpuTemperature.main ?? 0,
         cpuSpeed: {
