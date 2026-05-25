@@ -21,6 +21,8 @@
     "Disk Read": "ディスク読み取り速度",
     "Disk Space": "ディスク容量",
     "Disk Write": "ディスク書き込み速度",
+    "Est. {0}h {1}m until empty": "残り約 {0} 時間 {1} 分で空に",
+    "Est. {0}h {1}m until full": "残り約 {0} 時間 {1} 分で満充電",
     "Disk config: {0}, Found disks: {1}": "ディスク構成: {0}, 検出されたディスク: {1}",
     "Disk space config updated": "ディスク容量設定を更新しました",
     "Disk {0} has size=0, skipping": "ディスク {0} のサイズが0です。スキップします",

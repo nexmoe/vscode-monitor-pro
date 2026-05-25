@@ -21,6 +21,8 @@
     "Disk Read": "磁碟讀取速率",
     "Disk Space": "磁碟空間",
     "Disk Write": "磁碟寫入速率",
+    "Est. {0}h {1}m until empty": "預計 {0} 小時 {1} 分鐘後耗盡",
+    "Est. {0}h {1}m until full": "預計 {0} 小時 {1} 分鐘後充滿",
     "Disk config: {0}, Found disks: {1}": "磁碟配置: {0}, 發現磁碟: {1}",
     "Disk space config updated": "磁碟空間設定已更新",
     "Disk {0} has size=0, skipping": "磁碟 {0} 大小為 0，已跳過",

@@ -22,6 +22,49 @@ interface FormattedPayload {
   formattedText: Record<string, string>;
 }
 
+function formatEstimatedBatteryTime(
+  bat: TextMetrics["battery"],
+  state: string,
+): string {
+  if (
+    bat.powerRate === 0 ||
+    bat.maxCapacity <= 0 ||
+    bat.currentCapacity <= 0 ||
+    (state !== "charging" && state !== "discharging")
+  ) {
+    return "";
+  }
+
+  const powerMw = Math.abs(bat.powerRate) * 1000;
+  if (powerMw < 1) return "";
+
+  const remainingHours =
+    state === "charging"
+      ? (bat.maxCapacity - bat.currentCapacity) / powerMw
+      : state === "discharging"
+        ? bat.currentCapacity / powerMw
+        : 0;
+
+  if (remainingHours <= 0 || remainingHours > 48) return "";
+
+  const totalMinutes = Math.round(remainingHours * 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (state === "charging") {
+    return vscode.l10n.t(
+      "Est. {0}h {1}m until full",
+      hours,
+      minutes,
+    );
+  }
+  return vscode.l10n.t(
+    "Est. {0}h {1}m until empty",
+    hours,
+    minutes,
+  );
+}
+
 function formatUptime(seconds: number, format: string): string {
   if (format !== "auto") {
     const d = Math.floor(seconds / 86400);
@@ -238,11 +281,19 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
           ? `${vscode.l10n.t("Health")}: ${fmtNum(t.battery.health, sigDigits.battery)}${sp}%`
           : "",
         batteryPowerSub: t.battery.hasBattery
-          ? t.battery.powerState === "charging"
-            ? vscode.l10n.t("Charging")
-            : t.battery.powerState === "discharging"
-              ? vscode.l10n.t("Discharging")
-              : vscode.l10n.t("Idle")
+          ? (() => {
+              const stateText =
+                t.battery.powerState === "charging"
+                  ? vscode.l10n.t("Charging")
+                  : t.battery.powerState === "discharging"
+                    ? vscode.l10n.t("Discharging")
+                    : vscode.l10n.t("Idle");
+              const estTime = formatEstimatedBatteryTime(
+                t.battery,
+                t.battery.powerState,
+              );
+              return estTime ? `${stateText} · ${estTime}` : stateText;
+            })()
           : "",
         cpuTempSub: "",
         cpuSpeedSub:
