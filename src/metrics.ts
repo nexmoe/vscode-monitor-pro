@@ -162,12 +162,13 @@ const batteryText = async () => {
 
   const sp = _space ? " " : "";
   const pct = fmtSigNum(b.percent, sig) + sp + "%";
+  const icon = b.isCharging ? "$(plug)" : "$(symbol-event)";
 
   const estTime = formatEstimatedBatteryTime(b);
   if (estTime) {
-    return `$(plug) ${pct} · ${estTime}`;
+    return `${icon} ${pct} · ${estTime}`;
   }
-  return `$(plug) ${pct}`;
+  return `${icon} ${pct}`;
 };
 
 const cpuSpeedText = async () => {
