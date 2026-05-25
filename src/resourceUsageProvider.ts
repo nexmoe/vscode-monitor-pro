@@ -53,13 +53,13 @@ function formatEstimatedBatteryTime(
 
   if (state === "charging") {
     return vscode.l10n.t(
-      "Est. {0}h {1}m until full",
+      "{0}h {1}m until full",
       hours,
       minutes,
     );
   }
   return vscode.l10n.t(
-    "Est. {0}h {1}m until empty",
+    "{0}h {1}m until empty",
     hours,
     minutes,
   );

@@ -140,9 +140,9 @@ function formatEstimatedBatteryTime(b: SystemSnapshot["battery"]): string {
   const m = totalMinutes % 60;
 
   if (isCharging) {
-    return vscode.l10n.t("Est. {0}h {1}m until full", h, m);
+    return vscode.l10n.t("{0}h {1}m until full", h, m);
   }
-  return vscode.l10n.t("Est. {0}h {1}m until empty", h, m);
+  return vscode.l10n.t("{0}h {1}m until empty", h, m);
 }
 
 const batteryText = async () => {
@@ -163,17 +163,11 @@ const batteryText = async () => {
   const sp = _space ? " " : "";
   const pct = fmtSigNum(b.percent, sig) + sp + "%";
 
-  const powerState =
-    b.isCharging
-      ? vscode.l10n.t("Charging")
-      : b.hasBattery
-        ? vscode.l10n.t("Discharging")
-        : "";
-
   const estTime = formatEstimatedBatteryTime(b);
-  const status = estTime ? `${powerState} · ${estTime}` : powerState;
-
-  return `$(plug) ${pct} (${status})`;
+  if (estTime) {
+    return `$(plug) ${pct} · ${estTime}`;
+  }
+  return `$(plug) ${pct}`;
 };
 
 const cpuSpeedText = async () => {
