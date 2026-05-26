@@ -1,5 +1,4 @@
 {
-    " (Charging)": " (Charging)",
     "Bar chart": "Bar chart",
     "Battery": "Battery",
     "Battery - Has battery: {0}, Percent: {1}, Charging: {2}": "Battery - Has battery: {0}, Percent: {1}, Charging: {2}",
@@ -26,8 +25,6 @@
     "Disk {0} has size=0, skipping": "Disk {0} has size=0, skipping",
     "Disposed {0} metrics": "Disposed {0} metrics",
     "Enabled metrics: {0}": "Enabled metrics: {0}",
-    "{0}h {1}m until empty": "{0}h {1}m until empty",
-    "{0}h {1}m until full": "{0}h {1}m until full",
     "Extension activating": "Extension activating",
     "Extension deactivating": "Extension deactivating",
     "Failed to create worker: {0}, falling back to inline polling": "Failed to create worker: {0}, falling back to inline polling",
@@ -78,5 +75,7 @@
     "Using built-in data source: {0}": "Using built-in data source: {0}",
     "Worker collection failed: {0}": "Worker collection failed: {0}",
     "Worker error: {0}, falling back to inline polling": "Worker error: {0}, falling back to inline polling",
-    "Worker exited with code {0}, falling back to inline polling": "Worker exited with code {0}, falling back to inline polling"
+    "Worker exited with code {0}, falling back to inline polling": "Worker exited with code {0}, falling back to inline polling",
+    "{0}h {1}m until empty": "{0}h {1}m until empty",
+    "{0}h {1}m until full": "{0}h {1}m until full"
 }
