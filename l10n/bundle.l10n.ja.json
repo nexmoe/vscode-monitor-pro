@@ -1,5 +1,4 @@
 {
-    " (Charging)": " (充電中)",
     "Bar chart": "棒グラフ",
     "Battery": "バッテリー",
     "Battery - Has battery: {0}, Percent: {1}, Charging: {2}": "バッテリー - バッテリーあり: {0}, 残量: {1}%, 充電中: {2}",
@@ -14,8 +13,6 @@
     "CPU load: {0}%": "CPU負荷: {0}%",
     "Charging": "充電中",
     "Collection failed ({0}x), backing off to {1}ms": "データ収集に失敗しました（{0}回）、{1}ms待機して再試行します",
-    "{0}h {1}m until empty": "{0} 時間 {1} 分で空に",
-    "{0}h {1}m until full": "{0} 時間 {1} 分で満充電",
     "Collection failed: {0}": "データ収集に失敗しました: {0}",
     "Configuration changed, hot-reloading": "設定が変更されました。ホットリロード中",
     "Creating metric [{0}] at priority {1}": "メトリック [{0}] を作成中、優先度 {1}",
@@ -78,5 +75,7 @@
     "Using built-in data source: {0}": "内蔵データソースを使用: {0}",
     "Worker collection failed: {0}": "Worker データ収集に失敗しました: {0}",
     "Worker error: {0}, falling back to inline polling": "Worker エラー: {0}、インラインポーリングにフォールバックします",
-    "Worker exited with code {0}, falling back to inline polling": "Worker が終了コード {0} で終了しました、インラインポーリングにフォールバックします"
+    "Worker exited with code {0}, falling back to inline polling": "Worker が終了コード {0} で終了しました、インラインポーリングにフォールバックします",
+    "{0}h {1}m until empty": "{0} 時間 {1} 分で空に",
+    "{0}h {1}m until full": "{0} 時間 {1} 分で満充電"
 }

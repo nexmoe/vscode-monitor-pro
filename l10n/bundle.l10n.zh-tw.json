@@ -1,5 +1,4 @@
 {
-    " (Charging)": " (充電中)",
     "Bar chart": "條形圖",
     "Battery": "電量",
     "Battery - Has battery: {0}, Percent: {1}, Charging: {2}": "電池 - 有電池: {0}, 電量: {1}%, 充電中: {2}",
@@ -14,8 +13,6 @@
     "CPU load: {0}%": "CPU 負載: {0}%",
     "Charging": "充電中",
     "Collection failed ({0}x), backing off to {1}ms": "資料收集失敗（{0}次），回退等待 {1}ms",
-    "{0}h {1}m until empty": "{0} 小時 {1} 分鐘後耗盡",
-    "{0}h {1}m until full": "{0} 小時 {1} 分鐘後充滿",
     "Collection failed: {0}": "資料收集失敗: {0}",
     "Configuration changed, hot-reloading": "設定已變更，熱重載中",
     "Creating metric [{0}] at priority {1}": "建立度量 [{0}]，優先順序 {1}",
@@ -78,5 +75,7 @@
     "Using built-in data source: {0}": "使用內建資料來源: {0}",
     "Worker collection failed: {0}": "Worker 資料收集失敗: {0}",
     "Worker error: {0}, falling back to inline polling": "Worker 錯誤: {0}，回退到內聯輪詢",
-    "Worker exited with code {0}, falling back to inline polling": "Worker 以退出碼 {0} 終止，回退到內聯輪詢"
+    "Worker exited with code {0}, falling back to inline polling": "Worker 以退出碼 {0} 終止，回退到內聯輪詢",
+    "{0}h {1}m until empty": "{0} 小時 {1} 分鐘後耗盡",
+    "{0}h {1}m until full": "{0} 小時 {1} 分鐘後充滿"
 }
