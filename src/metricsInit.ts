@@ -45,7 +45,6 @@ export class Metric {
           String(e),
         ),
       );
-      this.#bar.text = vscode.l10n.t("$(error) {0}", this.#section);
     }
   }
 

@@ -1,6 +1,5 @@
 {
     " (Charging)": " (充电中)",
-    "$(error) {0}": "$(error) {0}",
     "Bar chart": "条形图",
     "Battery": "电量",
     "Battery - Has battery: {0}, Percent: {1}, Charging: {2}": "电池 - 有电池: {0}, 电量: {1}%, 充电中: {2}",
