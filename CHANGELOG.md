@@ -4,6 +4,28 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.5] - 2026-05-27
+
+### Added
+
+- **Battery estimated time in status bar & webview**: Status bar now shows e.g.
+  
+  `$(plug) 75% · 1h 30m until full` or `$(symbol-event) 50% · 2h 10m until empty`.
+  
+  The webview battery card appends the same estimate after the charge state.
+- **Localized chart toggle tooltips**: The Line / Bar chart toggle buttons in the resource usage webview now show localized tooltips (`Line chart` / `Bar chart`).
+
+### Changed
+
+- **Status bar icons refreshed**: CPU icon changed from `$(pulse)` to `$(chip)`; memory icons changed from `$(server)` to `$(pie-chart)`; discharging battery now shows `$(symbol-event)` instead of `$(plug)`.
+- **Compact battery status bar**: The charging/discharging state label is removed from the status bar—the icon and estimated time already convey the same info. The "Est." prefix is dropped from the webview battery card.
+- **Hidden scrollbar in webview**: The resource usage webview now hides its scrollbar for a cleaner look (scroll still works).
+
+### Fixed
+
+- **No more `$(error)` icon flash on metric update failure**: Previously, when a metric update failed, the status bar would briefly show `$(error) <metric>`. The error is still logged; the status bar now simply keeps the last good value.
+- **Language bundle cleanup**: Removed orphaned keys (`$(error) {0}`, `(Charging)`) and resorted bundles for consistency.
+
 ## [0.7.4] - 2026-05-24
 
 ### Fixed
