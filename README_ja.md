@@ -7,7 +7,7 @@
 
 [vscode-url]: https://marketplace.visualstudio.com/items?itemName=nexmoe.monitor-pro
 
-[![VSCode Installs](https://img.shields.io/badge/install-10k+-green?logo=visual-studio-code)][vscode-url]
+[![VSCode Installs](https://img.shields.io/badge/install-20k+-green?logo=visual-studio-code)][vscode-url]
 
 [English](./README.md) | [简体中文](./README_zh-cn.md) | [繁體中文](./README_zh-tw.md) | 日本語
 
