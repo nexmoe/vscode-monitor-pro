@@ -3,6 +3,7 @@ import * as http from "http";
 import { l10n } from "vscode";
 import type { GoAllResponse } from "./rawDataTypes";
 import { getLogger } from "./logger";
+import type { MetricsExist } from "./constants";
 
 const BACKEND_START_TIMEOUT = 10000;
 const FETCH_TIMEOUT = 5000;
@@ -116,9 +117,12 @@ export class GoBackendManager {
     );
   }
 
-  async fetchAll(): Promise<GoAllResponse> {
+  async fetchAll(enabled: Set<MetricsExist>): Promise<GoAllResponse> {
+    // 将已启用指标下传到 Go 后端，使其仅采集对应维度（真正的按需查询）。
+    const query =
+      enabled.size > 0 ? `?metrics=${encodeURIComponent([...enabled].join(","))}` : "";
     return this.fetchJSON<GoAllResponse>(
-      `http://127.0.0.1:${this._port}/api/v1/all`,
+      `http://127.0.0.1:${this._port}/api/v1/all${query}`,
     );
   }
 

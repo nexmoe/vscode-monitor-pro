@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/host"
-	"github.com/shirou/gopsutil/v4/load"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/sensors"
@@ -303,136 +303,141 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 		netCounters []net.IOCountersStat
 		hostInfo    *host.InfoStat
 		sensorData  []sensors.TemperatureStat
-		loadAvg     *load.AvgStat
-		loadMisc    *load.MiscStat
 		batData     batteryInfo
 	)
 
+	// 解析 ?metrics=cpu,memoryActive,... 决定实际采集哪些维度（真正的按需查询）。
+	// 未提供该参数时回落为全量采集（向后兼容）。
+	enabled := parseEnabledMetrics(r)
+
+	needCPU := enabled == nil || enabled["cpu"]
+	needMem := enabled == nil || enabled["memoryActive"] || enabled["memoryUsed"]
+	needDisk := enabled == nil || enabled["diskSpace"] || enabled["fileSystem"]
+	needNet := enabled == nil || enabled["network"]
+	needHost := enabled == nil || enabled["osDistro"] || enabled["cpuTemp"]
+	needBattery := enabled == nil || enabled["battery"]
+
 	// CPU group
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
+	if needCPU {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
 
-		info, _ := cpu.InfoWithContext(ctx)
-		info = patchCPUFreq(info)
-		perc, _ := getCPUPercent(2*time.Second, false)
-		times, _ := cpu.TimesWithContext(ctx, true)
+			info, _ := cpu.InfoWithContext(ctx)
+			info = patchCPUFreq(info)
+			perc, _ := getCPUPercent(2*time.Second, false)
+			times, _ := cpu.TimesWithContext(ctx, true)
 
-		mu.Lock()
-		cpuInfo = info
-		cpuPerc = perc
-		cpuTimes = times
-		mu.Unlock()
-	}()
+			mu.Lock()
+			cpuInfo = info
+			cpuPerc = perc
+			cpuTimes = times
+			mu.Unlock()
+		}()
+	}
 
 	// Memory group
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
+	if needMem {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
 
-		virtual, _ := mem.VirtualMemoryWithContext(ctx)
-		swap, _ := mem.SwapMemoryWithContext(ctx)
+			virtual, _ := mem.VirtualMemoryWithContext(ctx)
+			swap, _ := mem.SwapMemoryWithContext(ctx)
 
-		mu.Lock()
-		vmem = virtual
-		smem = swap
-		mu.Unlock()
-	}()
+			mu.Lock()
+			vmem = virtual
+			smem = swap
+			mu.Unlock()
+		}()
+	}
 
 	// Disk group
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	if needDisk {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 
-		partitions := partitionsWithTimeout(10 * time.Second)
+			partitions := partitionsWithTimeout(10 * time.Second)
 
-		diskUsage := make([]*disk.UsageStat, 0)
-		validParts := make([]disk.PartitionStat, 0, len(partitions))
-		hasRoot := false
-		for _, p := range partitions {
-			u := usageWithTimeout(p.Mountpoint)
-			if u != nil {
-				diskUsage = append(diskUsage, u)
-				validParts = append(validParts, p)
-				if p.Mountpoint == "/" {
-					hasRoot = true
+			diskUsage := make([]*disk.UsageStat, 0)
+			validParts := make([]disk.PartitionStat, 0, len(partitions))
+			hasRoot := false
+			for _, p := range partitions {
+				u := usageWithTimeout(p.Mountpoint)
+				if u != nil {
+					diskUsage = append(diskUsage, u)
+					validParts = append(validParts, p)
+					if p.Mountpoint == "/" {
+						hasRoot = true
+					}
 				}
 			}
-		}
-		if runtime.GOOS != "windows" && !hasRoot {
-			if u := usageWithTimeout("/"); u != nil {
-				diskUsage = append(diskUsage, u)
+			if runtime.GOOS != "windows" && !hasRoot {
+				if u := usageWithTimeout("/"); u != nil {
+					diskUsage = append(diskUsage, u)
+				}
 			}
-		}
 
-		ioMap := ioCountersWithTimeout(2 * time.Second)
+			ioMap := ioCountersWithTimeout(2 * time.Second)
 
-		mu.Lock()
-		parts = validParts
-		usage = diskUsage
-		ioCounters = ioMap
-		mu.Unlock()
-	}()
+			mu.Lock()
+			parts = validParts
+			usage = diskUsage
+			ioCounters = ioMap
+			mu.Unlock()
+		}()
+	}
 
 	// Network group
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
+	if needNet {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
 
-		counters, _ := net.IOCountersWithContext(ctx, true)
+			counters, _ := net.IOCountersWithContext(ctx, true)
 
-		mu.Lock()
-		netCounters = counters
-		mu.Unlock()
-	}()
+			mu.Lock()
+			netCounters = counters
+			mu.Unlock()
+		}()
+	}
 
-	// Host group
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
+	// Host group (承载 osDistro + cpuTemp/sensors)
+	if needHost {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
 
-		info, _ := host.InfoWithContext(ctx)
-		sensors, _ := sensors.TemperaturesWithContext(ctx)
+			info, _ := host.InfoWithContext(ctx)
+			sensors, _ := sensors.TemperaturesWithContext(ctx)
 
-		mu.Lock()
-		hostInfo = info
-		sensorData = sensors
-		mu.Unlock()
-	}()
-
-	// Load group
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
-
-		avg, _ := load.AvgWithContext(ctx)
-		misc, _ := load.MiscWithContext(ctx)
-
-		mu.Lock()
-		loadAvg = avg
-		loadMisc = misc
-		mu.Unlock()
-	}()
+			mu.Lock()
+			hostInfo = info
+			sensorData = sensors
+			mu.Unlock()
+		}()
+	}
 
 	// Battery group
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		data := getBatteryData()
-		mu.Lock()
-		batData = data
-		mu.Unlock()
-	}()
+	if needBattery {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			data := getBatteryData()
+			mu.Lock()
+			batData = data
+			mu.Unlock()
+		}()
+	}
 
 	wg.Wait()
 
@@ -442,7 +447,6 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 		Disk    interface{} `json:"disk"`
 		Network interface{} `json:"network"`
 		Host    interface{} `json:"host"`
-		Load    interface{} `json:"load"`
 		Battery batteryInfo `json:"battery"`
 	}{
 		CPU: struct {
@@ -476,12 +480,26 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 		}{
 			Info: hostInfo, Sensors: sensorData,
 		},
-		Load: struct {
-			Avg  *load.AvgStat  `json:"avg"`
-			Misc *load.MiscStat `json:"misc"`
-		}{
-			Avg: loadAvg, Misc: loadMisc,
-		},
 		Battery: batData,
 	}})
+}
+
+// parseEnabledMetrics 解析 ?metrics=a,b,c 查询参数，返回指标名集合。
+// 返回 nil 表示未提供参数（调用方应回落为全量采集）。
+func parseEnabledMetrics(r *http.Request) map[string]bool {
+	raw := r.URL.Query().Get("metrics")
+	if raw == "" {
+		return nil
+	}
+	set := make(map[string]bool)
+	for _, m := range strings.Split(raw, ",") {
+		m = strings.TrimSpace(m)
+		if m != "" {
+			set[m] = true
+		}
+	}
+	if len(set) == 0 {
+		return nil
+	}
+	return set
 }
