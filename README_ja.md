@@ -97,7 +97,15 @@ Codicon アイコンとフォーマットされた数値で表示される、11 
 - サブタイトル：バッテリー健全度、充放電状態、温度最小値、速度範囲
 - 調整可能な履歴ポイント数（10〜500）
 
-下部の**情報セクション**には、稼働時間、OS ディストリビューション、カラー付きディスク容量プログレスバーが表示されます。稼働時間と OS ディストリビューションは `resourceUsage.showUptime` / `showOsDistro` で個別にオン/オフできます。
+下部の**情報セクション**には、稼働時間、OS ディストリビューション、カラー付きディスク容量プログレスバーが表示されます。これらのカードは `resourceUsage.charts` 設定の一部であり、`charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` でオン/オフできます（デフォルトで有効）。
+
+### オンデマンドクエリ
+
+無効化されたメトリクスは**一切クエリされません**——収集は有効な項目のみによって駆動されます。実際のデータソース呼び出し（macOS/Linux の `systeminformation`、Windows の Go バックエンド）は、現在利用中の次元だけを取得します：
+
+- ステータスバーの `monitor-pro.metrics.*` トグルと webview の `resourceUsage.charts.*.enabled` は 1 つの有効セットに統合されます。
+- 未使用の `SI.*` 呼び出しや未使用の Go 収集グループ（CPU / メモリ / ディスク / ネットワーク / ホスト / バッテリー）は、「取得してからフィルタ」するのではなく完全にスキップされます。
+- 少数のメトリクスだけを表示する場合、更新サイクルのオーバーヘッドを最小限に抑えられます。いずれかのトグルを変更すると、次の更新（ホットリロード）ですぐに収集が切り替わります。
 
 ### バッテリー電力監視（現在は Windows でのみ完全実装）
 
@@ -144,11 +152,9 @@ Codicon アイコンとフォーマットされた数値で表示される、11 
 | `monitor-pro.singleUnit`                    | `false`       | 単位を最初の文字に省略（K、M、G）                        |
 | `monitor-pro.significantDigits`             | メトリック毎  | 有効桁数（1〜6）                                         |
 | `monitor-pro.uptimeFormat`                  | `auto`        | カスタムフォーマット、`{d}` `{h}` `{m}` `{s}` をサポート |
-| `monitor-pro.resourceUsage.charts`          | —             | グラフの有効化/表示/色設定                               |
+| `monitor-pro.resourceUsage.charts`          | —             | グラフ/カードの有効化・表示・色設定（ `osDistro` `uptime` `diskSpace` 含む） |
 | `monitor-pro.resourceUsage.samplingPoints`  | `60`          | グラフ履歴ポイント数（10〜500）                          |
-| `monitor-pro.resourceUsage.showUptime`      | `true`        | リソースビューに稼働時間カードを表示                     |
-| `monitor-pro.resourceUsage.showOsDistro`    | `true`        | リソースビューに OS 情報カードを表示                     |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | ディスク容量グラフのマウントフィルター                   |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | ディスク容量カードのマウントフィルター                   |
 | `monitor-pro.diskSpace`                     | `["/", "C:"]` | ステータスバーのディスク容量マウントフィルター           |
 
 ## スクリーンショット（0.6.0 以前、現在のバージョンでも互換性あり）

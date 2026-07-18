@@ -97,7 +97,15 @@ l10n — 中文、電量、電池健康度與功率：
 - 副標題：電池健康度、充放電狀態、溫度最低值、頻率範圍
 - 可調節歷史點數（10~500）
 
-底部**資訊區**顯示執行時間、系統發行版和彩色磁碟空間進度條。執行時間和系統發行版可透過 `resourceUsage.showUptime` / `showOsDistro` 獨立開關。
+底部**資訊區**顯示執行時間、系統發行版和彩色磁碟空間進度條。這些資訊卡屬於 `resourceUsage.charts` 設定的一部分，可透過 `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` 開關（預設啟用）。
+
+### 按需查詢
+
+被關閉的指標**完全不會被查詢**——採集完全由啟用項驅動。底層資料來源呼叫（macOS/Linux 上的 `systeminformation`，Windows 上的 Go 後端）只會取得目前正在使用的維度：
+
+- 狀態列 `monitor-pro.metrics.*` 開關與 webview `resourceUsage.charts.*.enabled` 合併為同一份「已啟用集合」。
+- 未使用的 `SI.*` 呼叫、未使用的 Go 採集組（CPU / 記憶體 / 磁碟 / 網路 / 主機 / 電池）都會被直接跳過，而非「查了再過濾」。
+- 只顯示少數指標時，重新整理週期的開銷被降到最低。修改任意開關後，採集會在下一次重新整理（熱重載）立即調整。
 
 ### 電池功率監控（目前僅在 Windows 上提供完整實作）
 
@@ -144,11 +152,9 @@ l10n — 中文、電量、電池健康度與功率：
 | `monitor-pro.singleUnit`                    | `false`       | 單位縮寫為首字母（K, M, G）              |
 | `monitor-pro.significantDigits`             | 各指標不同    | 有效數字位數（1~6）                      |
 | `monitor-pro.uptimeFormat`                  | `auto`        | 自訂格式，支援 `{d}` `{h}` `{m}` `{s}`   |
-| `monitor-pro.resourceUsage.charts`          | —             | 圖表啟用/檢視/顏色                       |
+| `monitor-pro.resourceUsage.charts`          | —             | 圖表/卡片啟用、檢視、顏色（含 `osDistro`、`uptime`、`diskSpace`） |
 | `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 圖表歷史點數（10~500）                   |
-| `monitor-pro.resourceUsage.showUptime`      | `true`        | 資源檢視顯示執行時間卡片                 |
-| `monitor-pro.resourceUsage.showOsDistro`    | `true`        | 資源檢視顯示系統發行版卡片               |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁碟空間圖表掛載點過濾                   |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁碟空間卡片掛載點過濾                   |
 | `monitor-pro.diskSpace`                     | `["/", "C:"]` | 狀態列磁碟空間掛載點過濾                 |
 
 ## 0.6.0 前螢幕截圖（目前版本仍保持相容）

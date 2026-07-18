@@ -97,7 +97,15 @@ Each chart features:
 - Subtitle: battery health, charge/discharge state, temperature min, speed range
 - 10–500 configurable history points
 
-A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. Uptime and OS distro can be independently toggled via `resourceUsage.showUptime` / `showOsDistro`.
+A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. These cards are part of the `resourceUsage.charts` configuration and can be toggled via `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` (enabled by default).
+
+### On-Demand Querying
+
+Disabled metrics are **never queried** — collection is driven entirely by what is enabled. The actual data source call (`systeminformation` on macOS/Linux, the Go backend on Windows) only fetches the dimensions currently in use:
+
+- Status bar `monitor-pro.metrics.*` toggles and webview `resourceUsage.charts.*.enabled` are merged into a single enabled set.
+- Unused `SI.*` calls and unused Go collection groups (CPU / Memory / Disk / Network / Host / Battery) are skipped entirely, not fetched-and-filtered.
+- This keeps the refresh cycle lightweight when only a few metrics are shown. Change any toggle and collection adapts on the next tick via hot-reload.
 
 ### Battery Power Monitoring (currently fully implemented on Windows only)
 
@@ -144,11 +152,9 @@ Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 | `monitor-pro.singleUnit`                    | `false`       | Abbreviate unit to first letter (K, M, G)     |
 | `monitor-pro.significantDigits`             | per-metric    | Significant digits (1–6) per metric           |
 | `monitor-pro.uptimeFormat`                  | `auto`        | Custom format with `{d}`, `{h}`, `{m}`, `{s}` |
-| `monitor-pro.resourceUsage.charts`          | —             | Chart enable/view/color per metric            |
+| `monitor-pro.resourceUsage.charts`          | —             | Chart/card enable/view/color per metric (incl. `osDistro`, `uptime`, `diskSpace`) |
 | `monitor-pro.resourceUsage.samplingPoints`  | `60`          | Chart history length (10–500)                 |
-| `monitor-pro.resourceUsage.showUptime`      | `true`        | Show uptime card in resource view             |
-| `monitor-pro.resourceUsage.showOsDistro`    | `true`        | Show OS distro card in resource view          |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space chart             |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space card              |
 | `monitor-pro.diskSpace`                     | `["/", "C:"]` | Mount filter for status bar                   |
 
 ## Screenshots (pre-0.6.0, still compatible with the current version)
