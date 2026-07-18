@@ -4,6 +4,7 @@ import { RawDataAdapter } from "./rawDataAdapter";
 import type { SystemSnapshot } from "./systemData";
 import type { MetricsExist } from "./constants";
 import { dimensionsForEnabled, type CollectDimension } from "./metricMap";
+import { dedupeFsSize } from "./diskSpace";
 
 export interface DataSource {
   readonly name: string;
@@ -125,7 +126,9 @@ export class SIDataSource implements DataSource {
           tx_sec: null,
           ms: 0,
         },
-      fsSize: fsSize ?? prev?.fsSize ?? [],
+      fsSize: fsSize
+        ? dedupeFsSize(fsSize)
+        : (prev?.fsSize ?? []),
       cpuCurrentSpeed: cpuSpeed ??
         prev?.cpuCurrentSpeed ?? { min: 0, max: 0, avg: 0, cores: [] },
       cpuTemperature: cpuTemp ??

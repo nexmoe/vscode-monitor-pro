@@ -1,4 +1,5 @@
 import { systemData, SystemSnapshot } from "./systemData";
+import { dedupeFsSize } from "./diskSpace";
 
 class RingBuffer<T> {
   private buffer: T[];
@@ -134,7 +135,7 @@ export class ResourceUsageDataCollector {
   }
 
   private pushPoint(snap: SystemSnapshot) {
-    const disks = snap.fsSize
+    const disks = dedupeFsSize(snap.fsSize)
       .filter((d) => d.size > 0)
       .sort((a, b) => a.mount.localeCompare(b.mount));
     const avgUse =

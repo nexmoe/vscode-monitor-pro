@@ -4,6 +4,7 @@ import byteFormat from "./byteFormat";
 import { MetricCtrProps } from "./constants";
 import { getDiskSpaceConfig, getUptimeFormat } from "./configuration";
 import { systemData } from "./systemData";
+import { dedupeFsSize } from "./diskSpace";
 import { getLogger } from "./logger";
 import { formatEstimatedBatteryTime } from "./battery";
 
@@ -189,7 +190,7 @@ const osDistroText = async () => {
 
 const diskSpaceText = async () => {
   const sig = getSigDigits("diskSpace");
-  const fsSize = (await systemData.getSnapshot()).fsSize;
+  const fsSize = dedupeFsSize((await systemData.getSnapshot()).fsSize);
   const disksToShow = getDiskSpaceConfig();
   getLogger().debug(
     vscode.l10n.t(

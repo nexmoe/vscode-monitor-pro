@@ -1,4 +1,5 @@
 import type { SystemSnapshot } from "./systemData";
+import { dedupeFsSize } from "./diskSpace";
 import type {
   GoAllResponse,
   GoDiskIOCountersStat,
@@ -138,9 +139,10 @@ export class RawDataAdapter {
             : null,
         ms: 0,
       },
-      fsSize: (raw.disk.usage || [])
-        .filter((u) => u.total > 0)
-        .map((u) => ({
+      fsSize: dedupeFsSize(
+        (raw.disk.usage || [])
+          .filter((u) => u.total > 0)
+          .map((u) => ({
           fs: u.path,
           type: u.fstype,
           size: u.total,
@@ -150,6 +152,7 @@ export class RawDataAdapter {
           mount: u.path,
           rw: null,
         })),
+      ),
       cpuCurrentSpeed: cpuSpeed,
       cpuTemperature: cpuTemp,
       battery: raw.battery?.hasBattery

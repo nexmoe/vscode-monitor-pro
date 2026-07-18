@@ -1,5 +1,6 @@
 import { parentPort } from "worker_threads";
 import * as SI from "systeminformation";
+import { dedupeFsSize } from "./diskSpace";
 
 let interval = 2000;
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -121,7 +122,7 @@ async function collect() {
         tx_sec: null,
         ms: 0,
       },
-    fsSize: fsSize ?? prev?.fsSize ?? [],
+    fsSize: fsSize ? dedupeFsSize(fsSize) : (prev?.fsSize ?? []),
     cpuCurrentSpeed: cpuSpeed ??
       prev?.cpuCurrentSpeed ?? { min: 0, max: 0, avg: 0, cores: [] },
     cpuTemperature: cpuTemp ??

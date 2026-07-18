@@ -556,8 +556,8 @@
                         '<span class="info-bar-label">' + m.use + '%</span>' +
                         '</div>';
                 }
-                const totalSize = mounts.reduce((s, m) => s + m.size, 0);
-                const totalUsed = mounts.reduce((s, m) => s + m.used, 0);
+                const totalSize = filtered.reduce((s, m) => s + m.size, 0);
+                const totalUsed = filtered.reduce((s, m) => s + m.used, 0);
                 const totalPct = totalSize > 0 ? ((totalUsed / totalSize) * 100).toFixed(1) : "0";
                 const sp2 = _fmtConfig.showSpace ? " " : "";
                 html +=
