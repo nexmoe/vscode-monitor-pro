@@ -4,6 +4,25 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.6] - 2026-07-18
+
+### Added
+
+- **On-demand metric collection (true lazy querying)**: Metrics you disable are no longer queried at all. The collection set is the union of status bar `monitor-pro.metrics.*` and webview `resourceUsage.charts.*.enabled`, and only those groups are gathered — by both the Node (`systeminformation`) path and the Go backend (`/api/v1/all?metrics=`).
+- **Unified webview info cards under `resourceUsage.charts`**: OS distribution, uptime, and disk-space info cards are now first-class entries in the `resourceUsage.charts` setting (default enabled), so hiding/showing them follows the same toggle flow as charts. The separate `monitor-pro.showUptime` / `monitor-pro.showOsDistro` settings are removed.
+- **New `metricMap` module**: Centralizes the metric → data-source dimension mapping used by the collector worker and Go adapter.
+
+### Changed
+
+- **Go backend now collects only the requested metric groups**: `handlers.go` reads the `metrics` query param and gathers only those groups; the Load group was removed (folded into CPU).
+- **Bar-view styling unified** across the resource usage webview for a consistent look.
+- **`systeminformation` dependency updated** to 5.31.7.
+- **Extension recommendations removed** from `.vscode/extensions.json`.
+
+### Removed
+
+- **Dead i18n keys**: Orphaned `resourceUsage` config translation keys dropped across all four language bundles (`package.nls*.json`).
+
 ## [0.7.5] - 2026-05-27
 
 ### Added
