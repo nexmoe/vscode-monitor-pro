@@ -277,7 +277,7 @@
   },
   "dependencies": {
     "source-map-support": "^0.5.21",
-    "systeminformation": "5.31.6"
+    "systeminformation": "5.31.7"
   },
   "description": "Monitor all the resources you care about.",
   "devDependencies": {
