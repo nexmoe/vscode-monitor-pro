@@ -84,7 +84,9 @@ export function getUptimeFormat(): string {
 
 export interface ResourceUsageChartConfig {
   enabled: boolean;
-  view: "line" | "bar";
+  // 以下字段仅对真正的图表（canvas 折线/柱状图）有意义；
+  // 信息区卡片（osDistro / uptime / diskSpace）只用到 enabled，无需 view/color。
+  view?: "line" | "bar";
   color?: string;
 }
 
@@ -92,8 +94,6 @@ export interface ResourceUsageConfig {
   charts: Record<string, ResourceUsageChartConfig>;
   diskSpaceMounts: string[];
   samplingPoints: number;
-  showUptime: boolean;
-  showOsDistro: boolean;
 }
 
 const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
@@ -116,6 +116,11 @@ const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
     view: "line",
     color: "--vscode-terminal-ansiBrightCyan",
   },
+  // 信息区卡片同样纳入 charts 配置，与图表共享 enabled 开关与采集逻辑。
+  // 它们默认启用，确保资源视图始终展示 OS 发行版 / 运行时间 / 磁盘空间。
+  osDistro: { enabled: true },
+  uptime: { enabled: true },
+  diskSpace: { enabled: true },
 };
 
 const CHART_SECTION = "resourceUsage";
@@ -141,8 +146,6 @@ export function getResourceUsageConfig(): ResourceUsageConfig {
       "all",
     ]),
     samplingPoints: config.get<number>(`${CHART_SECTION}.samplingPoints`, 60),
-    showUptime: config.get<boolean>(`${CHART_SECTION}.showUptime`, true),
-    showOsDistro: config.get<boolean>(`${CHART_SECTION}.showOsDistro`, true),
   };
 }
 

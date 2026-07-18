@@ -395,8 +395,9 @@
                 }
 
                 _show = {
-                    uptime: cfg.showUptime !== false,
-                    osDistro: cfg.showOsDistro !== false,
+                    uptime: (cfg.charts && cfg.charts.uptime && cfg.charts.uptime.enabled) !== false,
+                    osDistro: (cfg.charts && cfg.charts.osDistro && cfg.charts.osDistro.enabled) !== false,
+                    diskSpace: (cfg.charts && cfg.charts.diskSpace && cfg.charts.diskSpace.enabled) !== false,
                 };
                 _labels = cfg.labels || {};
 
@@ -513,11 +514,13 @@
                 }
 
                 // Disk space mounts
-                html +=
-                    '<div class="info-card" id="info-diskSpace">' +
-                    '<div class="info-header">' + (_labels.diskSpace || "Disk Space") + '</div>' +
-                    '<div id="disk-mount-list"></div>' +
-                    '</div>';
+                if (_show.diskSpace) {
+                    html +=
+                        '<div class="info-card" id="info-diskSpace">' +
+                        '<div class="info-header">' + (_labels.diskSpace || "Disk Space") + '</div>' +
+                        '<div id="disk-mount-list"></div>' +
+                        '</div>';
+                }
 
                 container.innerHTML = html;
             }

@@ -12,13 +12,63 @@ import {
   getShowSpace,
   getSingleUnit,
   getSignificantDigits,
+  getMetricsEnabled,
+  getResourceUsageConfig,
 } from "./configuration";
 import { getLogger, initLogger } from "./logger";
 import sourceMapSupport from "source-map-support";
+import type { MetricsExist } from "./constants";
 
 let metrics: Metric[] = [];
 let unsubscribeData: (() => void) | null = null;
 let goBackend: GoBackendManager | null = null;
+
+/**
+ * webview 图表 key -> 对应状态栏指标 section。
+ *
+ * 例：netRx/netTx 同属 network 维度，diskRx/diskWx 同属 fileSystem 维度，
+ * batteryPower 与 battery 同属 battery 维度。启用任一图表即需采集对应指标。
+ */
+const CHART_TO_METRIC: Record<string, MetricsExist> = {
+  cpu: "cpu",
+  memActive: "memoryActive",
+  memUsed: "memoryUsed",
+  netRx: "network",
+  netTx: "network",
+  diskRx: "fileSystem",
+  diskWx: "fileSystem",
+  battery: "battery",
+  batteryPower: "battery",
+  cpuTemp: "cpuTemp",
+  cpuSpeed: "cpuSpeed",
+  diskSpace: "diskSpace",
+  osDistro: "osDistro",
+  uptime: "uptime",
+};
+
+/**
+ * 计算实际的采集集合：状态栏 metrics.* 开关 与 webview resourceUsage.charts.*.enabled 的并集。
+ *
+ * 两类配置现已统一：webview 的信息卡（OS 发行版 / 运行时间 / 磁盘空间）也作为 charts 配置项，
+ * 默认启用。因此任一端（状态栏或 webview 图表/卡片）启用的指标都会被采集，
+ * 两端都不启用的指标则完全不查询（真正的按需查询）。
+ */
+function computeEnabledMetrics(): Set<MetricsExist> {
+  const enabled = new Set<MetricsExist>();
+  const metricsEnabled = getMetricsEnabled();
+  for (const [key, on] of Object.entries(metricsEnabled)) {
+    if (on) {
+      enabled.add(key as MetricsExist);
+    }
+  }
+  const charts = getResourceUsageConfig().charts;
+  for (const [chartKey, cfg] of Object.entries(charts)) {
+    if (cfg.enabled && CHART_TO_METRIC[chartKey]) {
+      enabled.add(CHART_TO_METRIC[chartKey]);
+    }
+  }
+  return enabled;
+}
 
 const GO_BINARY_NAME = process.platform === "win32" ? "monitor.exe" : "monitor";
 
@@ -43,6 +93,8 @@ function applyFormatConfig() {
 function rebuildMetrics() {
   metrics.forEach((x) => x.dispose());
   metrics = getEnabledMetrics();
+  // 同步实际采集集合（状态栏 + webview 图表并集）到数据层，实现按需查询。
+  systemData.setEnabledMetrics(computeEnabledMetrics());
   getLogger().info(l10n.t("Metrics initialized: {0}", metrics.length));
 }
 
@@ -168,6 +220,8 @@ export const activate = async (ctx: ExtensionContext) => {
         event.affectsConfiguration("monitor-pro.metrics.uptime") ||
         event.affectsConfiguration("monitor-pro.metrics.osDistro")
       ) {
+        // webview 图表启用状态变化会影响实际采集集合，需重新注入。
+        systemData.setEnabledMetrics(computeEnabledMetrics());
         resourceUsageProvider.pushConfigUpdate();
         getLogger().debug(l10n.t("Resource Usage view config pushed"));
       }

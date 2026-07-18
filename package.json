@@ -176,6 +176,15 @@
               "color": "--vscode-charts-purple",
               "enabled": true,
               "view": "line"
+            },
+            "osDistro": {
+              "enabled": true
+            },
+            "uptime": {
+              "enabled": true
+            },
+            "diskSpace": {
+              "enabled": true
             }
           },
           "description": "%config.resourceUsage.charts%",
@@ -197,16 +206,6 @@
           "maximum": 500,
           "minimum": 10,
           "type": "number"
-        },
-        "monitor-pro.resourceUsage.showOsDistro": {
-          "default": true,
-          "description": "%config.resourceUsage.showOsDistro%",
-          "type": "boolean"
-        },
-        "monitor-pro.resourceUsage.showUptime": {
-          "default": true,
-          "description": "%config.resourceUsage.showUptime%",
-          "type": "boolean"
         },
         "monitor-pro.showSpace": {
           "default": false,

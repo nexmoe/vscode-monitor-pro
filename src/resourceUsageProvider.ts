@@ -131,8 +131,6 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
         charts: config.charts,
         diskSpaceMounts: config.diskSpaceMounts,
         samplingPoints: config.samplingPoints,
-        showUptime: config.showUptime,
-        showOsDistro: config.showOsDistro,
         labels,
       },
     });
