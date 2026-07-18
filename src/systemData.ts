@@ -4,6 +4,7 @@ import { l10n } from "vscode";
 import type { DataSource } from "./dataSource";
 import { SIDataSource } from "./dataSource";
 import { getLogger } from "./logger";
+import type { MetricsExist } from "./constants";
 
 export interface SystemSnapshot {
   timestamp: number;
@@ -132,6 +133,8 @@ class SystemDataProvider {
   private _warnedMetrics = new Set<string>();
   private _useWorker = false;
   private _worker: Worker | null = null;
+  // 已启用的 UI 指标集合，由 extension 注入。collect() 据此下传到数据源层做按需采集。
+  private _enabledMetrics: Set<MetricsExist> = new Set();
   private _workerFailed = false;
   private _consecutiveFailures = 0;
 
@@ -170,6 +173,20 @@ class SystemDataProvider {
   setSource(source: DataSource) {
     this._source = source;
     this._snapshot = null;
+  }
+
+  /**
+   * 注入当前已启用的指标集合（状态栏 + webview 图表并集）。
+   *
+   * 该集合决定数据源层实际查询哪些维度：未启用的指标完全不发起 SI.* 调用，
+   * 也不触发 Go 后端对应采集组，实现真正的按需查询。
+   * 配置变更时由 extension 热重载调用，立即生效（下一轮 tick 即按新集合采集）。
+   */
+  setEnabledMetrics(enabled: Set<MetricsExist>) {
+    this._enabledMetrics = enabled;
+    if (this._worker) {
+      this._worker.postMessage({ type: "setEnabled", enabled: [...enabled] });
+    }
   }
 
   useWorker() {
@@ -358,6 +375,7 @@ class SystemDataProvider {
       this._worker.postMessage({
         type: "start",
         interval: this._interval,
+        enabled: [...this._enabledMetrics],
       });
     } catch (e) {
       getLogger().warn(
@@ -390,7 +408,10 @@ class SystemDataProvider {
       return this._collectPromise;
     }
 
-    const sourcePromise = this._source.collect(this._snapshot);
+    const sourcePromise = this._source.collect(
+      this._snapshot,
+      this._enabledMetrics,
+    );
     const failSafe = new Promise<never>((_, reject) => {
       setTimeout(() => {
         reject(new Error("collect() timed out; promise cache cleared for retry"));

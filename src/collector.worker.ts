@@ -5,18 +5,65 @@ let interval = 2000;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let prev: Record<string, any> | null = null;
 
+/**
+ * 已启用的 UI 指标集合（由主线程通过 setEnabled 消息下发）。
+ * 未启用的维度完全不发起 SI.* 查询，仅沿用 prev 快照以维持速率连续性。
+ */
+let enabledMetrics: Set<string> = new Set();
+
+// UI 指标 section -> 采集维度。uptime 为本地计算不查 SI；osDistro/cpuTemp 在 Go 端共用 Host 组，
+// 但在 SI 端分别由 osInfo / cpuTemperature 提供，故此处各自独立。
+const METRIC_TO_DIMENSION: Record<string, string> = {
+  cpu: "currentLoad",
+  memoryActive: "mem",
+  memoryUsed: "mem",
+  network: "networkStats",
+  fileSystem: "fsStats",
+  diskSpace: "fsSize",
+  battery: "battery",
+  cpuTemp: "cpuTemperature",
+  cpuSpeed: "cpuCurrentSpeed",
+  osDistro: "osInfo",
+  uptime: "currentLoad",
+};
+
+function enabledDimensions(): Set<string> {
+  const dims = new Set<string>();
+  for (const m of enabledMetrics) {
+    const d = METRIC_TO_DIMENSION[m];
+    if (d) dims.add(d);
+  }
+  return dims;
+}
+
 async function collect() {
+  const dims = enabledDimensions();
+  const need = (d: string) => dims.has(d);
   const [cl, mem, os, ns, fs, fsSize, cpuSpeed, cpuTemp, bat] =
     await Promise.all([
-      SI.currentLoad().catch(() => null),
-      SI.mem().catch(() => null),
-      SI.osInfo().catch(() => null),
-      SI.networkStats().catch(() => null),
-      SI.fsStats().catch(() => null),
-      SI.fsSize().catch(() => null),
-      SI.cpuCurrentSpeed().catch(() => null),
-      SI.cpuTemperature().catch(() => null),
-      SI.battery().catch(() => null),
+      need("currentLoad")
+        ? SI.currentLoad().catch(() => null)
+        : Promise.resolve(null),
+      need("mem") ? SI.mem().catch(() => null) : Promise.resolve(null),
+      need("osInfo") ? SI.osInfo().catch(() => null) : Promise.resolve(null),
+      need("networkStats")
+        ? SI.networkStats().catch(() => null)
+        : Promise.resolve(null),
+      need("fsStats")
+        ? SI.fsStats().catch(() => null)
+        : Promise.resolve(null),
+      need("fsSize")
+        ? SI.fsSize().catch(() => null)
+        : Promise.resolve(null),
+      need("cpuCurrentSpeed")
+        ? SI.cpuCurrentSpeed().catch(() => null)
+        : Promise.resolve(null),
+      need("cpuTemperature")
+        ? SI.cpuTemperature().catch(() => null)
+        : Promise.resolve(null),
+      need("battery")
+        ? SI.battery().catch(() => null)
+        : Promise.resolve(null),
     ]);
   let tm: SI.Systeminformation.TimeData | null = null;
   try {
@@ -156,11 +203,18 @@ async function tick() {
 parentPort?.on("message", (msg: any) => {
   if (msg.type === "start") {
     if (msg.interval) interval = msg.interval;
+    if (Array.isArray(msg.enabled)) {
+      enabledMetrics = new Set(msg.enabled);
+    }
     tick();
   } else if (msg.type === "stop") {
     if (timer) clearTimeout(timer);
     timer = null;
   } else if (msg.type === "setInterval") {
     interval = msg.interval;
+  } else if (msg.type === "setEnabled") {
+    if (Array.isArray(msg.enabled)) {
+      enabledMetrics = new Set(msg.enabled);
+    }
   }
 });

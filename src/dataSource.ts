@@ -2,10 +2,15 @@ import * as SI from "systeminformation";
 import type { GoBackendManager } from "./goBackend";
 import { RawDataAdapter } from "./rawDataAdapter";
 import type { SystemSnapshot } from "./systemData";
+import type { MetricsExist } from "./constants";
+import { dimensionsForEnabled, type CollectDimension } from "./metricMap";
 
 export interface DataSource {
   readonly name: string;
-  collect(prev: SystemSnapshot | null): Promise<SystemSnapshot>;
+  collect(
+    prev: SystemSnapshot | null,
+    enabled: Set<MetricsExist>,
+  ): Promise<SystemSnapshot>;
 }
 
 export class GoDataSource implements DataSource {
@@ -14,8 +19,11 @@ export class GoDataSource implements DataSource {
 
   constructor(private backend: GoBackendManager) {}
 
-  async collect(_prev: SystemSnapshot | null): Promise<SystemSnapshot> {
-    const raw = await this.backend.fetchAll();
+  async collect(
+    _prev: SystemSnapshot | null,
+    enabled: Set<MetricsExist>,
+  ): Promise<SystemSnapshot> {
+    const raw = await this.backend.fetchAll(enabled);
     return this.adapter.toSnapshot(raw);
   }
 }
@@ -23,19 +31,44 @@ export class GoDataSource implements DataSource {
 export class SIDataSource implements DataSource {
   readonly name = "systeminformation";
 
-  async collect(prev: SystemSnapshot | null): Promise<SystemSnapshot> {
+  async collect(
+    prev: SystemSnapshot | null,
+    enabled: Set<MetricsExist>,
+  ): Promise<SystemSnapshot> {
+    // 将已启用指标归一化为需要采集的 SI 维度集合，未启用的维度完全不发起查询。
+    const dims = dimensionsForEnabled(enabled);
+
+    const need = (d: CollectDimension) => dims.has(d);
+
     const [cl, mem, os, ns, fs, fsSize, cpuSpeed, cpuTemp, bat] =
       await Promise.all([
-        SI.currentLoad().catch(() => null),
-        SI.mem().catch(() => null),
-        SI.osInfo().catch(() => null),
-        SI.networkStats().catch(() => null),
-        SI.fsStats().catch(() => null),
-        SI.fsSize().catch(() => null),
-        SI.cpuCurrentSpeed().catch(() => null),
-        SI.cpuTemperature().catch(() => null),
-        SI.battery().catch(() => null),
+        need("currentLoad")
+          ? SI.currentLoad().catch(() => null)
+          : Promise.resolve(null),
+        need("mem") ? SI.mem().catch(() => null) : Promise.resolve(null),
+        need("osInfo") ? SI.osInfo().catch(() => null) : Promise.resolve(null),
+        need("networkStats")
+          ? SI.networkStats().catch(() => null)
+          : Promise.resolve(null),
+        need("fsStats")
+          ? SI.fsStats().catch(() => null)
+          : Promise.resolve(null),
+        need("fsSize")
+          ? SI.fsSize().catch(() => null)
+          : Promise.resolve(null),
+        need("cpuCurrentSpeed")
+          ? SI.cpuCurrentSpeed().catch(() => null)
+          : Promise.resolve(null),
+        need("cpuTemperature")
+          ? SI.cpuTemperature().catch(() => null)
+          : Promise.resolve(null),
+        need("battery")
+          ? SI.battery().catch(() => null)
+          : Promise.resolve(null),
       ]);
+
+    // time 始终采集：fsStats/networkStats 的速率计算依赖前后时间戳，
+    // 即使 fileSystem/network 未启用也需保留时间戳以维持 prev 连续性。
     let tm: SI.Systeminformation.TimeData | null = null;
     try {
       tm = SI.time();
