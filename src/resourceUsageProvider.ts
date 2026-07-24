@@ -14,6 +14,7 @@ import {
 import { getMetricsEnabled, getUptimeFormat } from "./configuration";
 import byteFormat from "./byteFormat";
 import { formatEstimatedBatteryTime } from "./battery";
+import { systemData } from "./systemData";
 
 interface FormattedPayload {
   history: ResourceUsagePayload["history"];
@@ -132,6 +133,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
         diskSpaceMounts: config.diskSpaceMounts,
         samplingPoints: config.samplingPoints,
         labels,
+        powerMode: systemData.sourceName === "mactop" ? "soc" : "battery",
       },
     });
   }
@@ -216,12 +218,21 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
         battery: t.battery.hasBattery
           ? fmtNum(t.battery.percent, sigDigits.battery) + sp + "%"
           : vscode.l10n.t("N/A"),
-        batteryPower: t.battery.hasBattery
-          ? (t.battery.powerRate >= 0 ? "+" : "-") +
-            fmtNum(Math.abs(t.battery.powerRate), sigDigits.battery) +
-            sp +
-            "W"
-          : vscode.l10n.t("N/A"),
+        batteryPower: (() => {
+          if (systemData.sourceName === "mactop") {
+            // mactop SoC 功率始终非负，无电池时也显示
+            return t.battery.powerRate !== 0
+              ? fmtNum(t.battery.powerRate, sigDigits.battery) + sp + "W"
+              : vscode.l10n.t("N/A");
+          }
+          // 其他数据源：电池净功率，有电池时显示带 +/- 前缀
+          return t.battery.hasBattery
+            ? (t.battery.powerRate >= 0 ? "+" : "-") +
+                fmtNum(Math.abs(t.battery.powerRate), sigDigits.battery) +
+                sp +
+                "W"
+            : vscode.l10n.t("N/A");
+        })(),
         cpuTemp:
           t.cpuTemp > 0
             ? fmtNum(t.cpuTemp, sigDigits.cpuTemp) + sp + "°C"
@@ -235,7 +246,9 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       formattedText: {
         batterySub: t.battery.hasBattery
           ? `${vscode.l10n.t("Health")}: ${fmtNum(t.battery.health, sigDigits.battery)}${sp}%`
-          : "",
+          : systemData.sourceName === "mactop" && t.battery.powerRate !== 0
+            ? vscode.l10n.t("SoC Power")
+            : "",
         batteryPowerSub: t.battery.hasBattery
           ? (() => {
               const stateText =
@@ -244,6 +257,29 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
                   : t.battery.powerState === "discharging"
                     ? vscode.l10n.t("Discharging")
                     : vscode.l10n.t("Idle");
+              // mactop 数据源的 powerRate 是 SoC 总功耗，不是电池充放电速率，
+              // 不能用于计算剩余充电/放电时间。改用系统提供的 timeRemaining。
+              const isMactop = systemData.sourceName === "mactop";
+              if (isMactop) {
+                // timeRemaining 来自 SI.battery()，在 macOS 上由 IOPMPowerSources 提供。
+                // 当设备接电源但停止充电（如设置了充电上限）时，该值可能返回过时缓存，
+                // idle/full 状态下不应显示剩余时间。
+                if (
+                  (t.battery.powerState === "charging" ||
+                    t.battery.powerState === "discharging") &&
+                  t.battery.timeRemaining > 0 &&
+                  t.battery.timeRemaining < 2880
+                ) {
+                  const h = Math.floor(t.battery.timeRemaining / 60);
+                  const m = Math.round(t.battery.timeRemaining % 60);
+                  const timeStr =
+                    t.battery.powerState === "charging"
+                      ? vscode.l10n.t("{0}h {1}m until full", h, m)
+                      : vscode.l10n.t("{0}h {1}m until empty", h, m);
+                  return `${stateText} · ${timeStr}`;
+                }
+                return stateText;
+              }
               const estTime =
                 t.battery.powerState === "charging" ||
                 t.battery.powerState === "discharging"
@@ -256,7 +292,9 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
                   : "";
               return estTime ? `${stateText} · ${estTime}` : stateText;
             })()
-          : "",
+          : systemData.sourceName === "mactop" && t.battery.powerRate !== 0
+            ? vscode.l10n.t("SoC Power")
+            : "",
         cpuTempSub: "",
         cpuSpeedSub:
           t.cpuSpeed.avg > 0

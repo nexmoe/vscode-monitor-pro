@@ -247,6 +247,7 @@
             let _show = { uptime: true, osDistro: true };
             let _labels = {};
             let _diskSpaceMounts = ["all"];
+            let _powerMode = "battery"; // "battery" (可正可负) | "soc" (mactop，始终非负)
 
             let _fmtConfig = {
                 unitSystem: "binary",
@@ -387,6 +388,7 @@
                 resetCSSCache();
                 _charts = cfg.charts || {};
                 _diskSpaceMounts = cfg.diskSpaceMounts || ["all"];
+                _powerMode = cfg.powerMode || "battery";
 
                 _chartColors = {};
                 for (const id of ALL_CHART_IDS) {
@@ -653,9 +655,17 @@
                     dataMin = 0;
                     dataMax = 100;
                 } else if (isPowerId(id)) {
-                    const maxVal = Math.max(1, ...(history.map(Math.abs)));
-                    dataMin = -maxVal * 1.15;
-                    dataMax = maxVal * 1.15;
+                    if (_powerMode === "soc") {
+                        // mactop SoC 功率始终非负
+                        const maxVal = Math.max(1, ...history);
+                        dataMin = 0;
+                        dataMax = maxVal * 1.15;
+                    } else {
+                        // 电池净功率可正可负，对称范围
+                        const maxVal = Math.max(1, ...(history.map(Math.abs)));
+                        dataMin = -maxVal * 1.15;
+                        dataMax = maxVal * 1.15;
+                    }
                 } else {
                     dataMin = 0;
                     dataMax = history.length > 0 ? Math.max(1, ...history) * 1.15 : 1;
@@ -681,7 +691,7 @@
                     ctx.stroke();
                 }
 
-                if (isPowerId(id)) {
+                if (isPowerId(id) && _powerMode === "battery") {
                     const yZero = yPos(0);
                     ctx.strokeStyle = rgba(fg, 0.15);
                     ctx.lineWidth = 1;
@@ -718,7 +728,11 @@
                 if (id === "battery") {
                     label = last.toFixed(1) + sep + "%";
                 } else if (id === "batteryPower") {
-                    label = (last >= 0 ? "+" : "") + last.toFixed(1) + sep + "W";
+                    if (_powerMode === "battery") {
+                        label = (last >= 0 ? "+" : "") + last.toFixed(1) + sep + "W";
+                    } else {
+                        label = last.toFixed(1) + sep + "W";
+                    }
                 } else if (id === "cpuTemp") {
                     label = last.toFixed(1) + sep + "\u00B0C";
                 } else if (id === "cpuSpeed") {

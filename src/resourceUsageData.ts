@@ -90,6 +90,7 @@ export interface TextMetrics {
     powerState: string;
     currentCapacity: number;
     maxCapacity: number;
+    timeRemaining: number;
   };
   cpuTemp: number;
   cpuSpeed: { avg: number; min: number; max: number };
@@ -154,7 +155,12 @@ export class ResourceUsageDataCollector {
       diskWx: snap.fsStats.wx_sec || 0,
       diskSpaceUse: avgUse,
       batteryPercent: snap.battery.hasBattery ? snap.battery.percent : -1,
-      batteryPower: snap.battery.hasBattery ? snap.battery.powerRate : 0,
+      batteryPower:
+        systemData.sourceName === "mactop"
+          ? snap.battery.powerRate
+          : snap.battery.hasBattery
+            ? snap.battery.powerRate
+            : 0,
       cpuTemperature: snap.cpuTemperature.main ?? 0,
       cpuSpeedAvg: snap.cpuCurrentSpeed.avg,
     };
@@ -175,6 +181,7 @@ export class ResourceUsageDataCollector {
           powerState: snap.battery.powerState,
           currentCapacity: snap.battery.currentCapacity,
           maxCapacity: snap.battery.maxCapacity,
+          timeRemaining: snap.battery.timeRemaining,
         },
         cpuTemp: snap.cpuTemperature.main ?? 0,
         cpuSpeed: {

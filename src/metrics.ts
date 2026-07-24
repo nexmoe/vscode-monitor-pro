@@ -137,11 +137,31 @@ const batteryText = async () => {
   const pct = fmtSigNum(b.percent, sig) + sp + "%";
   const icon = b.isCharging || b.acConnected ? "$(plug)" : "$(symbol-event)";
 
+  // mactop 数据源的 powerRate 是 SoC 总功耗，不是电池充放电速率，
+  // 不能用于 formatEstimatedBatteryTime 计算剩余充电/放电时间。
+  // 改用系统提供的 timeRemaining，且仅在 charging/discharging 状态显示。
+  if (systemData.sourceName === "mactop") {
+    if (
+      (b.powerState === "charging" || b.powerState === "discharging") &&
+      b.timeRemaining > 0 &&
+      b.timeRemaining < 2880
+    ) {
+      const h = Math.floor(b.timeRemaining / 60);
+      const m = Math.round(b.timeRemaining % 60);
+      const timeStr =
+        b.powerState === "charging"
+          ? vscode.l10n.t("{0}h {1}m until full", h, m)
+          : vscode.l10n.t("{0}h {1}m until empty", h, m);
+      return `${icon} ${pct} · ${timeStr}`;
+    }
+    return `${icon} ${pct}`;
+  }
+
   const estTime = formatEstimatedBatteryTime(
     b.powerRate,
     b.maxCapacity,
     b.currentCapacity,
-    b.isCharging || b.acConnected,
+    b.isCharging,
   );
   if (estTime) {
     return `${icon} ${pct} · ${estTime}`;
