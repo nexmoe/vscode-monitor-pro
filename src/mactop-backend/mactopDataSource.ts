@@ -33,6 +33,8 @@
 
 import * as os from "os";
 import * as SI from "systeminformation";
+import { exec } from "child_process";
+import { promisify } from "util";
 import type { DataSource } from "../dataSource";
 import type { SystemSnapshot } from "../systemData";
 import type { MetricsExist } from "../constants";
@@ -40,8 +42,35 @@ import { dedupeFsSize } from "../diskSpace";
 import type { MactopBackendManager } from "./mactopBackendManager";
 import { findMetricValue, type PrometheusMetric } from "./prometheusParser";
 
+const execAsync = promisify(exec);
+
 const GB_TO_BYTES = 1024 * 1024 * 1024;
 const KB_TO_BYTES = 1024;
+
+/**
+ * On macOS, SI.battery().timeRemaining comes from IOPMPowerSources which
+ * returns -1 during charging (Apple removed the estimate from the UI in
+ * macOS Sierra 10.12.2). pmset -g batt still provides a valid estimate in
+ * both charging and discharging states, so we use it as the primary source.
+ *
+ * Output example (charging):
+ *   Now drawing from 'AC Power' -InternalBattery-0 (id=12345678) 93%; charging; 0:11 remaining present: true
+ * Output example (discharging):
+ *   Now drawing from 'Battery Power' -InternalBattery-0 68%; discharging; 12:39 remaining present: true
+ * When no estimate is available: "(no estimate)" instead of "H:MM remaining".
+ */
+async function getPmsetTimeRemaining(): Promise<number> {
+  try {
+    const { stdout } = await execAsync("pmset -g batt");
+    const match = stdout.match(/(\d+):(\d+)\s+remaining/);
+    if (match) {
+      return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+}
 
 export class MactopDataSource implements DataSource {
   readonly name = "mactop";
@@ -52,13 +81,14 @@ export class MactopDataSource implements DataSource {
     prev: SystemSnapshot | null,
     _enabled: Set<MetricsExist>,
   ): Promise<SystemSnapshot> {
-    const [metrics, siBat, siFsSize, siOs] = await Promise.all([
+    const [metrics, siBat, siFsSize, siOs, pmsetTime] = await Promise.all([
       this.backend.fetchMetrics(),
       SI.battery().catch(() => null),
       SI.fsSize().catch(() => null),
       SI.osInfo().catch(() => null),
+      getPmsetTimeRemaining(),
     ]);
-    return this._toSnapshot(metrics, prev, siBat, siFsSize, siOs);
+    return this._toSnapshot(metrics, prev, siBat, siFsSize, siOs, pmsetTime);
   }
 
   private _toSnapshot(
@@ -67,6 +97,7 @@ export class MactopDataSource implements DataSource {
     siBat: SI.Systeminformation.BatteryData | null,
     siFsSize: SI.Systeminformation.FsSizeData[] | null,
     siOs: SI.Systeminformation.OsData | null,
+    pmsetTime: number,
   ): SystemSnapshot {
     const find = (name: string, labels?: Record<string, string>) =>
       findMetricValue(metrics, name, labels);
@@ -213,7 +244,11 @@ export class MactopDataSource implements DataSource {
               ? "idle"
               : "discharging"
           : "none",
-        timeRemaining: siBat?.timeRemaining ?? 0,
+        // Use pmset -g batt time estimate (works for both charging and
+        // discharging). SI.battery().timeRemaining returns -1 during charging
+        // on macOS, so pmset is the primary source. Fall back to SI value
+        // only if pmset returned 0 (e.g. command failed on non-macOS).
+        timeRemaining: pmsetTime > 0 ? pmsetTime : (siBat?.timeRemaining ?? 0),
         acConnected: siBat?.acConnected ?? batteryCharging === 1,
         type: siBat?.type ?? "",
         model: siBat?.model ?? "",
