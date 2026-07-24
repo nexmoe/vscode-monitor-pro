@@ -16,6 +16,25 @@ export type FsSizeEntry = SystemSnapshot["fsSize"][number];
  * 结果：每块物理磁盘（及每个虚拟文件系统）只保留一行。Windows 盘符天然唯一，去重为 no-op。
  * 函数为纯函数且幂等。
  */
+/**
+ * 提取去重分组键。
+ *
+ * macOS APFS：同一容器的多个卷设备路径为 /dev/diskNsM（或 /dev/diskNsMsR），
+ * 需按物理磁盘 /dev/diskN 合并，否则容器容量会被每个卷重复报告。
+ * 其他平台设备名（Linux /dev/nvme0n1p2、/dev/sda1；Windows 盘符）不匹配此模式，回退到原始 fs。
+ */
+function getDedupeKey(row: FsSizeEntry): string {
+  const fs = (row.fs && row.fs.trim()) || "";
+  if (fs) {
+    const apfsMatch = fs.match(/^\/dev\/disk(\d+)s\d+/);
+    if (apfsMatch) {
+      return `/dev/disk${apfsMatch[1]}`;
+    }
+    return fs;
+  }
+  return (row.mount && row.mount.trim()) || "";
+}
+
 export function dedupeFsSize(rows: FsSizeEntry[]): FsSizeEntry[] {
   if (!rows || rows.length <= 1) {
     return rows;
@@ -23,7 +42,7 @@ export function dedupeFsSize(rows: FsSizeEntry[]): FsSizeEntry[] {
 
   const groups = new Map<string, FsSizeEntry[]>();
   for (const row of rows) {
-    const key = (row.fs && row.fs.trim()) || (row.mount && row.mount.trim()) || "";
+    const key = getDedupeKey(row);
     if (!key) {
       continue;
     }
