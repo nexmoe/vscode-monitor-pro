@@ -1,11 +1,11 @@
 /**
- * Prometheus 文本格式解析器。
+ * Prometheus text format parser.
  *
- * mactop 通过 `--prometheus <port>` 启动后在 `/metrics` 端点暴露
- * Prometheus exposition format 文本。本解析器将其转为结构化对象，
- * 供 MactopDataSource 查询使用。
+ * When launched with `--prometheus <port>`, mactop exposes the Prometheus
+ * exposition format text at the `/metrics` endpoint. This parser converts that
+ * text into a structured object for MactopDataSource to consume.
  *
- * 格式示例：
+ * Example format:
  *   # HELP mactop_cpu_usage_percent Current total CPU usage percentage
  *   # TYPE mactop_cpu_usage_percent gauge
  *   mactop_cpu_usage_percent 12.65
@@ -19,8 +19,8 @@ export interface PrometheusMetric {
 }
 
 /**
- * 解析 Prometheus exposition format 文本，返回所有指标行。
- * 跳过注释行（# HELP / # TYPE）和空行。
+ * Parse Prometheus exposition format text and return all metric lines.
+ * Skips comment lines (# HELP / # TYPE) and blank lines.
  */
 export function parsePrometheusText(text: string): PrometheusMetric[] {
   const metrics: PrometheusMetric[] = [];
@@ -61,7 +61,7 @@ export function parsePrometheusText(text: string): PrometheusMetric[] {
 }
 
 /**
- * 解析标签字符串 `key="value",key2="value2"` 为对象。
+ * Parse a label string `key="value",key2="value2"` into an object.
  */
 function parseLabels(s: string): Record<string, string> {
   const labels: Record<string, string> = {};
@@ -74,8 +74,8 @@ function parseLabels(s: string): Record<string, string> {
 }
 
 /**
- * 查找第一个匹配指定名称和标签条件的指标，返回其值。
- * 标签条件为空表示不筛选标签。
+ * Find the first metric matching the given name and optional label filter,
+ * returning its value. An empty label filter means no label filtering.
  */
 export function findMetricValue(
   metrics: PrometheusMetric[],
@@ -91,7 +91,7 @@ export function findMetricValue(
 }
 
 /**
- * 判断指标标签是否包含所有指定的键值对。
+ * Check whether the metric labels contain all specified key/value pairs.
  */
 function matchesLabels(
   labels: Record<string, string>,

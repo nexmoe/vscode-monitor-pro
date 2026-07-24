@@ -1,20 +1,27 @@
 /**
- * mactop 子进程管理器。
+ * mactop child-process manager.
  *
- * 职责：
- * - 检测 mactop 是否已安装
- * - 临时文件端口发现：首次启动将 port+PID 写入临时文件，后续窗口优先复用
- * - 进程存活检查（process.kill(pid, 0)）和 HTTP 健康检查
- * - detached 进程：mactop 在 VS Code 窗口关闭后自然存活，支持跨窗口复用
- * - Node net 模块分配空闲端口（mactop 不支持随机端口 :0）
- * - HTTP 轮询 /metrics 端点获取 Prometheus 文本数据
+ * Responsibilities:
+ * - Detect whether mactop is installed
+ * - Temporary file port discovery: writes port+PID to a temp file on first start
+ *   and reuses it in subsequent windows
+ * - Process liveness check (process.kill(pid, 0)) and HTTP health check
+ * - Detached process: mactop stays alive after VS Code windows close, enabling
+ *   reuse across windows
+ * - Allocate a free port with the Node net module (mactop does not support the
+ *   random port :0)
+ * - Poll the /metrics endpoint via HTTP to fetch Prometheus text data
  *
- * 设计决策：
- * - 不在 deactivate 时 kill mactop，也不删除临时文件——让 mactop 自然存活，
- *   下一个 VS Code 窗口通过临时文件 + PID 检查 + 健康检查复用同一进程。
- * - 临时文件在发现 mactop 进程已死时被自然覆盖（启动新进程时重写）。
- * - 使用 --headless 模式启动 mactop，避免无终端环境下 TUI 初始化失败。
- * - stdout 设为 "ignore" 避免 headless JSON 输出填满管道缓冲区导致阻塞。
+ * Design decisions:
+ * - Do not kill mactop in deactivate, and do not delete the temp file. Let
+ *   mactop stay alive so the next VS Code window can reuse the same process
+ *   via the temp file + PID check + health check.
+ * - The temp file is naturally overwritten when the existing process is found
+ *   dead and a new one is started.
+ * - Launch mactop in --headless mode to avoid TUI initialization failures in a
+ *   non-terminal environment.
+ * - stdout is set to "ignore" so headless JSON output does not fill the pipe
+ *   buffer and block the process.
  */
 
 import { spawn, execSync, ChildProcess } from "child_process";
@@ -32,7 +39,7 @@ const STARTUP_TIMEOUT = 10000;
 const HEALTH_POLL_INTERVAL = 300;
 const FETCH_TIMEOUT = 5000;
 
-/** 临时文件路径：存储 mactop 的 port 和 PID，供跨窗口复用。 */
+/** Temporary file path storing mactop's port and PID for reuse across windows. */
 const PORT_FILE = path.join(os.tmpdir(), "vscode-monitor-pro-mactop.json");
 
 interface PortFileContent {
@@ -55,9 +62,9 @@ export class MactopBackendManager {
   }
 
   /**
-   * 检测 mactop 是否已安装。
-   * 先尝试 `which mactop`，再检查 Homebrew 常见路径（Apple Silicon / Intel）。
-   * 成功时缓存二进制路径供 spawn 使用。
+   * Detect whether mactop is installed.
+   * First tries `which mactop`, then checks common Homebrew paths for Apple
+   * Silicon and Intel. Caches the binary path on success for later spawn.
    */
   isMactopInstalled(): boolean {
     try {
@@ -87,16 +94,16 @@ export class MactopBackendManager {
   }
 
   /**
-   * 启动或复用 mactop 后端。
+   * Start or reuse the mactop backend.
    *
-   * 流程：
-   * 1. 读取临时文件 → PID 存活检查 → HTTP 健康检查 → 复用
-   * 2. 失败则分配空闲端口，spawn mactop --prometheus <port>
-   * 3. 轮询健康检查直到通过或超时
-   * 4. 写入临时文件（port + PID）供后续窗口复用
+   * Flow:
+   * 1. Read temp file -> PID liveness check -> HTTP health check -> reuse
+   * 2. Otherwise allocate a free port and spawn mactop --prometheus <port>
+   * 3. Poll health check until it passes or times out
+   * 4. Write temp file (port + PID) for later windows to reuse
    */
   async start(): Promise<void> {
-    // 尝试复用已有实例
+    // Try to reuse an existing instance
     const existingPort = await this._tryReuseExisting();
     if (existingPort !== null) {
       this._port = existingPort;
@@ -111,16 +118,16 @@ export class MactopBackendManager {
       throw new Error("mactop binary not found");
     }
 
-    // 分配空闲端口
+    // Allocate a free port
     const port = await this._findFreePort();
 
-    // 启动 mactop 进程
+    // Start the mactop process
     await this._startProcess(port);
 
     this._port = port;
     this._ready = true;
 
-    // 写入临时文件
+    // Write temp file
     this._writePortFile(port);
 
     getLogger().info(
@@ -129,15 +136,15 @@ export class MactopBackendManager {
   }
 
   /**
-   * 尝试从临时文件中复用已运行的 mactop 实例。
-   * 返回可复用的端口号，或 null 表示需要启动新实例。
+   * Try to reuse a running mactop instance recorded in the temp file.
+   * Returns the reusable port, or null if a new instance must be started.
    */
   private async _tryReuseExisting(): Promise<number | null> {
     try {
       const content = fs.readFileSync(PORT_FILE, "utf-8");
       const info = JSON.parse(content) as PortFileContent;
 
-      // 检查进程是否存活
+      // Check if the process is still alive
       if (!this._isProcessAlive(info.pid)) {
         getLogger().info(
           l10n.t(
@@ -148,7 +155,7 @@ export class MactopBackendManager {
         return null;
       }
 
-      // HTTP 健康检查
+      // HTTP health check
       const healthy = await this._healthCheck(info.port);
       if (!healthy) {
         getLogger().info(
@@ -167,7 +174,8 @@ export class MactopBackendManager {
   }
 
   /**
-   * 使用 process.kill(pid, 0) 探测进程是否存在（不发信号）。
+   * Probe whether the process exists using process.kill(pid, 0), which sends
+   * no signal.
    */
   private _isProcessAlive(pid: number): boolean {
     try {
@@ -179,7 +187,7 @@ export class MactopBackendManager {
   }
 
   /**
-   * HTTP GET /metrics 健康检查，超时 500ms。
+   * HTTP GET /metrics health check with a 500 ms timeout.
    */
   private _healthCheck(port: number): Promise<boolean> {
     return new Promise((resolve) => {
@@ -197,8 +205,9 @@ export class MactopBackendManager {
   }
 
   /**
-   * 使用 Node net 模块获取 OS 分配的空闲端口，然后 close 后传给 mactop。
-   * mactop 不支持 :0 随机端口，必须由调用方指定。
+   * Use the Node net module to get an OS-assigned free port, then close it and
+   * pass it to mactop. mactop does not support the random port :0, so the
+   * caller must provide an explicit port.
    */
   private _findFreePort(): Promise<number> {
     return new Promise((resolve, reject) => {
@@ -213,18 +222,22 @@ export class MactopBackendManager {
   }
 
   /**
-   * Spawn mactop --headless --prometheus <port>，detached 使其在 VS Code 关闭后存活。
+   * Spawn mactop --headless --prometheus <port>, detached so it survives after
+   * VS Code closes.
    *
-   * --headless 必须：不带此标志 mactop 会进入 TUI 模式调用 ui.Init()，
-   * 在无终端环境（VS Code extension host 子进程）下立即以 exit code 1 崩溃。
-   * headless 模式调用 startHeadlessPrometheus() 启动 Prometheus 服务器，
-   * 并运行无限循环持续采集和发布指标。
+   * --headless is mandatory: without it mactop enters TUI mode and calls
+   * ui.Init(), which crashes immediately with exit code 1 in a non-terminal
+   * environment like the VS Code extension host child process. Headless mode
+   * calls startHeadlessPrometheus() to start the Prometheus server and runs an
+   * infinite loop that continuously collects and publishes metrics.
    *
-   * stdout 设为 "ignore"：headless 模式持续向 stdout 输出 JSON，
-   * 若使用 "pipe" 但不读取，管道缓冲区（~64KB）填满后进程会阻塞。
-   * stderr 设为 "pipe" 并添加 data handler 捕获错误信息用于诊断。
+   * stdout is set to "ignore": headless mode continuously outputs JSON to
+   * stdout. If "pipe" is used without reading, the pipe buffer (~64 KB) fills
+   * up and blocks the process.
+   * stderr is set to "pipe" with a data handler to capture error messages for
+   * diagnostics.
    *
-   * 轮询健康检查直到 mactop 就绪或超时。
+   * Polls the health check until mactop is ready or the startup times out.
    */
   private _startProcess(port: number): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -242,7 +255,7 @@ export class MactopBackendManager {
         return;
       }
 
-      // 捕获 stderr 用于诊断启动失败原因
+      // Capture stderr to diagnose startup failures
       this._process.stderr?.on("data", (chunk: Buffer) => {
         const msg = chunk.toString().trim();
         if (msg) {
@@ -250,7 +263,7 @@ export class MactopBackendManager {
         }
       });
 
-      // unref 使父进程（extension host）可以独立退出
+      // unref so the parent (extension host) can exit independently
       this._process.unref();
 
       let resolved = false;
@@ -260,7 +273,7 @@ export class MactopBackendManager {
         clearTimeout(timeoutHandle);
       };
 
-      // 轮询健康检查（mactop 不输出 "ready" 信号，需主动探测）
+      // Poll health check (mactop emits no "ready" signal, so we probe)
       const checkHealth = async () => {
         if (resolved) return;
         const healthy = await this._healthCheck(port);
@@ -272,7 +285,7 @@ export class MactopBackendManager {
       };
 
       const healthInterval = setInterval(checkHealth, HEALTH_POLL_INTERVAL);
-      checkHealth(); // 立即执行一次
+      checkHealth(); // Run immediately
 
       const timeoutHandle = setTimeout(() => {
         if (!resolved) {
@@ -301,7 +314,8 @@ export class MactopBackendManager {
   }
 
   /**
-   * 将 port 和 PID 写入临时文件，供其他 VS Code 窗口复用。
+   * Write port and PID to the temp file so other VS Code windows can reuse the
+   * backend.
    */
   private _writePortFile(port: number): void {
     const pid = this._process?.pid;
@@ -317,7 +331,7 @@ export class MactopBackendManager {
   }
 
   /**
-   * HTTP GET /metrics，返回解析后的 Prometheus 指标数组。
+   * HTTP GET /metrics and return the parsed Prometheus metric array.
    */
   async fetchMetrics(): Promise<PrometheusMetric[]> {
     if (!this._ready || this._port === null) {
@@ -349,8 +363,9 @@ export class MactopBackendManager {
   }
 
   /**
-   * 清理本实例引用。不 kill mactop 进程（detached，可能被其他窗口复用），
-   * 也不删除临时文件（供后续窗口复用）。
+   * Clean up this instance's references. Does not kill the mactop process
+   * (it is detached and may be reused by other windows) and does not delete the
+   * temp file (reused by later windows).
    */
   stop(): void {
     this._process = null;

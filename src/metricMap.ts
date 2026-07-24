@@ -1,10 +1,12 @@
 import type { MetricsExist } from "./constants";
 
 /**
- * systeminformation 采集维度。
+ * systeminformation collection dimensions.
  *
- * 一个维度对应一组 SI.* 调用（或本地调用），多个 UI 指标可能共享同一维度。
- * 例如 memoryActive 与 memoryUsed 都只依赖 `mem` 维度，启用任一即需采集 `SI.mem()`。
+ * A dimension maps to a group of SI.* calls (or local computation). Multiple UI
+ * metrics may share one dimension. For example, both memoryActive and
+ * memoryUsed only depend on the `mem` dimension, so enabling either requires
+ * collecting SI.mem().
  */
 export type CollectDimension =
   | "currentLoad" // SI.currentLoad()      -> cpu
@@ -18,14 +20,18 @@ export type CollectDimension =
   | "battery"; // SI.battery()           -> battery
 
 /**
- * UI 指标 section -> 采集维度（SI.* 调用名）。
+ * UI metric section -> collection dimension (SI.* call name).
  *
- * 维度命名必须与 SIDataSource / collector.worker 中实际的 `need("<维度>")` 检查一致：
- * - `osDistro` 对应 `SI.osInfo()`（维度名 `osInfo`）
- * - `cpuTemp`  对应 `SI.cpuTemperature()`（维度名 `cpuTemperature`）
- * - `uptime`   本地 `os.uptime()` 计算，无需 SI 查询，但仍借用 `currentLoad` 占位以便归入采集集合
+ * Dimension names must match the `need("<dimension>")` checks in SIDataSource
+ * and collector.worker:
+ * - osDistro maps to SI.osInfo() (dimension name osInfo)
+ * - cpuTemp  maps to SI.cpuTemperature() (dimension name cpuTemperature)
+ * - uptime   is computed locally with os.uptime() and needs no SI query, but
+ *   still borrows the currentLoad placeholder so it is included in the
+ *   collection set
  *
- * Go 后端不使用此维度表：它直接按指标名（osDistro / cpuTemp）判断是否采集 Host 组。
+ * The Go backend does not use this table: it decides Host group collection
+ * directly from metric names (osDistro / cpuTemp).
  */
 export const METRIC_TO_DIMENSION: Record<MetricsExist, CollectDimension> = {
   cpu: "currentLoad",
@@ -38,13 +44,15 @@ export const METRIC_TO_DIMENSION: Record<MetricsExist, CollectDimension> = {
   cpuTemp: "cpuTemperature",
   cpuSpeed: "cpuCurrentSpeed",
   osDistro: "osInfo",
-  uptime: "currentLoad", // uptime 本地计算，但借用此占位避免遗漏；实际不查 SI
+  uptime: "currentLoad", // computed locally; placeholder only, SI is not queried
 };
 
 /**
- * 将已启用指标集合归一化为需要采集的维度集合。
+ * Normalize an enabled metric set into the set of dimensions that need to be
+ * collected.
  *
- * 返回去重后的维度集合。调用方据此决定是否发起对应的 SI.* / Go 采集组调用。
+ * Returns a deduplicated dimension set. Callers use it to decide whether to
+ * issue the corresponding SI.* / Go collection group calls.
  */
 export function dimensionsForEnabled(
   enabled: Iterable<MetricsExist>,

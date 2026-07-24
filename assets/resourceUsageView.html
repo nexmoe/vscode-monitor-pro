@@ -247,7 +247,7 @@
             let _show = { uptime: true, osDistro: true };
             let _labels = {};
             let _diskSpaceMounts = ["all"];
-            let _powerMode = "battery"; // "battery" (可正可负) | "soc" (mactop，始终非负)
+            let _powerMode = "battery"; // "battery" (signed) | "soc" (mactop, always non-negative)
 
             let _fmtConfig = {
                 unitSystem: "binary",
@@ -656,12 +656,12 @@
                     dataMax = 100;
                 } else if (isPowerId(id)) {
                     if (_powerMode === "soc") {
-                        // mactop SoC 功率始终非负
+                        // mactop SoC power is always non-negative
                         const maxVal = Math.max(1, ...history);
                         dataMin = 0;
                         dataMax = maxVal * 1.15;
                     } else {
-                        // 电池净功率可正可负，对称范围
+                        // Battery net power can be positive or negative; use a symmetric range
                         const maxVal = Math.max(1, ...(history.map(Math.abs)));
                         dataMin = -maxVal * 1.15;
                         dataMax = maxVal * 1.15;

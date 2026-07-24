@@ -220,12 +220,12 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
           : vscode.l10n.t("N/A"),
         batteryPower: (() => {
           if (systemData.sourceName === "mactop") {
-            // mactop SoC 功率始终非负，无电池时也显示
+            // mactop SoC power is always non-negative, so show it even without a battery
             return t.battery.powerRate !== 0
               ? fmtNum(t.battery.powerRate, sigDigits.battery) + sp + "W"
               : vscode.l10n.t("N/A");
           }
-          // 其他数据源：电池净功率，有电池时显示带 +/- 前缀
+          // Other data sources: battery net power, shown with +/- prefix when a battery exists
           return t.battery.hasBattery
             ? (t.battery.powerRate >= 0 ? "+" : "-") +
                 fmtNum(Math.abs(t.battery.powerRate), sigDigits.battery) +
@@ -257,13 +257,17 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
                   : t.battery.powerState === "discharging"
                     ? vscode.l10n.t("Discharging")
                     : vscode.l10n.t("Idle");
-              // mactop 数据源的 powerRate 是 SoC 总功耗，不是电池充放电速率，
-              // 不能用于计算剩余充电/放电时间。改用系统提供的 timeRemaining。
+              // For the mactop data source, powerRate is total SoC power, not
+              // battery charge/discharge rate, so it cannot be used to compute
+              // remaining charge/discharge time. Use the system-provided
+              // timeRemaining instead.
               const isMactop = systemData.sourceName === "mactop";
               if (isMactop) {
-                // timeRemaining 来自 SI.battery()，在 macOS 上由 IOPMPowerSources 提供。
-                // 当设备接电源但停止充电（如设置了充电上限）时，该值可能返回过时缓存，
-                // idle/full 状态下不应显示剩余时间。
+                // timeRemaining comes from SI.battery(), which on macOS is
+                // provided by IOPMPowerSources. When the device is plugged in
+                // but not charging (e.g. a charge limit is set), this value may
+                // return stale cached data, so it should not be shown in idle
+                // or full states.
                 if (
                   (t.battery.powerState === "charging" ||
                     t.battery.powerState === "discharging") &&

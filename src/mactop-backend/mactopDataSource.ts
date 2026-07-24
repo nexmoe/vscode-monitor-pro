@@ -1,28 +1,34 @@
 /**
- * mactop DataSource 实现。
+ * mactop DataSource implementation.
  *
- * 将 mactop Prometheus 指标映射到 SystemSnapshot 统一格式。
- * mactop 的 /metrics 返回所有指标（无法按需查询），因此 enabled 集合被忽略。
+ * Maps mactop Prometheus metrics into the unified SystemSnapshot format.
+ * mactop's /metrics returns all metrics and cannot be queried on demand, so the
+ * enabled set is ignored.
  *
- * 关键映射：
- * - mactop_cpu_usage_percent              → currentLoad
- * - mactop_memory_gb{type="total|used"}   → mem (GB → bytes, 1024^3)
- * - mactop_network_kbytes_per_sec         → networkStats (KB/s → B/s, 1024)
- * - mactop_disk_kbytes_per_sec            → fsStats (KB/s → B/s, 1024)
- * - mactop_soc_temp_celsius               → cpuTemperature
- * - mactop_battery_percent / _charging    → battery (补充 SI battery 获取 health/cycleCount)
- * - mactop_power_watts{component="total"} → battery.powerRate (SoC 总功耗，始终非负)
+ * Key mappings:
+ * - mactop_cpu_usage_percent              -> currentLoad
+ * - mactop_memory_gb{type="total|used"}   -> mem (GB -> bytes, 1024^3)
+ * - mactop_network_kbytes_per_sec         -> networkStats (KB/s -> B/s, 1024)
+ * - mactop_disk_kbytes_per_sec            -> fsStats (KB/s -> B/s, 1024)
+ * - mactop_soc_temp_celsius               -> cpuTemperature
+ * - mactop_battery_percent / _charging    -> battery (supplemented by SI battery
+ *                                              for health/cycleCount)
+ * - mactop_power_watts{component="total"} -> battery.powerRate (total SoC power,
+ *                                              always non-negative)
  *
- * 补充数据（mactop Prometheus 不提供）：
- * - SI.battery() → cycleCount, maxCapacity, designedCapacity, health, acConnected
- *   mactop 的 BatteryInfo 只有 Present/Percent/Charging/OnACPower，无健康度数据。
- *   且 mactop_battery_charging 仅反映 IOPSIsChargingKey（是否正在充电），
- *   不反映 AC 连接状态——电池满电接电源时 charging=0，需 SI 区分 acConnected。
- * - SI.fsSize() → 磁盘空间使用情况
- *   mactop Prometheus 只提供磁盘 IO 速率，不提供磁盘容量/使用量。
+ * Supplemental data not provided by mactop Prometheus:
+ * - SI.battery() -> cycleCount, maxCapacity, designedCapacity, health, acConnected
+ *   mactop's BatteryInfo only has Present/Percent/Charging/OnACPower and no
+ *   health data. Also, mactop_battery_charging only reflects IOPSIsChargingKey
+ *   (whether the battery is actively charging), not AC connection status. When
+ *   the battery is full but plugged in, charging=0, so SI is used to distinguish
+ *   acConnected.
+ * - SI.fsSize() -> disk space usage
+ *   mactop Prometheus only provides disk IO rates, not capacity or used space.
  *
- * 注意：battery.powerRate 被复用为 SoC 总功耗，而非电池净功率。
- * macOS SoC 功率始终非负，webview 图表据此去掉负值范围。
+ * Note: battery.powerRate is reused as total SoC power, not battery net power.
+ * macOS SoC power is always non-negative, so the webview chart drops the
+ * negative range accordingly.
  */
 
 import * as os from "os";
@@ -68,7 +74,7 @@ export class MactopDataSource implements DataSource {
     // CPU
     const cpuUsage = find("mactop_cpu_usage_percent") ?? 0;
 
-    // Memory (mactop 报告 GB，转换为 bytes)
+    // Memory (mactop reports GB; convert to bytes)
     const memTotalGB = find("mactop_memory_gb", { type: "total" }) ?? 0;
     const memUsedGB = find("mactop_memory_gb", { type: "used" }) ?? 0;
     const swapTotalGB = find("mactop_memory_gb", { type: "swap_total" }) ?? 0;
@@ -79,7 +85,7 @@ export class MactopDataSource implements DataSource {
     const swapTotal = swapTotalGB * GB_TO_BYTES;
     const swapUsed = swapUsedGB * GB_TO_BYTES;
 
-    // Network (mactop 报告 KB/s，转换为 B/s)
+    // Network (mactop reports KB/s; convert to B/s)
     const netRx = (find("mactop_network_kbytes_per_sec", {
       direction: "download",
     }) ?? 0) * KB_TO_BYTES;
@@ -87,7 +93,7 @@ export class MactopDataSource implements DataSource {
       direction: "upload",
     }) ?? 0) * KB_TO_BYTES;
 
-    // Disk (mactop 报告 KB/s，转换为 B/s)
+    // Disk (mactop reports KB/s; convert to B/s)
     const diskRead = (find("mactop_disk_kbytes_per_sec", {
       operation: "read",
     }) ?? 0) * KB_TO_BYTES;
@@ -103,7 +109,7 @@ export class MactopDataSource implements DataSource {
     const batteryCharging = find("mactop_battery_charging") ?? 0;
     const hasBattery = batteryPercent >= 0;
 
-    // SoC 总功耗（始终非负，复用 battery.powerRate 字段）
+    // Total SoC power (always non-negative, reuses the battery.powerRate field)
     const powerTotal = find("mactop_power_watts", { component: "total" }) ?? 0;
 
     return {
@@ -113,7 +119,7 @@ export class MactopDataSource implements DataSource {
         total: memTotal,
         free: memTotal - memUsed,
         used: memUsed,
-        // mactop 不区分 active/used，将 active 设为 used
+        // mactop does not distinguish active vs used; treat active as used
         active: memUsed,
         available: memTotal - memUsed,
         buffcache: 0,
@@ -143,7 +149,7 @@ export class MactopDataSource implements DataSource {
         servicepack: siOs?.servicepack ?? "",
         uefi: siOs?.uefi ?? null,
       },
-      // mactop 直接提供速率（KB/s），无需前后时间戳差值计算
+      // mactop already provides rates (KB/s), so no delta over time is needed
       networkStats: [
         {
           iface: "mactop",
@@ -168,11 +174,11 @@ export class MactopDataSource implements DataSource {
         tx_sec: null,
         ms: 0,
       },
-      // 磁盘空间使用情况：mactop Prometheus 不提供，用 SI.fsSize() 补充
+      // Disk space usage: mactop Prometheus does not provide it, supplement with SI.fsSize()
       fsSize: siFsSize
         ? dedupeFsSize(siFsSize)
         : (prev?.fsSize ?? []),
-      // mactop 不提供 CPU 频率
+      // mactop does not provide CPU frequency
       cpuCurrentSpeed: prev?.cpuCurrentSpeed ?? {
         min: 0,
         max: 0,
@@ -198,7 +204,7 @@ export class MactopDataSource implements DataSource {
           siBat?.maxCapacity && siBat?.designedCapacity
             ? (siBat.maxCapacity / siBat.designedCapacity) * 100
             : 0,
-        // SoC 总功耗复用此字段，始终非负
+        // Total SoC power reuses this field; always non-negative
         powerRate: powerTotal,
         powerState: hasBattery
           ? batteryCharging === 1

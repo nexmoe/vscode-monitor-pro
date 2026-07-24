@@ -306,8 +306,8 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 		batData     batteryInfo
 	)
 
-	// 解析 ?metrics=cpu,memoryActive,... 决定实际采集哪些维度（真正的按需查询）。
-	// 未提供该参数时回落为全量采集（向后兼容）。
+	// Parse ?metrics=cpu,memoryActive,... to decide which dimensions to actually collect (true on-demand query).
+	// Falls back to full collection when the parameter is absent (backward compatibility).
 	enabled := parseEnabledMetrics(r)
 
 	needCPU := enabled == nil || enabled["cpu"]
@@ -409,7 +409,7 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 		}()
 	}
 
-	// Host group (承载 osDistro + cpuTemp/sensors)
+	// Host group (carries osDistro + cpuTemp/sensors)
 	if needHost {
 		wg.Add(1)
 		go func() {
@@ -484,8 +484,8 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 	}})
 }
 
-// parseEnabledMetrics 解析 ?metrics=a,b,c 查询参数，返回指标名集合。
-// 返回 nil 表示未提供参数（调用方应回落为全量采集）。
+// parseEnabledMetrics parses the ?metrics=a,b,c query parameter and returns a set of metric names.
+// Returning nil means the parameter was not provided (caller should fall back to full collection).
 func parseEnabledMetrics(r *http.Request) map[string]bool {
 	raw := r.URL.Query().Get("metrics")
 	if raw == "" {

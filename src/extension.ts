@@ -27,10 +27,12 @@ let goBackend: GoBackendManager | null = null;
 let mactopBackend: MactopBackendManager | null = null;
 
 /**
- * webview 图表 key -> 对应状态栏指标 section。
+ * webview chart key -> corresponding status bar metric section.
  *
- * 例：netRx/netTx 同属 network 维度，diskRx/diskWx 同属 fileSystem 维度，
- * batteryPower 与 battery 同属 battery 维度。启用任一图表即需采集对应指标。
+ * For example, netRx/netTx share the network dimension, diskRx/diskWx share
+ * the fileSystem dimension, and batteryPower/battery share the battery
+ * dimension. Enabling any chart in a group means the corresponding metric must
+ * be collected.
  */
 const CHART_TO_METRIC: Record<string, MetricsExist> = {
   cpu: "cpu",
@@ -50,11 +52,14 @@ const CHART_TO_METRIC: Record<string, MetricsExist> = {
 };
 
 /**
- * 计算实际的采集集合：状态栏 metrics.* 开关 与 webview resourceUsage.charts.*.enabled 的并集。
+ * Compute the actual collection set as the union of status bar metrics.*
+ * switches and webview resourceUsage.charts.*.enabled.
  *
- * 两类配置现已统一：webview 的信息卡（OS 发行版 / 运行时间 / 磁盘空间）也作为 charts 配置项，
- * 默认启用。因此任一端（状态栏或 webview 图表/卡片）启用的指标都会被采集，
- * 两端都不启用的指标则完全不查询（真正的按需查询）。
+ * Both configurations are now unified: webview info cards (OS distro / uptime /
+ * disk space) are also modeled as chart items and enabled by default. Any
+ * metric enabled on either side (status bar or webview chart/card) is
+ * collected; metrics disabled on both sides are not queried at all (true
+ * on-demand querying).
  */
 function computeEnabledMetrics(): Set<MetricsExist> {
   const enabled = new Set<MetricsExist>();
@@ -84,8 +89,9 @@ function shouldUseGoBackend(): boolean {
 }
 
 /**
- * macOS Apple Silicon 使用 mactop 作为后端数据源。
- * mactop 以 Prometheus HTTP 服务器模式运行，提供 SoC 指标（CPU/GPU/ANE 功耗、温度等）。
+ * Use mactop as the backend data source on macOS Apple Silicon.
+ * mactop runs a Prometheus HTTP server that provides SoC metrics such as
+ * CPU/GPU/ANE power and temperature.
  */
 function shouldUseMactopBackend(): boolean {
   return process.platform === "darwin" && process.arch === "arm64";
@@ -104,7 +110,8 @@ function applyFormatConfig() {
 function rebuildMetrics() {
   metrics.forEach((x) => x.dispose());
   metrics = getEnabledMetrics();
-  // 同步实际采集集合（状态栏 + webview 图表并集）到数据层，实现按需查询。
+  // Sync the actual collection set (status bar + webview charts union) to the
+  // data layer for on-demand querying.
   systemData.setEnabledMetrics(computeEnabledMetrics());
   getLogger().info(l10n.t("Metrics initialized: {0}", metrics.length));
 }
@@ -135,11 +142,12 @@ function tryStartGoBackend(ctx: ExtensionContext) {
 }
 
 /**
- * 尝试启动 mactop 后端。
+ * Try to start the mactop backend.
  *
- * 流程：检测安装 → start()（复用或新建）→ setSource(MactopDataSource)
- * 失败时回退到 SIDataSource + worker。
- * 首次运行未安装 mactop 时，通过 VS Code 通知提示用户安装。
+ * Flow: detect installation -> start() (reuse or create) ->
+ * setSource(MactopDataSource). Falls back to SIDataSource + worker on failure.
+ * On first run without mactop installed, prompt the user via a VS Code
+ * notification.
  */
 async function tryStartMactopBackend(ctx: ExtensionContext) {
   mactopBackend = new MactopBackendManager();
@@ -147,7 +155,7 @@ async function tryStartMactopBackend(ctx: ExtensionContext) {
   if (!mactopBackend.isMactopInstalled()) {
     getLogger().warn(l10n.t("mactop is not installed, using fallback data source"));
     mactopBackend = null;
-    // 提示用户安装 mactop
+    // Prompt the user to install mactop
     const installAction = l10n.t("Install mactop");
     const dismissAction = l10n.t("Dismiss");
     const selection = await window.showInformationMessage(
@@ -158,7 +166,7 @@ async function tryStartMactopBackend(ctx: ExtensionContext) {
       dismissAction,
     );
     if (selection === installAction) {
-      // 打开 mactop 安装页面
+      // Open the mactop installation page
       commands.executeCommand(
         "vscode.open",
         Uri.parse("https://github.com/context-labs/mactop"),
@@ -289,7 +297,8 @@ export const activate = async (ctx: ExtensionContext) => {
         event.affectsConfiguration("monitor-pro.metrics.uptime") ||
         event.affectsConfiguration("monitor-pro.metrics.osDistro")
       ) {
-        // webview 图表启用状态变化会影响实际采集集合，需重新注入。
+        // Changes to webview chart enabled states affect the actual collection
+        // set, so re-inject it.
         systemData.setEnabledMetrics(computeEnabledMetrics());
         resourceUsageProvider.pushConfigUpdate();
         getLogger().debug(l10n.t("Resource Usage view config pushed"));

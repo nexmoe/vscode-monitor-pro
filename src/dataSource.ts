@@ -36,7 +36,8 @@ export class SIDataSource implements DataSource {
     prev: SystemSnapshot | null,
     enabled: Set<MetricsExist>,
   ): Promise<SystemSnapshot> {
-    // 将已启用指标归一化为需要采集的 SI 维度集合，未启用的维度完全不发起查询。
+    // Normalize enabled metrics to the SI dimensions that need collection.
+    // Disabled dimensions are not queried at all.
     const dims = dimensionsForEnabled(enabled);
 
     const need = (d: CollectDimension) => dims.has(d);
@@ -68,8 +69,9 @@ export class SIDataSource implements DataSource {
           : Promise.resolve(null),
       ]);
 
-    // time 始终采集：fsStats/networkStats 的速率计算依赖前后时间戳，
-    // 即使 fileSystem/network 未启用也需保留时间戳以维持 prev 连续性。
+    // Always collect time: fsStats/networkStats rate calculations depend on the
+    // delta between consecutive timestamps. Keep the timestamp even when
+    // fileSystem/network are disabled to maintain prev continuity.
     let tm: SI.Systeminformation.TimeData | null = null;
     try {
       tm = SI.time();

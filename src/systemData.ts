@@ -133,23 +133,27 @@ class SystemDataProvider {
   private _warnedMetrics = new Set<string>();
   private _useWorker = false;
   private _worker: Worker | null = null;
-  // 已启用的 UI 指标集合，由 extension 注入。collect() 据此下传到数据源层做按需采集。
+  // Enabled UI metric set, injected by extension. collect() forwards it to the
+  // data source layer for on-demand collection.
   private _enabledMetrics: Set<MetricsExist> = new Set();
   private _workerFailed = false;
   private _consecutiveFailures = 0;
 
   /**
-   * 世代计数器，解决 "重新加载窗口" 后 async tick 逃逸问题。
+   * Generation counter that prevents stale async ticks from escaping after a
+   * VS Code "Reload Window".
    *
-   * VS Code "重新加载窗口" 时 extension host 不重启，module 级单例存活。
-   * `deactivate() → stop()` 虽然清掉了定时器句柄，但正在 await 中的 async tick()
-   * 不会因此中止——它完成后续代码时会重新 `setTimeout`，导致 _timer 再次非 null。
-   * 等到新 `activate() → start()` 执行时，`if (this._timer) return` 守卫拦截，新轮询永不启动。
+   * When VS Code reloads a window, the extension host does not restart and the
+   * module-level singleton survives. deactivate() -> stop() clears the timer
+   * handle, but an async tick currently awaiting collection is not aborted; it
+   * will eventually reschedule via setTimeout, making _timer non-null again.
+   * When the new activate() -> start() runs, the `if (this._timer) return`
+   * guard blocks the new polling loop forever.
    *
-   * 每隔 _gen 递增：stop() +1，start() +1。
-   * 每个 tick 闭包捕获启动时的 gen 值，重调度前检查 gen 是否匹配：
-   * - 匹配  → 当前 tick 属于最新 generation，允许重调度
-   * - 不匹配 → 当前 tick 已过时，静默退出（不设定时器）
+   * The generation counter is incremented on stop() and start(). Each tick
+   * closure captures the generation at startup and checks it before rescheduling:
+   * - Match   -> tick belongs to the current generation, allow reschedule
+   * - Mismatch -> stale tick, silently exit without scheduling
    */
   private _gen = 0;
   private readonly _MAX_RETRIES = 3;
@@ -176,11 +180,12 @@ class SystemDataProvider {
   }
 
   /**
-   * 注入当前已启用的指标集合（状态栏 + webview 图表并集）。
+   * Inject the currently enabled metric set (status bar + webview charts union).
    *
-   * 该集合决定数据源层实际查询哪些维度：未启用的指标完全不发起 SI.* 调用，
-   * 也不触发 Go 后端对应采集组，实现真正的按需查询。
-   * 配置变更时由 extension 热重载调用，立即生效（下一轮 tick 即按新集合采集）。
+   * This set determines which dimensions the data source layer actually queries:
+   * disabled metrics do not trigger any SI.* calls or Go collection groups,
+   * enabling true on-demand querying. Called by extension on hot-reload so the
+   * new set takes effect on the next tick.
    */
   setEnabledMetrics(enabled: Set<MetricsExist>) {
     this._enabledMetrics = enabled;
@@ -225,8 +230,9 @@ class SystemDataProvider {
       return;
     }
 
-    // 抬升世代计数器，使任何残留的旧 tick 在下一次重调度前检测到过时并退出。
-    // 这防止了 VS Code "重新加载窗口" 场景下 async tick 逃逸堵塞新轮询。
+    // Bump the generation counter so any leftover stale tick detects it is
+    // outdated and exits before rescheduling. This prevents stale ticks from
+    // blocking the new polling loop after a VS Code "Reload Window".
     this._gen++;
     const gen = this._gen;
 
@@ -269,9 +275,10 @@ class SystemDataProvider {
         getLogger().warn(logMsg);
       }
 
-      // 世代检查：重调度前确认当前 tick 仍是活跃一代。
-      // 如果是旧 tick（gen < this._gen），说明 stop/start 已发生了切换，
-      // 跳过重调度让新 tick 接替，避免 _timer 残留堵塞新轮询。
+      // Generation check: confirm this tick is still the active generation
+      // before rescheduling. If it is a stale tick (gen < this._gen), stop/start
+      // has already switched, so skip rescheduling and let the new tick take
+      // over to avoid a lingering _timer blocking the new loop.
       if (gen !== this._gen) {
         return;
       }
@@ -283,8 +290,9 @@ class SystemDataProvider {
   }
 
   stop() {
-    // 抬升世代计数器，标记当前 tick 世代已结束。
-    // 正在 await 中尚未完成的旧 tick 在重调度前会检测到 gen 不匹配并静默退出。
+    // Bump the generation counter to mark the end of the current tick
+    // generation. Any stale tick still awaiting will detect the mismatch before
+    // rescheduling and exit silently.
     this._gen++;
 
     if (this._worker) {

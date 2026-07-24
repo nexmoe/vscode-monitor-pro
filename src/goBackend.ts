@@ -118,7 +118,8 @@ export class GoBackendManager {
   }
 
   async fetchAll(enabled: Set<MetricsExist>): Promise<GoAllResponse> {
-    // 将已启用指标下传到 Go 后端，使其仅采集对应维度（真正的按需查询）。
+    // Forward enabled metrics to the Go backend so it only collects the
+    // corresponding dimensions (true on-demand querying).
     const query =
       enabled.size > 0 ? `?metrics=${encodeURIComponent([...enabled].join(","))}` : "";
     return this.fetchJSON<GoAllResponse>(

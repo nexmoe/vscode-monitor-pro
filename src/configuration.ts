@@ -84,8 +84,9 @@ export function getUptimeFormat(): string {
 
 export interface ResourceUsageChartConfig {
   enabled: boolean;
-  // 以下字段仅对真正的图表（canvas 折线/柱状图）有意义；
-  // 信息区卡片（osDistro / uptime / diskSpace）只用到 enabled，无需 view/color。
+  // The following fields only matter for real charts (canvas line/bar).
+  // Info cards (osDistro / uptime / diskSpace) only use enabled and ignore
+  // view and color.
   view?: "line" | "bar";
   color?: string;
 }
@@ -116,8 +117,9 @@ const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
     view: "line",
     color: "--vscode-terminal-ansiBrightCyan",
   },
-  // 信息区卡片同样纳入 charts 配置，与图表共享 enabled 开关与采集逻辑。
-  // 它们默认启用，确保资源视图始终展示 OS 发行版 / 运行时间 / 磁盘空间。
+  // Info cards are also modeled as chart config items so they share the enabled
+  // switch and collection logic. They are enabled by default so the resource
+  // view always shows OS distro, uptime, and disk space.
   osDistro: { enabled: true },
   uptime: { enabled: true },
   diskSpace: { enabled: true },

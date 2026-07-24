@@ -7,13 +7,15 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 let prev: Record<string, any> | null = null;
 
 /**
- * 已启用的 UI 指标集合（由主线程通过 setEnabled 消息下发）。
- * 未启用的维度完全不发起 SI.* 查询，仅沿用 prev 快照以维持速率连续性。
+ * Enabled UI metric set, pushed from the main thread via the setEnabled message.
+ * Disabled dimensions are not queried via SI.* at all; the previous snapshot is
+ * reused to keep rate continuity.
  */
 let enabledMetrics: Set<string> = new Set();
 
-// UI 指标 section -> 采集维度。uptime 为本地计算不查 SI；osDistro/cpuTemp 在 Go 端共用 Host 组，
-// 但在 SI 端分别由 osInfo / cpuTemperature 提供，故此处各自独立。
+// UI metric section -> collection dimension. uptime is computed locally without
+// querying SI; osDistro/cpuTemp share the Host group in the Go backend but are
+// separate in SI (osInfo / cpuTemperature), so they are mapped independently.
 const METRIC_TO_DIMENSION: Record<string, string> = {
   cpu: "currentLoad",
   memoryActive: "mem",

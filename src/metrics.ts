@@ -137,9 +137,10 @@ const batteryText = async () => {
   const pct = fmtSigNum(b.percent, sig) + sp + "%";
   const icon = b.isCharging || b.acConnected ? "$(plug)" : "$(symbol-event)";
 
-  // mactop 数据源的 powerRate 是 SoC 总功耗，不是电池充放电速率，
-  // 不能用于 formatEstimatedBatteryTime 计算剩余充电/放电时间。
-  // 改用系统提供的 timeRemaining，且仅在 charging/discharging 状态显示。
+  // For the mactop data source, powerRate is total SoC power, not battery
+  // charge/discharge rate, so it cannot be used with formatEstimatedBatteryTime.
+  // Use the system-provided timeRemaining instead, and only show it while
+  // charging or discharging.
   if (systemData.sourceName === "mactop") {
     if (
       (b.powerState === "charging" || b.powerState === "discharging") &&

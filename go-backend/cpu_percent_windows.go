@@ -33,9 +33,9 @@ type pdhFmtCounterValueDouble struct {
 	DoubleValue float64
 }
 
-// cpuMonitor 持有一个常驻 PDH 查询句柄
-// 对应 TrafficMonitor 的 CPdhQuery：构造时 Open+AddCounter+初始基线采集，
-// 每次 QueryValue 只做一次 CollectQueryData + GetFormattedCounterValue
+// cpuMonitor holds a persistent PDH query handle.
+// Mirrors TrafficMonitor's CPdhQuery: open + add counter + baseline collection at construction,
+// and each QueryValue only calls CollectQueryData + GetFormattedCounterValue once.
 type cpuMonitor struct {
 	mu      sync.Mutex
 	query   uintptr
@@ -105,8 +105,8 @@ func initCPU() error {
 	return cpuMonErr
 }
 
-// collect 每次采集一个新样本，PDH 基于与基线（或前一次采集）的差值计算使用率
-// 对应 TrafficMonitor PdhQuery::QueryValue 的 Collect + GetFormattedCounterValue
+// collect takes a new sample each time; PDH computes usage from the delta against the baseline (or previous sample).
+// Mirrors TrafficMonitor PdhQuery::QueryValue's Collect + GetFormattedCounterValue.
 func (m *cpuMonitor) collect() (float64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -128,7 +128,7 @@ func (m *cpuMonitor) collect() (float64, error) {
 	return value.DoubleValue, nil
 }
 
-// getCPUPercent 保持与 unix 版一致的签名，interval/percpu 在 Windows 上忽略
+// getCPUPercent keeps the same signature as the Unix version; interval/percpu are ignored on Windows.
 func getCPUPercent(_ time.Duration, _ bool) ([]float64, error) {
 	if err := initCPU(); err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func getCPUPercent(_ time.Duration, _ bool) ([]float64, error) {
 	return []float64{val}, nil
 }
 
-// patchCPUFreq 替换 cpu.Info() 的静态 MHz 为实时 PDH 频率数值
+// patchCPUFreq replaces the static MHz from cpu.Info() with the real-time PDH frequency value.
 func patchCPUFreq(info []cpu.InfoStat) []cpu.InfoStat {
 	if len(info) == 0 {
 		return info
@@ -173,8 +173,8 @@ func patchCPUFreq(info []cpu.InfoStat) []cpu.InfoStat {
 	return out
 }
 
-// pdhReadCounter 一次性查询 PDH 计数器（用于 patchCPUFreq 等低频查询，非 CPU 使用率路径）
-// 瞬时计数器只需一次 PdhCollectQueryData
+// pdhReadCounter performs a one-off PDH counter query (used for low-frequency queries such as patchCPUFreq, not the CPU usage path).
+// Instantaneous counters only need a single PdhCollectQueryData.
 func pdhReadCounter(counterPath string) (float64, error) {
 	var query uintptr
 	ret, _, _ := _PdhOpenQuery.Call(0, 0, uintptr(unsafe.Pointer(&query)))
@@ -201,7 +201,7 @@ func pdhReadCounter(counterPath string) (float64, error) {
 		}
 	}
 
-	// 部分内核模式提供程序（如 Processor Information）需要一次预热采集才能返回有效数据，因此这里必须采集两次，无时间间隔要求
+	// Some kernel-mode providers (e.g., Processor Information) require a warm-up sample before returning valid data, so we must collect twice here; no delay is required between them.
 	_PdhCollectQueryData.Call(query)
 	_PdhCollectQueryData.Call(query)
 
