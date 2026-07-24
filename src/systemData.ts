@@ -118,7 +118,7 @@ type Listener = (data: SystemSnapshot) => void;
 
 const UNAVAILABLE_CHECKERS: Record<string, (s: SystemSnapshot) => boolean> = {
   battery: (s) => !s.battery.hasBattery,
-  batteryPower: (s) => !s.battery.hasBattery,
+  batteryPower: (s) => !s.battery.hasBattery && s.battery.powerRate === 0,
   cpuTemp: (s) => s.cpuTemperature.main <= 0,
   cpuSpeed: (s) => s.cpuCurrentSpeed.avg <= 0,
 };

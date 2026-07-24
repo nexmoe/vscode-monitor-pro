@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, l10n, window, workspace } from "vscode";
+import { commands, ExtensionContext, l10n, Uri, window, workspace } from "vscode";
 import { ResourceUsageProvider } from "./resourceUsageProvider";
 import { powerShellRelease, powerShellStart } from "systeminformation";
 import { getRefreshInterval, isConfigChanged } from "./configuration";
@@ -7,6 +7,8 @@ import { updateGlobalConfig } from "./metrics";
 import { systemData } from "./systemData";
 import { GoBackendManager } from "./goBackend";
 import { GoDataSource, SIDataSource } from "./dataSource";
+import { MactopBackendManager } from "./mactop-backend/mactopBackendManager";
+import { MactopDataSource } from "./mactop-backend/mactopDataSource";
 import {
   getUnitSystem,
   getShowSpace,
@@ -22,6 +24,7 @@ import type { MetricsExist } from "./constants";
 let metrics: Metric[] = [];
 let unsubscribeData: (() => void) | null = null;
 let goBackend: GoBackendManager | null = null;
+let mactopBackend: MactopBackendManager | null = null;
 
 /**
  * webview 图表 key -> 对应状态栏指标 section。
@@ -80,6 +83,14 @@ function shouldUseGoBackend(): boolean {
   return process.platform === "win32";
 }
 
+/**
+ * macOS Apple Silicon 使用 mactop 作为后端数据源。
+ * mactop 以 Prometheus HTTP 服务器模式运行，提供 SoC 指标（CPU/GPU/ANE 功耗、温度等）。
+ */
+function shouldUseMactopBackend(): boolean {
+  return process.platform === "darwin" && process.arch === "arm64";
+}
+
 function applyFormatConfig() {
   const unitSystem = getUnitSystem();
   updateGlobalConfig(
@@ -123,9 +134,67 @@ function tryStartGoBackend(ctx: ExtensionContext) {
     });
 }
 
+/**
+ * 尝试启动 mactop 后端。
+ *
+ * 流程：检测安装 → start()（复用或新建）→ setSource(MactopDataSource)
+ * 失败时回退到 SIDataSource + worker。
+ * 首次运行未安装 mactop 时，通过 VS Code 通知提示用户安装。
+ */
+async function tryStartMactopBackend(ctx: ExtensionContext) {
+  mactopBackend = new MactopBackendManager();
+
+  if (!mactopBackend.isMactopInstalled()) {
+    getLogger().warn(l10n.t("mactop is not installed, using fallback data source"));
+    mactopBackend = null;
+    // 提示用户安装 mactop
+    const installAction = l10n.t("Install mactop");
+    const dismissAction = l10n.t("Dismiss");
+    const selection = await window.showInformationMessage(
+      l10n.t(
+        "mactop is not installed. Install it via Homebrew (brew install amoranth/brew/mactop) to enable macOS SoC monitoring (power, temperature, GPU).",
+      ),
+      installAction,
+      dismissAction,
+    );
+    if (selection === installAction) {
+      // 打开 mactop 安装页面
+      commands.executeCommand(
+        "vscode.open",
+        Uri.parse("https://github.com/context-labs/mactop"),
+      );
+    }
+    systemData.setSource(new SIDataSource());
+    systemData.useWorker();
+    return;
+  }
+
+  try {
+    await mactopBackend.start();
+    systemData.setSource(new MactopDataSource(mactopBackend));
+    getLogger().info(
+      l10n.t(
+        "mactop backend started on port {0}, source: {1}",
+        mactopBackend.port!,
+        systemData.sourceName,
+      ),
+    );
+  } catch (err) {
+    getLogger().warn(
+      l10n.t("mactop backend unavailable: {0}, using fallback", String(err)),
+    );
+    mactopBackend?.stop();
+    mactopBackend = null;
+    systemData.setSource(new SIDataSource());
+    systemData.useWorker();
+  }
+}
+
 function initDataSource(ctx: ExtensionContext) {
   if (shouldUseGoBackend()) {
     tryStartGoBackend(ctx);
+  } else if (shouldUseMactopBackend()) {
+    tryStartMactopBackend(ctx);
   } else {
     getLogger().info(l10n.t("Using built-in data source: {0}", "systeminformation"));
     systemData.useWorker();
@@ -233,6 +302,8 @@ export const deactivate = () => {
   getLogger().info(l10n.t("Extension deactivating"));
   goBackend?.stop();
   goBackend = null;
+  mactopBackend?.stop();
+  mactopBackend = null;
   unsubscribeData?.();
   systemData.stop();
   if (process.platform === "win32") {
