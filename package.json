@@ -250,6 +250,11 @@
           "default": "auto",
           "description": "%config.uptimeFormat%",
           "type": "string"
+        },
+        "monitor-pro.mactop.enabled": {
+          "default": true,
+          "description": "%config.mactop.enabled%",
+          "type": "boolean"
         }
       },
       "title": "Monitor Pro"

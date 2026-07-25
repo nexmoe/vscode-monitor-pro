@@ -1,4 +1,6 @@
-import { commands, ExtensionContext, l10n, Uri, window, workspace } from "vscode";
+import { exec } from "child_process";
+import { promisify } from "util";
+import { commands, ExtensionContext, l10n, ProgressLocation, window, workspace } from "vscode";
 import { ResourceUsageProvider } from "./resourceUsageProvider";
 import { powerShellRelease, powerShellStart } from "systeminformation";
 import { getRefreshInterval, isConfigChanged } from "./configuration";
@@ -20,6 +22,8 @@ import {
 import { getLogger, initLogger } from "./logger";
 import sourceMapSupport from "source-map-support";
 import type { MetricsExist } from "./constants";
+
+const execAsync = promisify(exec);
 
 let metrics: Metric[] = [];
 let unsubscribeData: (() => void) | null = null;
@@ -147,43 +151,108 @@ function tryStartGoBackend(ctx: ExtensionContext) {
  * Flow: detect installation -> start() (reuse or create) ->
  * setSource(MactopDataSource). Falls back to SIDataSource + worker on failure.
  * On first run without mactop installed, prompt the user via a VS Code
- * notification.
+ * notification with auto-install and "Don't show again" options.
  */
-async function tryStartMactopBackend(ctx: ExtensionContext) {
-  mactopBackend = new MactopBackendManager();
+function fallbackToSIDataSource() {
+  mactopBackend = null;
+  systemData.stop();
+  systemData.setSource(new SIDataSource());
+  systemData.useWorker();
+  systemData.start();
+}
 
-  if (!mactopBackend.isMactopInstalled()) {
+async function tryStartMactopBackend() {
+  const manager = new MactopBackendManager();
+
+  if (!manager.isMactopInstalled()) {
+    // Skip notification if user previously disabled mactop in settings
+    const config = workspace.getConfiguration("monitor-pro");
+    if (!config.get<boolean>("mactop.enabled", true)) {
+      getLogger().info(
+        l10n.t("mactop is disabled via settings, using fallback data source"),
+      );
+      fallbackToSIDataSource();
+      return;
+    }
+
     getLogger().warn(l10n.t("mactop is not installed, using fallback data source"));
-    mactopBackend = null;
-    // Prompt the user to install mactop
+
     const installAction = l10n.t("Install mactop");
+    const neverAction = l10n.t("Don't show again");
     const dismissAction = l10n.t("Dismiss");
     const selection = await window.showInformationMessage(
       l10n.t(
-        "mactop is not installed. Install it via Homebrew (brew install amoranth/brew/mactop) to enable macOS SoC monitoring (power, temperature, GPU).",
+        "mactop is not installed. Install it to enable macOS SoC monitoring (power, temperature, GPU).",
       ),
       installAction,
+      neverAction,
       dismissAction,
     );
+
     if (selection === installAction) {
-      // Open the mactop installation page
-      commands.executeCommand(
-        "vscode.open",
-        Uri.parse("https://github.com/context-labs/mactop"),
+      const succeeded = await window.withProgress(
+        {
+          location: ProgressLocation.Notification,
+          title: l10n.t("Installing mactop\u2026"),
+        },
+        async () => {
+          try {
+            await execAsync("brew install amoranth/brew/mactop");
+            return true;
+          } catch {
+            return false;
+          }
+        },
       );
+
+      if (succeeded) {
+        const newManager = new MactopBackendManager();
+        if (newManager.isMactopInstalled()) {
+          try {
+            await newManager.start();
+            mactopBackend = newManager;
+            systemData.setSource(new MactopDataSource(newManager));
+            getLogger().info(
+              l10n.t(
+                "mactop backend started on port {0}, source: {1}",
+                String(newManager.port!),
+                systemData.sourceName,
+              ),
+            );
+            window.showInformationMessage(l10n.t("mactop installed successfully!"));
+            return;
+          } catch (err) {
+            getLogger().warn(
+              l10n.t("mactop backend unavailable: {0}, using fallback", String(err)),
+            );
+            newManager.stop();
+          }
+        }
+      } else {
+        window.showErrorMessage(
+          l10n.t(
+            "Failed to install mactop. Please try manually: brew install amoranth/brew/mactop",
+          ),
+        );
+      }
+    } else if (selection === neverAction) {
+      await config.update("mactop.enabled", false, true);
     }
-    systemData.setSource(new SIDataSource());
-    systemData.useWorker();
+
+    // Fallback to built-in data source
+    fallbackToSIDataSource();
     return;
   }
 
+  // mactop is installed, start the backend
+  mactopBackend = manager;
   try {
-    await mactopBackend.start();
-    systemData.setSource(new MactopDataSource(mactopBackend));
+    await manager.start();
+    systemData.setSource(new MactopDataSource(manager));
     getLogger().info(
       l10n.t(
         "mactop backend started on port {0}, source: {1}",
-        mactopBackend.port!,
+        String(manager.port!),
         systemData.sourceName,
       ),
     );
@@ -191,10 +260,8 @@ async function tryStartMactopBackend(ctx: ExtensionContext) {
     getLogger().warn(
       l10n.t("mactop backend unavailable: {0}, using fallback", String(err)),
     );
-    mactopBackend?.stop();
-    mactopBackend = null;
-    systemData.setSource(new SIDataSource());
-    systemData.useWorker();
+    manager.stop();
+    fallbackToSIDataSource();
   }
 }
 
@@ -202,7 +269,7 @@ function initDataSource(ctx: ExtensionContext) {
   if (shouldUseGoBackend()) {
     tryStartGoBackend(ctx);
   } else if (shouldUseMactopBackend()) {
-    tryStartMactopBackend(ctx);
+    tryStartMactopBackend();
   } else {
     getLogger().info(l10n.t("Using built-in data source: {0}", "systeminformation"));
     systemData.useWorker();

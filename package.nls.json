@@ -18,6 +18,7 @@
   "config.significantDigits": "Number of significant digits per metric (e.g. 3 \u2192 \"12.3 MiB\", 4 \u2192 \"12.34 MiB\")",
   "config.uptimeFormat": "Custom format for the uptime display. Use placeholders: {d}=days, {h}=hours, {m}=minutes, {s}=seconds. Default \"auto\" shows \"{d}d {h}h {m}m\"",
   "config.diskSpace": "Disk space mount points to display (\"all\" shows every mounted filesystem; default shows only root / and C: to reduce space usage; add specific mount paths to filter)",
+  "config.mactop.enabled": "Automatically detect and use mactop (brew install amoranth/brew/mactop) for macOS Apple Silicon SoC monitoring (power, temperature, GPU)",
   "metric.battery.name": "Battery Status",
   "metric.cpu.name": "CPU Usage",
   "metric.cpuSpeed.name": "CPU Speed",

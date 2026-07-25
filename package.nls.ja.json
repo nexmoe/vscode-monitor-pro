@@ -18,6 +18,7 @@
   "config.significantDigits": "メトリックごとの有効数字桁数（例: 3 → \"12.3 MiB\"、4 → \"12.34 MiB\"）",
   "config.uptimeFormat": "システム稼働時間のカスタム表示形式。プレースホルダー: {d}=日, {h}=時間, {m}=分, {s}=秒。デフォルト \"auto\" は \"{d}d {h}h {m}m\" 形式",
   "config.diskSpace": "表示するディスク容量のマウントポイント（\"all\" ですべてのマウント済みファイルシステムを表示。デフォルトはルート / と C: のみで容量を節約。特定のパスを追加してフィルタリング可能）",
+  "config.mactop.enabled": "mactop（brew install amoranth/brew/mactop）を自動検出して使用し、macOS Apple Silicon の SoC モニタリング（消費電力、温度、GPU）を有効にする",
   "metric.battery.name": "バッテリー状態",
   "metric.cpu.name": "CPU使用率",
   "metric.cpuSpeed.name": "プロセッサ速度",
