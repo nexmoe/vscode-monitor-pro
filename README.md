@@ -13,7 +13,7 @@ English | [简体中文](./README_zh-cn.md) | [繁體中文](./README_zh-tw.md) 
 
 Monitor Pro is a real-time system resource monitoring tool that works directly in the VS Code status bar and a dedicated Webview panel. From the very beginning, the plugin was designed with cross-platform and remote development machine performance monitoring in mind, with full implementations on local systems, Remote SSH, and WSL.
 
-A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for over 10x faster data collection compared to `systeminformation`; macOS and Linux automatically fall back to the Node.js (`systeminformation`) data source, ensuring full platform compatibility.
+A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for over 10x faster data collection compared to `systeminformation`; macOS Apple Silicon machines use [mactop](https://github.com/context-labs/mactop) (when installed) for SoC-level metrics (CPU/GPU/ANE power, temperature) via a Prometheus HTTP endpoint; Linux and macOS without mactop fall back to the Node.js (`systeminformation`) data source, ensuring full platform compatibility.
 
 > [!WARNING]
 >
@@ -87,7 +87,7 @@ Discharge and charge chart transition:
 
 ### Resource Usage Webview
 
-A dedicated side panel with live line/bar charts for 11 metrics: CPU, Memory (Active/Used), Network (Down/Up), Disk (Read/Write), Battery, Battery Power, CPU Temperature, CPU Speed.
+A dedicated side panel with live line/bar charts for 11 metrics: CPU, Memory (Active/Used), Network (Down/Up), Disk (Read/Write), Battery, Battery Power / SoC Power, CPU Temperature, CPU Speed. On macOS Apple Silicon with the mactop backend, the power chart switches to SoC Power mode, showing total chip power consumption (CPU + GPU + ANE).
 
 Each chart features:
 
@@ -107,9 +107,12 @@ Disabled metrics are **never queried** — collection is driven entirely by what
 - Unused `SI.*` calls and unused Go collection groups (CPU / Memory / Disk / Network / Host / Battery) are skipped entirely, not fetched-and-filtered.
 - This keeps the refresh cycle lightweight when only a few metrics are shown. Change any toggle and collection adapts on the next tick via hot-reload.
 
-### Battery Power Monitoring (currently fully implemented on Windows only)
+### Battery / SoC Power Monitoring
 
-Unique to this extension, Monitor Pro reports real-time battery power in watts:
+Monitor Pro reports real-time power consumption in watts across two modes:
+
+- **Windows**: Battery net power (positive for charging, negative for discharging) via the native Go backend.
+- **macOS Apple Silicon**: Total SoC power (CPU + GPU + ANE) via the mactop backend, shown as a non-negative value. Also includes battery health and time remaining from `pmset`.
 
 - **Signed values**: positive for charging, negative for discharging
 - **Zero reference**: a dashed guideline always marks 0W
@@ -135,7 +138,7 @@ These settings apply to the status bar and webview alike.
 ### Cross-Platform
 
 - Works in local, Remote SSH, and WSL environments
-- Go binary for Windows only; transparent fallback to Node.js on all platforms
+- Go binary for Windows (native performance); mactop for macOS Apple Silicon (SoC metrics); transparent fallback to Node.js on all platforms
 - Multi-language: English, 简体中文, 繁體中文, 日本語
 
 ## Configuration
@@ -167,6 +170,7 @@ Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 
 - VS Code 1.104+
 - Windows 10/11 (for native Go backend; Linux/macOS use built-in fallback)
+- macOS 12+ Apple Silicon (optional): [mactop](https://github.com/context-labs/mactop) via Homebrew for SoC metrics (`brew install amoranth/brew/mactop`)
 
 ## Developing
 

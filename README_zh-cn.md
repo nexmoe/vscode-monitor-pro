@@ -13,7 +13,7 @@
 
 Monitor Pro 是一款实时系统资源监控工具，直接在 VS Code 状态栏和专属 Webview 面板中呈现。本插件在设计之初就充分考虑到了跨平台与远程开发机性能监控的能力，在原系统、Remote SSH、WSL 上均有完善的实现。
 
-采用**混合架构**：Windows 上使用原生 Go 二进制绕过 PowerShell/WMI 开销，相比于 `systeminformation` 实现 **10 倍以上的数据采集速度提升**；macOS 和 Linux 自动回退到 Node.js (`systeminformation`) 数据源，确保全平台兼容。
+采用**混合架构**：Windows 上使用原生 Go 二进制绕过 PowerShell/WMI 开销，相比于 `systeminformation` 实现 **10 倍以上的数据采集速度提升**；macOS Apple Silicon 机器使用 [mactop](https://github.com/context-labs/mactop)（若已安装）通过 Prometheus HTTP 端点获取 SoC 级别指标（CPU/GPU/ANE 功率、温度）；Linux 和未安装 mactop 的 macOS 自动回退到 Node.js (`systeminformation`) 数据源，确保全平台兼容。
 
 > [!WARNING]
 >
@@ -87,7 +87,7 @@ l10n-中文-电量、电池健康度与功率：
 
 ### 资源占用视图
 
-侧边栏专属面板，提供 11 项实时折线/柱状图：CPU、内存（活跃/已用）、网络（下行/上行）、磁盘（读取/写入）、电池、电池功率、CPU 温度、CPU 频率。
+侧边栏专属面板，提供 11 项实时折线/柱状图：CPU、内存（活跃/已用）、网络（下行/上行）、磁盘（读取/写入）、电池、电池功率 / SoC 功率、CPU 温度、CPU 频率。在 macOS Apple Silicon 上使用 mactop 后端时，功率图将切换为 SoC 功率模式，显示芯片总功耗（CPU + GPU + ANE）。
 
 每张图表包含：
 
@@ -107,9 +107,12 @@ l10n-中文-电量、电池健康度与功率：
 - 未使用的 `SI.*` 调用、未使用的 Go 采集组（CPU / 内存 / 磁盘 / 网络 / 主机 / 电池）都会被直接跳过，而非"查了再过滤"。
 - 只显示少数指标时，刷新周期的开销被降到最低。修改任意开关后，采集会在下一次刷新（热重载）立即调整。
 
-### 电池功率监控（目前仅在 Windows 上提供完整实现）
+### 电池 / SoC 功率监控
 
-本扩展独有的电池功率实时监测：
+Monitor Pro 支持两种模式的实时功率监测：
+
+- **Windows**：电池净功率（充电为正、放电为负）通过原生 Go 后端获取。
+- **macOS Apple Silicon**：总 SoC 功率（CPU + GPU + ANE）通过 mactop 后端获取，以非负值显示。同时包含来自 `pmset` 的电池健康度和剩余时间。
 
 - **带符号显示**：正值为充电，负值为放电
 - **零线参考**：虚线引导线始终标出 0W 位置
@@ -135,7 +138,7 @@ l10n-中文-电量、电池健康度与功率：
 ### 跨平台
 
 - 支持本地、Remote SSH、WSL
-- Windows 使用原生 Go 二进制；其余平台自动回退 Node.js
+- Windows 使用原生 Go 二进制（原生性能）；macOS Apple Silicon 使用 mactop（SoC 指标）；其余平台自动回退 Node.js
 - 多语言：English, 简体中文, 繁體中文, 日本語
 
 ## 配置
@@ -167,6 +170,7 @@ l10n-中文-电量、电池健康度与功率：
 
 - VS Code 1.104+
 - Windows 10/11（Go 后端需要；Linux/macOS 使用内置回退）
+- macOS 12+ Apple Silicon（可选）：安装 [mactop](https://github.com/context-labs/mactop) 获取 SoC 指标（`brew install amoranth/brew/mactop`）
 
 ## 开发
 

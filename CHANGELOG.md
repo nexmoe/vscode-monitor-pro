@@ -4,6 +4,19 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.7] - 2026-07-25
+
+### Added
+
+- **mactop backend for macOS Apple Silicon**: When [mactop](https://github.com/context-labs/mactop) is installed via Homebrew, Monitor Pro automatically uses it as the data source on macOS ARM64, providing SoC-level metrics (CPU/GPU/ANE power, temperature) via a Prometheus HTTP endpoint. The extension detects mactop, starts/reuses a headless process on a free port, and falls back to `systeminformation` if unavailable.
+- **SoC Power chart**: When using the mactop backend, the battery power chart shows total SoC power (always non-negative) instead of battery power.
+- **New l10n strings**: 12 new i18n keys across all 4 locales for mactop backend integration (installation prompt, process lifecycle, health check, SoC Power label, etc.).
+
+### Fixed
+
+- **APFS disk capacity double-counting** (follow-up to 0.7.6): APFS volumes that share the same physical device are now deduplicated by `physicalDevice` in `diskSpace.ts`, preventing inflated capacity and usage totals on macOS.
+- **macOS battery timeRemaining accuracy**: When using the mactop backend, battery ETA is now sourced from `pmset` instead of the SoC power value, since mactop reports total SoC power rather than battery charge/discharge rate.
+
 ## [0.7.6] - 2026-07-18
 
 ### Added
