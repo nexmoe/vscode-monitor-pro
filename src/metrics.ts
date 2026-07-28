@@ -2,7 +2,7 @@ import os from "os";
 import * as vscode from "vscode";
 import byteFormat from "./byteFormat";
 import { MetricCtrProps } from "./constants";
-import { getDiskSpaceConfig, getUptimeFormat } from "./configuration";
+import { configManager } from "./configuration";
 import { systemData } from "./systemData";
 import { dedupeFsSize } from "./diskSpace";
 import { getLogger } from "./logger";
@@ -212,7 +212,7 @@ const osDistroText = async () => {
 const diskSpaceText = async () => {
   const sig = getSigDigits("diskSpace");
   const fsSize = dedupeFsSize((await systemData.getSnapshot()).fsSize);
-  const disksToShow = getDiskSpaceConfig();
+  const disksToShow = configManager.getDiskSpaceConfig();
   getLogger().debug(
     vscode.l10n.t(
       "Disk config: {0}, Found disks: {1}",
@@ -245,7 +245,7 @@ const diskSpaceText = async () => {
 
 const uptimeText = async () => {
   const uptime = os.uptime();
-  const fmt = getUptimeFormat();
+  const fmt = configManager.getUptimeFormat();
   if (fmt && fmt !== "auto") {
     const days = Math.floor(uptime / (24 * 3600));
     const hours = Math.floor((uptime % (24 * 3600)) / 3600);

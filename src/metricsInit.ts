@@ -1,12 +1,9 @@
 import * as vscode from "vscode";
 import metrics from "./metrics";
-import {
-  getMetricsEnabled,
-  getMetricsOrder,
-  MetricsExist,
-} from "./configuration";
+import { configManager, MetricsExist } from "./configuration";
 import { MetricCtrProps } from "./constants";
 import { getLogger } from "./logger";
+import { StatusBarManager } from "./statusBarManager";
 
 export class Metric {
   #func: () => Promise<string>;
@@ -18,8 +15,8 @@ export class Metric {
     this.#section = section;
   }
 
-  init(index: number) {
-    this.#bar = newBarItem({ priority: -1e3 - index, section: this.#section });
+  init(index: number, barManager: StatusBarManager) {
+    this.#bar = barManager.create(this.#section, index);
     this.update();
     return this;
   }
@@ -53,58 +50,9 @@ export class Metric {
   }
 }
 
-function getMetricTitle(section: MetricsExist): string {
-  switch (section) {
-    case "cpu":
-      return vscode.l10n.t("CPU Usage");
-    case "memoryActive":
-      return vscode.l10n.t("Memory Active");
-    case "memoryUsed":
-      return vscode.l10n.t("Memory Used");
-    case "network":
-      return vscode.l10n.t("Network (Down/Up)");
-    case "fileSystem":
-      return vscode.l10n.t("File System (Read/Write)");
-    case "battery":
-      return vscode.l10n.t("Battery Status");
-    case "cpuTemp":
-      return vscode.l10n.t("CPU Temperature");
-    case "cpuSpeed":
-      return vscode.l10n.t("CPU Speed");
-    case "osDistro":
-      return vscode.l10n.t("OS Distribution");
-    case "diskSpace":
-      return vscode.l10n.t("Storage Space");
-    case "uptime":
-      return vscode.l10n.t("Running Time");
-  }
-  return section;
-}
-
-const newBarItem = ({
-  priority,
-  section,
-}: {
-  priority: number;
-  section: MetricsExist;
-}) => {
-  const title = getMetricTitle(section);
-
-  const sbi = vscode.window.createStatusBarItem(
-    vscode.l10n.t("Monitor Pro: {0}", title),
-    vscode.StatusBarAlignment.Left,
-    priority,
-  );
-
-  sbi.show();
-  sbi.tooltip = title;
-  sbi.name = sbi.id;
-  return sbi;
-};
-
-export const getEnabledMetrics = () => {
-  const enabled = getMetricsEnabled();
-  const order = getMetricsOrder();
+export const getEnabledMetrics = (barManager: StatusBarManager) => {
+  const enabled = configManager.getMetricsEnabled();
+  const order = configManager.getMetricsOrder();
   getLogger().debug(vscode.l10n.t("Enabled metrics: {0}", JSON.stringify(enabled)));
   getLogger().debug(vscode.l10n.t("Metrics order: {0}", JSON.stringify(order)));
 
@@ -124,7 +72,7 @@ export const getEnabledMetrics = () => {
           -1e3 - index,
         ),
       );
-      return new Metric(metric).init(index);
+      return new Metric(metric).init(index, barManager);
     }
     getLogger().warn(
       vscode.l10n.t('Metric section "{0}" not found, skipping', section),

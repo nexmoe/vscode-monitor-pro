@@ -1,7 +1,7 @@
 import { commands, ExtensionContext, l10n, Uri, window, workspace } from "vscode";
 import { ResourceUsageProvider } from "./resourceUsageProvider";
 import { powerShellRelease, powerShellStart } from "systeminformation";
-import { getRefreshInterval, isConfigChanged } from "./configuration";
+import { configManager } from "./configuration";
 import { Metric, getEnabledMetrics } from "./metricsInit";
 import { updateGlobalConfig } from "./metrics";
 import { systemData } from "./systemData";
@@ -9,22 +9,16 @@ import { GoBackendManager } from "./goBackend";
 import { GoDataSource, SIDataSource } from "./dataSource";
 import { MactopBackendManager } from "./mactop-backend/mactopBackendManager";
 import { MactopDataSource } from "./mactop-backend/mactopDataSource";
-import {
-  getUnitSystem,
-  getShowSpace,
-  getSingleUnit,
-  getSignificantDigits,
-  getMetricsEnabled,
-  getResourceUsageConfig,
-} from "./configuration";
 import { getLogger, initLogger } from "./logger";
 import sourceMapSupport from "source-map-support";
 import type { MetricsExist } from "./constants";
+import { StatusBarManager } from "./statusBarManager";
 
 let metrics: Metric[] = [];
 let unsubscribeData: (() => void) | null = null;
 let goBackend: GoBackendManager | null = null;
 let mactopBackend: MactopBackendManager | null = null;
+let statusBarManager: StatusBarManager;
 
 /**
  * webview chart key -> corresponding status bar metric section.
@@ -52,7 +46,7 @@ const CHART_TO_METRIC: Record<string, MetricsExist> = {
 };
 
 /**
- * Compute the actual collection set as the union of status bar metrics.*
+ * Compute the actual collection set as the union of status bar metrics.
  * switches and webview resourceUsage.charts.*.enabled.
  *
  * Both configurations are now unified: webview info cards (OS distro / uptime /
@@ -63,13 +57,13 @@ const CHART_TO_METRIC: Record<string, MetricsExist> = {
  */
 function computeEnabledMetrics(): Set<MetricsExist> {
   const enabled = new Set<MetricsExist>();
-  const metricsEnabled = getMetricsEnabled();
+  const metricsEnabled = configManager.getMetricsEnabled();
   for (const [key, on] of Object.entries(metricsEnabled)) {
     if (on) {
       enabled.add(key as MetricsExist);
     }
   }
-  const charts = getResourceUsageConfig().charts;
+  const charts = configManager.getResourceUsageConfig().charts;
   for (const [chartKey, cfg] of Object.entries(charts)) {
     if (cfg.enabled && CHART_TO_METRIC[chartKey]) {
       enabled.add(CHART_TO_METRIC[chartKey]);
@@ -98,18 +92,19 @@ function shouldUseMactopBackend(): boolean {
 }
 
 function applyFormatConfig() {
-  const unitSystem = getUnitSystem();
+  const unitSystem = configManager.getUnitSystem();
   updateGlobalConfig(
     unitSystem === "binary",
-    getShowSpace(),
-    getSingleUnit(),
-    getSignificantDigits(),
+    configManager.getShowSpace(),
+    configManager.getSingleUnit(),
+    configManager.getSignificantDigits(),
   );
 }
 
 function rebuildMetrics() {
   metrics.forEach((x) => x.dispose());
-  metrics = getEnabledMetrics();
+  statusBarManager.dispose();
+  metrics = getEnabledMetrics(statusBarManager);
   // Sync the actual collection set (status bar + webview charts union) to the
   // data layer for on-demand querying.
   systemData.setEnabledMetrics(computeEnabledMetrics());
@@ -214,6 +209,8 @@ export const activate = async (ctx: ExtensionContext) => {
   initLogger("Monitor Pro");
   getLogger().info(l10n.t("Extension activating"));
 
+  statusBarManager = new StatusBarManager();
+
   if (process.platform === "win32") {
     powerShellStart();
   }
@@ -238,7 +235,7 @@ export const activate = async (ctx: ExtensionContext) => {
 
   initDataSource(ctx);
 
-  systemData.setInterval(getRefreshInterval());
+  systemData.setInterval(configManager.getRefreshInterval());
   systemData.start();
 
   unsubscribeData = systemData.subscribe(() => {
@@ -256,7 +253,7 @@ export const activate = async (ctx: ExtensionContext) => {
   // ── Hot-reload: react to config changes without restart ──
   ctx.subscriptions.push(
     workspace.onDidChangeConfiguration((event) => {
-      if (!isConfigChanged(event)) {
+      if (!configManager.isConfigChanged(event)) {
         return;
       }
 
@@ -273,9 +270,9 @@ export const activate = async (ctx: ExtensionContext) => {
       }
 
       if (event.affectsConfiguration("monitor-pro.refresh-interval")) {
-        systemData.setInterval(getRefreshInterval());
+        systemData.setInterval(configManager.getRefreshInterval());
         getLogger().debug(
-          l10n.t("Refresh interval updated to {0}ms", getRefreshInterval()),
+          l10n.t("Refresh interval updated to {0}ms", configManager.getRefreshInterval()),
         );
       }
 
@@ -319,5 +316,6 @@ export const deactivate = () => {
     powerShellRelease();
   }
   metrics.forEach((x) => x.dispose());
+  statusBarManager.dispose();
   getLogger().info(l10n.t("Disposed {0} metrics", metrics.length));
 };
