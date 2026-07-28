@@ -17,86 +17,6 @@ const allMetrics: MetricsExist[] = [
   "uptime",
 ];
 
-export function getRefreshInterval(): number {
-  return (
-    workspace
-      .getConfiguration(CONFIG_SECTION)
-      .get<number>("refresh-interval") ?? 2000
-  );
-}
-
-export function getMetricsEnabled(): Record<MetricsExist, boolean> {
-  const config = workspace.getConfiguration(CONFIG_SECTION);
-  const result = {} as Record<MetricsExist, boolean>;
-  for (const metric of allMetrics) {
-    result[metric] = config.get<boolean>(`metrics.${metric}`, true);
-  }
-  return result;
-}
-
-export function getMetricsOrder(): MetricsExist[] {
-  const config = workspace.getConfiguration(CONFIG_SECTION);
-  return config.get<MetricsExist[]>("metricsOrder", allMetrics);
-}
-
-export function getUnitSystem(): "binary" | "decimal" {
-  return (
-    workspace
-      .getConfiguration(CONFIG_SECTION)
-      .get<"binary" | "decimal">("unitSystem") ?? "binary"
-  );
-}
-
-export function getShowSpace(): boolean {
-  return workspace
-    .getConfiguration(CONFIG_SECTION)
-    .get<boolean>("showSpace", false);
-}
-
-export function getSingleUnit(): boolean {
-  return workspace
-    .getConfiguration(CONFIG_SECTION)
-    .get<boolean>("singleUnit", false);
-}
-
-export function getSignificantDigits(): Record<string, number> {
-  return (
-    workspace
-      .getConfiguration(CONFIG_SECTION)
-      .get<Record<string, number>>("significantDigits") ?? {}
-  );
-}
-
-export function getFormatConfig() {
-  return {
-    unitSystem: getUnitSystem(),
-    showSpace: getShowSpace(),
-    singleUnit: getSingleUnit(),
-    significantDigits: getSignificantDigits(),
-  };
-}
-
-export function getUptimeFormat(): string {
-  return workspace
-    .getConfiguration(CONFIG_SECTION)
-    .get<string>("uptimeFormat", "auto");
-}
-
-export interface ResourceUsageChartConfig {
-  enabled: boolean;
-  // The following fields only matter for real charts (canvas line/bar).
-  // Info cards (osDistro / uptime / diskSpace) only use enabled and ignore
-  // view and color.
-  view?: "line" | "bar";
-  color?: string;
-}
-
-export interface ResourceUsageConfig {
-  charts: Record<string, ResourceUsageChartConfig>;
-  diskSpaceMounts: string[];
-  samplingPoints: number;
-}
-
 const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
   cpu: { enabled: true, view: "line", color: "--vscode-charts-blue" },
   memActive: { enabled: true, view: "line", color: "--vscode-charts-green" },
@@ -127,41 +47,150 @@ const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
 
 const CHART_SECTION = "resourceUsage";
 
-export function getResourceUsageConfig(): ResourceUsageConfig {
-  const config = workspace.getConfiguration(CONFIG_SECTION);
-  const charts = config.get<Record<string, ResourceUsageChartConfig>>(
-    `${CHART_SECTION}.charts`,
-    {},
-  );
-  for (const key of Object.keys(DEFAULT_CHARTS)) {
-    if (!charts[key]) {
-      charts[key] = { ...DEFAULT_CHARTS[key] };
-    } else {
-      if (charts[key].color === undefined) {
-        charts[key].color = DEFAULT_CHARTS[key].color;
+export interface ResourceUsageChartConfig {
+  enabled: boolean;
+  // The following fields only matter for real charts (canvas line/bar).
+  // Info cards (osDistro / uptime / diskSpace) only use enabled and ignore
+  // view and color.
+  view?: "line" | "bar";
+  color?: string;
+}
+
+export interface ResourceUsageConfig {
+  charts: Record<string, ResourceUsageChartConfig>;
+  diskSpaceMounts: string[];
+  samplingPoints: number;
+}
+
+/**
+ * Centrally manages all Monitor Pro configuration access.
+ *
+ * Provides typed getter methods for every configuration property,
+ * centralizing the workspace.getConfiguration() calls that were
+ * previously scattered across individual exported functions.
+ */
+export class ConfigManager {
+  /**
+   * Get the refresh interval in milliseconds.
+   */
+  getRefreshInterval(): number {
+    return this.get<number>("refresh-interval", 2000);
+  }
+
+  /**
+   * Get the enabled/disabled state for all metrics.
+   */
+  getMetricsEnabled(): Record<MetricsExist, boolean> {
+    const result = {} as Record<MetricsExist, boolean>;
+    for (const metric of allMetrics) {
+      result[metric] = this.get<boolean>(`metrics.${metric}`, true);
+    }
+    return result;
+  }
+
+  /**
+   * Get the display order of metrics.
+   */
+  getMetricsOrder(): MetricsExist[] {
+    return this.get<MetricsExist[]>("metricsOrder", allMetrics);
+  }
+
+  /**
+   * Get the unit system (binary or decimal).
+   */
+  getUnitSystem(): "binary" | "decimal" {
+    return this.get<"binary" | "decimal">("unitSystem", "binary");
+  }
+
+  /**
+   * Get whether to show a space between value and unit.
+   */
+  getShowSpace(): boolean {
+    return this.get<boolean>("showSpace", false);
+  }
+
+  /**
+   * Get whether to use single unit (auto-scale).
+   */
+  getSingleUnit(): boolean {
+    return this.get<boolean>("singleUnit", false);
+  }
+
+  /**
+   * Get the significant digits configuration per metric.
+   */
+  getSignificantDigits(): Record<string, number> {
+    return this.get<Record<string, number>>("significantDigits", {});
+  }
+
+  /**
+   * Get the combined format configuration.
+   */
+  getFormatConfig() {
+    return {
+      unitSystem: this.getUnitSystem(),
+      showSpace: this.getShowSpace(),
+      singleUnit: this.getSingleUnit(),
+      significantDigits: this.getSignificantDigits(),
+    };
+  }
+
+  /**
+   * Get the uptime display format string.
+   */
+  getUptimeFormat(): string {
+    return this.get<string>("uptimeFormat", "auto");
+  }
+
+  /**
+   * Get the resource usage webview configuration (charts, mounts, sampling).
+   */
+  getResourceUsageConfig(): ResourceUsageConfig {
+    const charts = this.get<Record<string, ResourceUsageChartConfig>>(
+      `${CHART_SECTION}.charts`,
+      {},
+    );
+    for (const key of Object.keys(DEFAULT_CHARTS)) {
+      if (!charts[key]) {
+        charts[key] = { ...DEFAULT_CHARTS[key] };
+      } else {
+        if (charts[key].color === undefined) {
+          charts[key].color = DEFAULT_CHARTS[key].color;
+        }
       }
     }
+    return {
+      charts,
+      diskSpaceMounts: this.get<string[]>(`${CHART_SECTION}.diskSpaceMounts`, [
+        "all",
+      ]),
+      samplingPoints: this.get<number>(`${CHART_SECTION}.samplingPoints`, 60),
+    };
   }
-  return {
-    charts,
-    diskSpaceMounts: config.get<string[]>(`${CHART_SECTION}.diskSpaceMounts`, [
-      "all",
-    ]),
-    samplingPoints: config.get<number>(`${CHART_SECTION}.samplingPoints`, 60),
-  };
+
+  /**
+   * Get the disk space mount paths to monitor.
+   */
+  getDiskSpaceConfig(): string[] {
+    return this.get<string[]>("diskSpace", ["/", "C:"]);
+  }
+
+  /**
+   * Check if a configuration change event affects Monitor Pro settings.
+   */
+  isConfigChanged(event: ConfigurationChangeEvent): boolean {
+    return event.affectsConfiguration(CONFIG_SECTION);
+  }
+
+  private get<T>(key: string, defaultValue: T): T {
+    return workspace
+      .getConfiguration(CONFIG_SECTION)
+      .get<T>(key, defaultValue);
+  }
 }
 
-export function getDiskSpaceConfig(): string[] {
-  return (
-    workspace.getConfiguration(CONFIG_SECTION).get<string[]>("diskSpace") ?? [
-      "/",
-      "C:",
-    ]
-  );
-}
+// Singleton instance for use across the extension.
+export const configManager = new ConfigManager();
 
-export function isConfigChanged(event: ConfigurationChangeEvent): boolean {
-  return event.affectsConfiguration(CONFIG_SECTION);
-}
-
+// Re-export types for backward compatibility.
 export { MetricsExist };

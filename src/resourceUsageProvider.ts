@@ -6,12 +6,7 @@ import {
   ResourceUsagePayload,
   TextMetrics,
 } from "./resourceUsageData";
-import {
-  getFormatConfig,
-  getResourceUsageConfig,
-  ResourceUsageConfig,
-} from "./configuration";
-import { getMetricsEnabled, getUptimeFormat } from "./configuration";
+import { configManager, ResourceUsageConfig } from "./configuration";
 import byteFormat from "./byteFormat";
 import { formatEstimatedBatteryTime } from "./battery";
 import { systemData } from "./systemData";
@@ -19,7 +14,7 @@ import { systemData } from "./systemData";
 interface FormattedPayload {
   history: ResourceUsagePayload["history"];
   formatted: Record<string, string>;
-  formatConfig: ReturnType<typeof getFormatConfig>;
+  formatConfig: ReturnType<typeof configManager.getFormatConfig>;
   textMetrics: TextMetrics;
   formattedText: Record<string, string>;
 }
@@ -59,7 +54,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
 
   constructor(extensionPath: string) {
     this._collector = new ResourceUsageDataCollector();
-    this._collector.maxHistory = getResourceUsageConfig().samplingPoints;
+    this._collector.maxHistory = configManager.getResourceUsageConfig().samplingPoints;
     this._extensionPath = extensionPath;
   }
 
@@ -102,14 +97,14 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
 
   pushConfigUpdate() {
     if (this._view) {
-      this._collector.maxHistory = getResourceUsageConfig().samplingPoints;
+      this._collector.maxHistory = configManager.getResourceUsageConfig().samplingPoints;
       this._pushConfig(this._view);
     }
   }
 
   private _pushConfig(webviewView: vscode.WebviewView) {
-    const config = getResourceUsageConfig();
-    const metricsEnabled = getMetricsEnabled();
+    const config = configManager.getResourceUsageConfig();
+    const metricsEnabled = configManager.getMetricsEnabled();
     const labels: Record<string, string> = {
       cpu: vscode.l10n.t("CPU"),
       memActive: vscode.l10n.t("Mem Active"),
@@ -140,7 +135,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
 
   private _formatPayload(data: ResourceUsagePayload): FormattedPayload {
     const { current, textMetrics } = data;
-    const fmtConfig = getFormatConfig();
+    const fmtConfig = configManager.getFormatConfig();
     const isBinary = fmtConfig.unitSystem === "binary";
     const sp = fmtConfig.showSpace ? " " : "";
     const single = fmtConfig.singleUnit;
@@ -307,7 +302,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
               : `${fmtNum(t.cpuSpeed.avg, sigDigits.cpuSpeed)}${sp}GHz`
             : "",
         osDistro: t.osDistro || vscode.l10n.t("N/A"),
-        uptime: formatUptime(t.uptime, getUptimeFormat()),
+        uptime: formatUptime(t.uptime, configManager.getUptimeFormat()),
         diskSpaceMounts: JSON.stringify(t.diskSpace),
       },
     };
