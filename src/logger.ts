@@ -2,30 +2,30 @@ import { window } from "vscode";
 
 function callerLocation(skip = 2): string {
   const stack = new Error().stack;
-  if (!stack) return '';
-  const lines = stack.split('\n');
+  if (!stack) return "";
+  const lines = stack.split("\n");
   const frame = lines[skip + 1];
-  if (!frame) return '';
+  if (!frame) return "";
   const s = frame.trim();
 
   let content: string;
-  const parenOpen = s.lastIndexOf('(');
+  const parenOpen = s.lastIndexOf("(");
   if (parenOpen >= 0) {
-    content = s.slice(parenOpen + 1, s.endsWith(')') ? -1 : undefined);
+    content = s.slice(parenOpen + 1, s.endsWith(")") ? -1 : undefined);
   } else {
-    content = s.replace(/^at\s+/, '');
+    content = s.replace(/^at\s+/, "");
   }
 
-  const sep = content.lastIndexOf(':');
-  if (sep < 0) return '';
-  const sep2 = content.lastIndexOf(':', sep - 1);
-  if (sep2 < 0) return '';
+  const sep = content.lastIndexOf(":");
+  if (sep < 0) return "";
+  const sep2 = content.lastIndexOf(":", sep - 1);
+  if (sep2 < 0) return "";
 
   const filePart = content.slice(0, sep2);
   const line = content.slice(sep2 + 1, sep);
   const segments = filePart.split(/[/\\]/);
-  const srcIdx = segments.lastIndexOf('src');
-  const short = srcIdx >= 0 ? segments.slice(srcIdx).join('/') : segments.slice(-2).join('/');
+  const srcIdx = segments.lastIndexOf("src");
+  const short = srcIdx >= 0 ? segments.slice(srcIdx).join("/") : segments.slice(-2).join("/");
 
   return `${short}:${line}`;
 }
@@ -35,7 +35,7 @@ export interface ILogger {
   debug(msg: string): void;
   info(msg: string): void;
   warn(msg: string): void;
-  error(msg: string): void;
+  error(msg: string, extra?: unknown): void;
 }
 
 const noop = () => {};
@@ -45,7 +45,7 @@ const _logger: ILogger = {
   debug: noop,
   info: noop,
   warn: noop,
-  error: noop,
+  error: noop as (msg: string, extra?: unknown) => void,
 };
 
 let _channel: ILogger | null = null;
@@ -73,8 +73,13 @@ export function initLogger(name: string): void {
     const loc = callerLocation();
     _channel!.warn(loc ? `[${loc}] ${msg}` : msg);
   };
-  _logger.error = (msg: string) => {
+  _logger.error = (msg: string, extra?: unknown) => {
     const loc = callerLocation();
-    _channel!.error(loc ? `[${loc}] ${msg}` : msg);
+    const prefix = loc ? `[${loc}] ` : "";
+    if (extra !== undefined) {
+      _channel!.error(`${prefix}${msg}`, extra as string);
+    } else {
+      _channel!.error(`${prefix}${msg}`);
+    }
   };
 }
