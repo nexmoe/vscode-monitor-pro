@@ -5,13 +5,42 @@
 1. Clone the repository.
 2. Run the command `pnpm install` to install dependencies.
 
+## Project Structure
+
+```
+vscode-monitor-pro/
+├── src/                    # Extension source code
+│   ├── extension.ts        # Entry point, activation & deactivation
+│   ├── metrics.ts          # Metric text generation functions
+│   ├── metricsInit.ts      # Metric class & status bar item creation
+│   ├── configuration.ts    # Configuration access functions
+│   ├── constants.ts        # Type definitions & constants
+│   ├── logger.ts           # Output channel logger
+│   ├── systemData.ts       # Data layer & subscription
+│   ├── goBackend.ts        # Go backend manager
+│   ├── dataSource.ts       # Data source abstraction
+│   ├── battery.ts          # Battery time estimation
+│   ├── byteFormat.ts       # Byte formatting utility
+│   ├── diskSpace.ts        # Disk space deduplication
+│   ├── resourceUsageProvider.ts  # Webview resource usage view
+│   └── mactop-backend/     # macOS Apple Silicon backend
+├── go-backend/             # Go backend (Windows performance data)
+├── l10n/                   # Localization files
+├── scripts/                # Build & utility scripts
+├── assets/                 # Icons & static assets
+├── docs/                   # Documentation
+├── .github/                # GitHub Actions & issue templates
+├── package.json            # Extension manifest
+└── tsconfig.json           # TypeScript configuration
+```
+
 ## Adding Metrics
 
 To add metrics to the project, follow these steps:
 
-### 1. Edit `metrics.ts`
+### 1. Edit `src/metrics.ts`
 
-In the `metrics.ts` file, locate the array `metrics` and add the following objects to it:
+In the `src/metrics.ts` file, locate the array `metrics` and add the following objects to it:
 
 ```ts
 {
@@ -27,14 +56,7 @@ In the `metrics.ts` file, locate the array `metrics` and add the following objec
 
 ### 2. Edit localization files
 
-Open the `locales/en.json` file (and any other relevant localization files) and add the following entries:
-
-```json5
-"metric.cpuTemp.name": "CPU Temperature",
-"metric.cpuSpeed.name": "CPU Speed",
-"metric.osDistro.name": "OS Distribution",
-// Add more metric entries here
-```
+Open the `l10n` directory and add the relevant localization entries to each language file.
 
 ### 3. Update `package.json`
 
