@@ -367,9 +367,7 @@
                 return parts.join(" ");
             }
 
-            function isRateId(id) {
-                return id === "netRx" || id === "netTx" || id === "diskRx" || id === "diskWx";
-            }
+            const SCALE_HEADROOM = 1.15;
 
             function isPercentId(id) {
                 return id === "cpu" || id === "memActive" || id === "memUsed" || id === "battery";
@@ -377,6 +375,40 @@
 
             function isPowerId(id) {
                 return id === "batteryPower";
+            }
+
+            // Non-percentage metrics derive their scale from the collected data, so their
+            // current scale must be displayed (unlike the fixed 0-100% scale).
+            function isDynamicScaleId(id) {
+                return !isPercentId(id);
+            }
+
+            // Battery net power in battery mode is signed, so the chart is symmetric
+            // about zero; every other scale starts at zero.
+            function hasSymmetricScale(id) {
+                return isPowerId(id) && _powerMode === "battery";
+            }
+
+            // Single source of truth for a metric's scale maximum: drives the line chart
+            // y-axis, the bar fill width, and the scale label on both views.
+            function computeScaleMax(id, vals) {
+                if (isPercentId(id)) return 100;
+                const peak = hasSymmetricScale(id)
+                    ? Math.max(1, ...vals.map(Math.abs))
+                    : Math.max(1, ...vals);
+                return peak * SCALE_HEADROOM;
+            }
+
+            function formatChartValue(id, v) {
+                const sep = _fmtConfig.showSpace ? " " : "";
+                if (isPowerId(id)) {
+                    const sign = hasSymmetricScale(id) && v >= 0 ? "+" : "";
+                    return sign + v.toFixed(1) + sep + "W";
+                }
+                if (id === "cpuTemp") return v.toFixed(1) + sep + "\u00B0C";
+                if (id === "cpuSpeed") return v.toFixed(2) + sep + "GHz";
+                if (isPercentId(id)) return v.toFixed(1) + sep + "%";
+                return formatRate(v);
             }
 
             function colorFor(id) {
@@ -653,27 +685,8 @@
                 const padTop = 4, padBot = 4;
                 const drawH = h - padTop - padBot;
 
-                let dataMin, dataMax;
-                if (isPercentId(id)) {
-                    dataMin = 0;
-                    dataMax = 100;
-                } else if (isPowerId(id)) {
-                    if (_powerMode === "soc") {
-                        // mactop SoC power is always non-negative
-                        const maxVal = Math.max(1, ...history);
-                        dataMin = 0;
-                        dataMax = maxVal * 1.15;
-                    } else {
-                        // Battery net power can be positive or negative; use a symmetric range
-                        const maxVal = Math.max(1, ...(history.map(Math.abs)));
-                        dataMin = -maxVal * 1.15;
-                        dataMax = maxVal * 1.15;
-                    }
-                } else {
-                    dataMin = 0;
-                    dataMax = history.length > 0 ? Math.max(1, ...history) * 1.15 : 1;
-                }
-                if (dataMax === dataMin) dataMax = dataMin + 10;
+                const dataMax = computeScaleMax(id, history);
+                const dataMin = hasSymmetricScale(id) ? -dataMax : 0;
                 const range = dataMax - dataMin;
                 const n = history.length;
                 if (n < 2) return;
@@ -694,7 +707,7 @@
                     ctx.stroke();
                 }
 
-                if (isPowerId(id) && _powerMode === "battery") {
+                if (hasSymmetricScale(id)) {
                     const yZero = yPos(0);
                     ctx.strokeStyle = rgba(fg, 0.15);
                     ctx.lineWidth = 1;
@@ -726,25 +739,7 @@
                 ctx.stroke();
 
                 const last = history[n - 1];
-                const sep = _fmtConfig.showSpace ? " " : "";
-                let label;
-                if (id === "battery") {
-                    label = last.toFixed(1) + sep + "%";
-                } else if (id === "batteryPower") {
-                    if (_powerMode === "battery") {
-                        label = (last >= 0 ? "+" : "") + last.toFixed(1) + sep + "W";
-                    } else {
-                        label = last.toFixed(1) + sep + "W";
-                    }
-                } else if (id === "cpuTemp") {
-                    label = last.toFixed(1) + sep + "\u00B0C";
-                } else if (id === "cpuSpeed") {
-                    label = last.toFixed(2) + sep + "GHz";
-                } else if (isPercentId(id)) {
-                    label = last.toFixed(1) + sep + "%";
-                } else {
-                    label = formatRate(last);
-                }
+                const label = formatChartValue(id, last);
 
                 const bg = getCachedCSSVar("--vscode-editor-background");
                 ctx.font = "bold " + Math.round(h * 0.24) + "px var(--vscode-font-family, sans-serif)";
@@ -757,16 +752,17 @@
                 ctx.fillStyle = color;
                 ctx.fillText(label, w - 2, padTop + 2);
 
-                if (isRateId(id)) {
+                if (isDynamicScaleId(id)) {
+                    const scaleLabel = formatChartValue(id, dataMax);
                     ctx.font = Math.round(h * 0.16) + "px var(--vscode-font-family, sans-serif)";
                     ctx.textAlign = "left";
                     ctx.textBaseline = "top";
                     ctx.strokeStyle = bg;
                     ctx.lineWidth = 2;
                     ctx.lineJoin = "round";
-                    ctx.strokeText(formatRate(dataMax), 2, padTop + 2);
+                    ctx.strokeText(scaleLabel, 2, padTop + 2);
                     ctx.fillStyle = rgba(color, 0.55);
-                    ctx.fillText(formatRate(dataMax), 2, padTop + 2);
+                    ctx.fillText(scaleLabel, 2, padTop + 2);
                 }
             }
 
@@ -784,26 +780,21 @@
             // -------- bar updates --------
 
             function updateBar(id) {
-                const pct = getBarPercent(id);
                 const fill = _barFills[id];
-                if (fill) fill.style.width = Math.min(100, pct) + "%";
+                if (fill) fill.style.width = getBarPercent(id) + "%";
                 const label = _barLabels[id];
                 if (!label) return;
-                if (isRateId(id)) {
-                    label.textContent = formatRate(state.barMax[id] || 1);
-                } else {
-                    label.textContent = "100%";
-                }
+                label.textContent = isDynamicScaleId(id)
+                    ? formatChartValue(id, state.barMax[id] || 1)
+                    : "100%";
             }
 
             function getBarPercent(id) {
                 const hist = state.history[id];
                 const val = hist && hist.length > 0 ? hist[hist.length - 1] : 0;
-                if (isRateId(id)) {
-                    const maxVal = state.barMax[id];
-                    return maxVal > 0 ? (val / maxVal) * 100 : 0;
-                }
-                return Math.min(100, val);
+                const maxVal = state.barMax[id] || 1;
+                if (maxVal <= 0) return 0;
+                return Math.max(0, Math.min(100, (val / maxVal) * 100));
             }
 
             // -------- handle data --------
@@ -829,11 +820,7 @@
                     if (hidden.has(id)) continue;
 
                     state.history[id] = extractHistory(h, id);
-
-                    if (isRateId(id)) {
-                        const vals = state.history[id];
-                        state.barMax[id] = Math.max(1, ...vals) * 1.15;
-                    }
+                    state.barMax[id] = computeScaleMax(id, state.history[id]);
 
                     const valEl = document.getElementById("val-" + id);
                     if (valEl) valEl.textContent = fmt[id] || "\u2014";
