@@ -201,8 +201,11 @@
             font-size: calc(var(--font-size) - 2px);
             color: var(--fg-muted);
             white-space: nowrap;
-            flex-shrink: 0;
-            min-width: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 30%;
+            flex-shrink: 1;
+            min-width: 0;
         }
 
         .info-bar-track {
@@ -553,7 +556,7 @@
                     if (!barColor) barColor = colorFor("memActive");
                     html +=
                         '<div class="info-mount-row">' +
-                        '<span class="info-mount-name">' + escHtml(m.mount) + '</span>' +
+                        '<span class="info-mount-name" title="' + escHtml(m.mount) + '">' + escHtml(m.mount) + '</span>' +
                         '<div class="info-bar-track"><div class="info-bar-fill" style="width:' + m.use + '%;background:' + barColor + '"></div></div>' +
                         '<span class="info-bar-label">' + m.use + '%</span>' +
                         '</div>';
