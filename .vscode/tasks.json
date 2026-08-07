@@ -5,6 +5,16 @@
 	"tasks": [
 		{
 			"type": "npm",
+			"script": "compile",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"label": "compile",
+			"problemMatcher": []
+		},
+		{
+			"type": "npm",
 			"script": "watch",
 			"problemMatcher": "$ts-webpack-watch",
 			"isBackground": true,
@@ -12,10 +22,7 @@
 				"reveal": "never",
 				"group": "watchers"
 			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			}
+			"group": "build"
 		},
 		{
 			"type": "npm",
