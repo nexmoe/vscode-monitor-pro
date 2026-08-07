@@ -411,6 +411,24 @@
                 return formatRate(v);
             }
 
+            // Marks scale labels on both views as the chart's current maximum scale,
+            // rather than the latest value.
+            const SCALE_LABEL_PREFIX = "\u2191 ";
+
+            // Draw a chart label with a background halo for contrast. Value and
+            // scale labels use identical formatting and share this path.
+            function drawChartLabel(ctx, text, x, y, opts) {
+                ctx.font = opts.font;
+                ctx.textAlign = opts.align;
+                ctx.textBaseline = "top";
+                ctx.strokeStyle = opts.halo;
+                ctx.lineWidth = 3;
+                ctx.lineJoin = "round";
+                ctx.strokeText(text, x, y);
+                ctx.fillStyle = opts.color;
+                ctx.fillText(text, x, y);
+            }
+
             function colorFor(id) {
                 const c = resolveColorValue(_chartColors[id]);
                 if (c) return c;
@@ -742,27 +760,13 @@
                 const label = formatChartValue(id, last);
 
                 const bg = getCachedCSSVar("--vscode-editor-background");
-                ctx.font = "bold " + Math.round(h * 0.24) + "px var(--vscode-font-family, sans-serif)";
-                ctx.textAlign = "right";
-                ctx.textBaseline = "top";
-                ctx.strokeStyle = bg;
-                ctx.lineWidth = 3;
-                ctx.lineJoin = "round";
-                ctx.strokeText(label, w - 2, padTop + 2);
-                ctx.fillStyle = color;
-                ctx.fillText(label, w - 2, padTop + 2);
+                const font = "bold " + Math.round(h * 0.24) + "px var(--vscode-font-family, sans-serif)";
+
+                drawChartLabel(ctx, label, w - 2, padTop + 2, { font, align: "right", color, halo: bg });
 
                 if (isDynamicScaleId(id)) {
-                    const scaleLabel = formatChartValue(id, dataMax);
-                    ctx.font = Math.round(h * 0.16) + "px var(--vscode-font-family, sans-serif)";
-                    ctx.textAlign = "left";
-                    ctx.textBaseline = "top";
-                    ctx.strokeStyle = bg;
-                    ctx.lineWidth = 2;
-                    ctx.lineJoin = "round";
-                    ctx.strokeText(scaleLabel, 2, padTop + 2);
-                    ctx.fillStyle = rgba(color, 0.55);
-                    ctx.fillText(scaleLabel, 2, padTop + 2);
+                    const scaleLabel = SCALE_LABEL_PREFIX + formatChartValue(id, dataMax);
+                    drawChartLabel(ctx, scaleLabel, 2, padTop + 2, { font, align: "left", color, halo: bg });
                 }
             }
 
@@ -785,7 +789,7 @@
                 const label = _barLabels[id];
                 if (!label) return;
                 label.textContent = isDynamicScaleId(id)
-                    ? formatChartValue(id, state.barMax[id] || 1)
+                    ? SCALE_LABEL_PREFIX + formatChartValue(id, state.barMax[id] || 1)
                     : "100%";
             }
 
