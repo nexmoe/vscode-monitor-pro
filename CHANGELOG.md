@@ -4,6 +4,24 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.8] - 2026-08-07
+
+### Added
+
+- **Scale labels for all auto-scaled charts**: Line charts now show the current scale maximum in the top-left corner (bar charts on the right), marked with an `↑` prefix to distinguish it from the live value in the top-right. CPU temperature, CPU speed, and battery power now show a scale label too — previously only network and disk rates did. Scale and value labels share identical formatting with a background halo for readability on any theme.
+
+### Fixed
+
+- **Long disk mount paths truncated**: Mount paths longer than the card width are trimmed with an ellipsis and show the full path on hover.
+
+### Changed
+
+- **Unified chart label rendering**: Scale and value labels are drawn through the same code path, removing duplicated per-label style setup.
+
+### Chore
+
+- **Auto-compile before debug**: The `Run Extension` launch now runs the `compile` task (type check + esbuild) first, keeping `dist/extension.js` current.
+
 ## [0.7.7] - 2026-07-25
 
 ### Added

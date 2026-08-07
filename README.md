@@ -92,7 +92,7 @@ A dedicated side panel with live line/bar charts for 11 metrics: CPU, Memory (Ac
 Each chart features:
 
 - Live 2D canvas rendering with gradient fill and Bezier curves
-- Auto-scaling Y-axis with min/max labels
+- Auto-scaling Y-axis; the current scale maximum is labeled with an `↑` prefix
 - Toggle between line and bar view
 - Subtitle: battery health, charge/discharge state, temperature min, speed range
 - 10–500 configurable history points
