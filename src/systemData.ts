@@ -5,6 +5,7 @@ import type { DataSource } from "./dataSource";
 import { SIDataSource } from "./dataSource";
 import { getLogger } from "./logger";
 import type { MetricsExist } from "./constants";
+import type { GpuCard } from "./gpuUtil";
 
 export interface SystemSnapshot {
   timestamp: number;
@@ -88,6 +89,17 @@ export interface SystemSnapshot {
     cores: number[];
     max: number;
   };
+  /**
+   * GPU metrics exposed by the active data source.
+   *
+   * cards is the list of GPUs with live (NVIDIA nvidia-smi based) readings.
+   * When a data source cannot provide GPU data (Go backend, mactop, or a
+   * machine without NVIDIA hardware/driver), cards stays empty; the UI hides
+   * all GPU charts/status entries based on this data-presence signal.
+   */
+  gpu: {
+    cards: GpuCard[];
+  };
   battery: {
     hasBattery: boolean;
     cycleCount: number;
@@ -124,6 +136,11 @@ const UNAVAILABLE_CHECKERS: Record<string, (s: SystemSnapshot) => boolean> = {
   batteryPower: (s) => !s.battery.hasBattery && s.battery.powerRate === 0,
   cpuTemp: (s) => s.cpuTemperature.main <= 0,
   cpuSpeed: (s) => s.cpuCurrentSpeed.avg <= 0,
+  // GPU availability is expressed by data presence: no cards (no NVIDIA
+  // hardware / driver / unsupported data source) hides any GPU metric.
+  gpu: (s) => s.gpu.cards.length === 0,
+  gpuTemp: (s) => s.gpu.cards.length === 0,
+  gpuMem: (s) => s.gpu.cards.length === 0,
 };
 
 class SystemDataProvider {

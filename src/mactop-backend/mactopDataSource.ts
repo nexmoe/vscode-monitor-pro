@@ -233,6 +233,9 @@ export class MactopDataSource implements DataSource {
         cores: [],
         max: socTemp,
       },
+      // mactop upstream exposes GPU metrics, but this iteration keeps the GPU
+      // cards empty so the unified data-presence signal hides all GPU entries.
+      gpu: { cards: [] },
       battery: {
         hasBattery,
         cycleCount: siBat?.cycleCount ?? 0,

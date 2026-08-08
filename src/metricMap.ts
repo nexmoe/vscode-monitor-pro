@@ -17,7 +17,8 @@ export type CollectDimension =
   | "fsSize" // SI.fsSize()            -> diskSpace
   | "cpuCurrentSpeed" // SI.cpuCurrentSpeed()    -> cpuSpeed
   | "cpuTemperature" // SI.cpuTemperature()     -> cpuTemp
-  | "battery"; // SI.battery()           -> battery
+  | "battery" // SI.battery()           -> battery
+  | "gpu"; // SI.graphics()          -> gpu, gpuTemp, gpuMem
 
 /**
  * UI metric section -> collection dimension (SI.* call name).
@@ -45,6 +46,11 @@ export const METRIC_TO_DIMENSION: Record<MetricsExist, CollectDimension> = {
   cpuSpeed: "cpuCurrentSpeed",
   osDistro: "osInfo",
   uptime: "currentLoad", // computed locally; placeholder only, SI is not queried
+  // All three GPU charts (utilization / temperature / memory) come from the
+  // single SI.graphics() call, so they share the gpu dimension.
+  gpu: "gpu",
+  gpuTemp: "gpu",
+  gpuMem: "gpu",
 };
 
 /**

@@ -5,6 +5,7 @@ import type { SystemSnapshot } from "./systemData";
 import type { MetricsExist } from "./constants";
 import { dimensionsForEnabled, type CollectDimension } from "./metricMap";
 import { dedupeFsSize } from "./diskSpace";
+import { resolveGpuCards } from "./gpuUtil";
 
 export interface DataSource {
   readonly name: string;
@@ -42,7 +43,7 @@ export class SIDataSource implements DataSource {
 
     const need = (d: CollectDimension) => dims.has(d);
 
-    const [cl, mem, os, ns, fs, fsSize, cpuSpeed, cpuTemp, bat] =
+    const [cl, mem, os, ns, fs, fsSize, cpuSpeed, cpuTemp, bat, gpu] =
       await Promise.all([
         need("currentLoad")
           ? SI.currentLoad().catch(() => null)
@@ -67,6 +68,7 @@ export class SIDataSource implements DataSource {
         need("battery")
           ? SI.battery().catch(() => null)
           : Promise.resolve(null),
+        need("gpu") ? SI.graphics().catch(() => null) : Promise.resolve(null),
       ]);
 
     // Always collect time: fsStats/networkStats rate calculations depend on the
@@ -137,6 +139,9 @@ export class SIDataSource implements DataSource {
         prev?.cpuCurrentSpeed ?? { min: 0, max: 0, avg: 0, cores: [] },
       cpuTemperature: cpuTemp ??
         prev?.cpuTemperature ?? { main: 0, cores: [], max: 0 },
+      gpu: {
+        cards: gpu ? await resolveGpuCards(gpu) : (prev?.gpu?.cards ?? []),
+      },
       battery: bat
         ? {
             hasBattery: bat.hasBattery,

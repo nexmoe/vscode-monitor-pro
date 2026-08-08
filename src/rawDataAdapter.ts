@@ -158,6 +158,9 @@ export class RawDataAdapter {
       ),
       cpuCurrentSpeed: cpuSpeed,
       cpuTemperature: cpuTemp,
+      // The Go backend does not expose GPU metrics; an empty cards list makes
+      // all GPU metrics auto-hide via the data-presence signal.
+      gpu: { cards: [] },
       battery: raw.battery?.hasBattery
         ? {
             hasBattery: true,
