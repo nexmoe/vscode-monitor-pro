@@ -105,6 +105,17 @@ export class MactopDataSource implements DataSource {
     // CPU
     const cpuUsage = find("mactop_cpu_usage_percent") ?? 0;
 
+    // Per-core CPU usage, ordered by core index. The Go backend has no such
+    // metric; mactop exposes one series per core labeled by its index.
+    const cpuCoreUsage = metrics
+      .filter((m) => m.name === "mactop_cpu_core_usage_percent")
+      .sort(
+        (a, b) =>
+          (parseInt(a.labels.core ?? "0", 10) || 0) -
+          (parseInt(b.labels.core ?? "0", 10) || 0),
+      )
+      .map((m) => m.value);
+
     // Memory (mactop reports GB; convert to bytes)
     const memTotalGB = find("mactop_memory_gb", { type: "total" }) ?? 0;
     const memUsedGB = find("mactop_memory_gb", { type: "used" }) ?? 0;
@@ -146,6 +157,7 @@ export class MactopDataSource implements DataSource {
     return {
       timestamp: Date.now(),
       currentLoad: cpuUsage,
+      currentLoadCores: cpuCoreUsage,
       mem: {
         total: memTotal,
         free: memTotal - memUsed,

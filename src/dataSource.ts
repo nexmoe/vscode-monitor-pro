@@ -82,6 +82,8 @@ export class SIDataSource implements DataSource {
     return {
       timestamp: Date.now(),
       currentLoad: cl?.currentLoad ?? prev?.currentLoad ?? 0,
+      currentLoadCores:
+        cl?.cpus?.map((c) => c.load) ?? prev?.currentLoadCores ?? [],
       mem: mem ??
         prev?.mem ?? {
           total: 0,

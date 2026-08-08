@@ -77,6 +77,9 @@ export class RawDataAdapter {
       timestamp: now,
       currentLoad:
         (raw.cpu.percent || []).length > 0 ? (raw.cpu.percent || [])[0] : 0,
+      // The Go backend (Windows) only reports the aggregate load; per-core data
+      // is not collected there yet.
+      currentLoadCores: [],
       mem: {
         total: virt.total,
         free: virt.free,

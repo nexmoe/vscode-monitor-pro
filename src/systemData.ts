@@ -9,6 +9,9 @@ import type { MetricsExist } from "./constants";
 export interface SystemSnapshot {
   timestamp: number;
   currentLoad: number;
+  // Per-CPU usage (%), ordered by core index. Empty when the active data
+  // source cannot provide per-core data (e.g. the Go backend).
+  currentLoadCores: number[];
   mem: {
     total: number;
     free: number;

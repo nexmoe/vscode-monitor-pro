@@ -58,6 +58,7 @@ class RingBuffer<T> {
 
 export interface DataPoint {
   cpu: number;
+  cpuCores: number[];
   memoryActive: number;
   memoryUsed: number;
   memoryTotal: number;
@@ -146,6 +147,7 @@ export class ResourceUsageDataCollector {
 
     const point: DataPoint = {
       cpu: snap.currentLoad,
+      cpuCores: snap.currentLoadCores || [],
       memoryActive: snap.mem.active,
       memoryUsed: snap.mem.used,
       memoryTotal: snap.mem.total,
