@@ -55,6 +55,21 @@
           "description": "%config.metrics.fileSystem%",
           "type": "boolean"
         },
+        "monitor-pro.metrics.gpu": {
+          "default": false,
+          "description": "%config.metrics.gpu%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.gpuTemp": {
+          "default": false,
+          "description": "%config.metrics.gpuTemp%",
+          "type": "boolean"
+        },
+        "monitor-pro.metrics.gpuMem": {
+          "default": false,
+          "description": "%config.metrics.gpuMem%",
+          "type": "boolean"
+        },
         "monitor-pro.metrics.memoryActive": {
           "default": true,
           "description": "%config.metrics.memoryActive%",
@@ -107,7 +122,10 @@
               "cpuSpeed",
               "osDistro",
               "diskSpace",
-              "uptime"
+              "uptime",
+              "gpu",
+              "gpuTemp",
+              "gpuMem"
             ],
             "type": "string"
           },
@@ -140,6 +158,21 @@
             "cpuSpeed": {
               "color": "--vscode-terminal-ansiBrightCyan",
               "enabled": false,
+              "view": "line"
+            },
+            "gpu": {
+              "color": "--vscode-charts-green",
+              "enabled": true,
+              "view": "line"
+            },
+            "gpuTemp": {
+              "color": "--vscode-charts-orange",
+              "enabled": true,
+              "view": "line"
+            },
+            "gpuMem": {
+              "color": "--vscode-charts-purple",
+              "enabled": true,
               "view": "line"
             },
             "cpuTemp": {
@@ -225,6 +258,9 @@
             "cpuTemp": 3,
             "diskSpace": 3,
             "fileSystem": 4,
+            "gpu": 3,
+            "gpuMem": 4,
+            "gpuTemp": 3,
             "memoryActive": 4,
             "memoryUsed": 4,
             "network": 4

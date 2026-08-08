@@ -71,6 +71,12 @@ function getMetricTitle(section: MetricsExist): string {
       return vscode.l10n.t("CPU Temperature");
     case "cpuSpeed":
       return vscode.l10n.t("CPU Speed");
+    case "gpu":
+      return vscode.l10n.t("GPU Usage");
+    case "gpuTemp":
+      return vscode.l10n.t("GPU Temperature");
+    case "gpuMem":
+      return vscode.l10n.t("GPU Memory");
     case "osDistro":
       return vscode.l10n.t("OS Distribution");
     case "diskSpace":

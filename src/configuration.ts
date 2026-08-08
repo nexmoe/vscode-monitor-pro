@@ -12,6 +12,9 @@ const allMetrics: MetricsExist[] = [
   "battery",
   "cpuTemp",
   "cpuSpeed",
+  "gpu",
+  "gpuTemp",
+  "gpuMem",
   "osDistro",
   "diskSpace",
   "uptime",
@@ -116,6 +119,24 @@ const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
     enabled: false,
     view: "line",
     color: "--vscode-terminal-ansiBrightCyan",
+  },
+  // GPU charts are enabled by default; they appear once the active data source
+  // reports live NVIDIA GPU data (no data -> charts hide via UNAVAILABLE_CHECKERS).
+  // Only the status bar GPU metrics remain opt-in.
+  gpu: {
+    enabled: true,
+    view: "line",
+    color: "--vscode-charts-green",
+  },
+  gpuTemp: {
+    enabled: true,
+    view: "line",
+    color: "--vscode-charts-orange",
+  },
+  gpuMem: {
+    enabled: true,
+    view: "line",
+    color: "--vscode-charts-purple",
   },
   // Info cards are also modeled as chart config items so they share the enabled
   // switch and collection logic. They are enabled by default so the resource

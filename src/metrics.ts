@@ -188,6 +188,63 @@ const cpuSpeedText = async () => {
   return `$(dashboard) ${fmtSigNum(cpuCurrentSpeed.avg, sig) + sp + "GHz"}`;
 };
 
+// ── GPU status bar metrics ──
+//
+// All three read the shared snapshot GPU card list. Multi-card aggregation:
+// utilization = mean, temperature = max, memory = sum (consistent with the
+// webview charts). An empty card list (no NVIDIA hardware / driver, or a data
+// source without GPU support) yields an empty string so the status entry hides.
+
+const gpuText = async () => {
+  const sig = getSigDigits("gpu");
+  const cards = (await systemData.getSnapshot()).gpu.cards;
+  if (cards.length === 0) {
+    return "";
+  }
+  const avg = cards.reduce((s, c) => s + c.utilization, 0) / cards.length;
+  getLogger().debug(
+    vscode.l10n.t("GPU - Utilization: {0}% across {1} card(s)", avg.toFixed(2), cards.length),
+  );
+  const sp = _space ? " " : "";
+  return `$(server) ${fmtSigNum(avg, sig) + sp + "%"}`;
+};
+
+const gpuTempText = async () => {
+  const sig = getSigDigits("gpuTemp");
+  const cards = (await systemData.getSnapshot()).gpu.cards;
+  if (cards.length === 0) {
+    return "";
+  }
+  const maxTemp = Math.max(...cards.map((c) => c.temperature));
+  if (maxTemp <= 0) {
+    return "";
+  }
+  getLogger().debug(
+    vscode.l10n.t("GPU - Max temperature: {0}°C", maxTemp.toFixed(2)),
+  );
+  const sp = _space ? " " : "";
+  return `$(flame) ${fmtSigNum(maxTemp, sig) + sp + "°C"}`;
+};
+
+const gpuMemText = async () => {
+  const sig = getSigDigits("gpuMem");
+  const cards = (await systemData.getSnapshot()).gpu.cards;
+  if (cards.length === 0) {
+    return "";
+  }
+  const used = cards.reduce((s, c) => s + c.memUsed, 0);
+  const total = cards.reduce((s, c) => s + c.memTotal, 0);
+  getLogger().debug(
+    vscode.l10n.t(
+      "GPU - Memory used: {0} bytes, total: {1} bytes",
+      used,
+      total,
+    ),
+  );
+  // Same used/total presentation as the memory status entries.
+  return `$(pie-chart) ${prettySig(used, sig)}/${prettySig(total, sig)}`;
+};
+
 const cpuTempText = async () => {
   const sig = getSigDigits("cpuTemp");
   const cl = (await systemData.getSnapshot()).cpuTemperature;
@@ -291,6 +348,18 @@ const metrics: MetricCtrProps[] = [
   {
     func: cpuSpeedText,
     section: "cpuSpeed",
+  },
+  {
+    func: gpuText,
+    section: "gpu",
+  },
+  {
+    func: gpuTempText,
+    section: "gpuTemp",
+  },
+  {
+    func: gpuMemText,
+    section: "gpuMem",
   },
   {
     func: osDistroText,
