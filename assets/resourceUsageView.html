@@ -314,17 +314,39 @@
                 "netRx", "netTx",
                 "diskRx", "diskWx",
                 "battery", "batteryPower", "cpuTemp", "cpuSpeed",
+                "gpu", "gpuTemp", "gpuMem",
             ];
 
-            // Metrics exposing a per-item dimension for the array view, mapped to
-            // the snapshot field carrying the current values. cpu -> per-core usage.
-            const ARRAY_FIELDS = { cpu: "cpuCores" };
+            // Metrics exposing a per-item dimension for the array view. The
+            // value may be a plain number array (cpu cores, cpu temp cores) or
+            // an array of objects (gpuCards) from which `valueKey` selects the
+            // per-card field. `type` drives cell semantics:
+            //   percent - 0-100 bar with usageColor, "%" label
+            //   temp    - fixed 0-110 bar with tempColor, "°C" label
+            //   mem     - per-card used/total percent, tooltip shows model +
+            //             byte-formatted used/total (provided by the extension)
+            const ARRAY_FIELDS = {
+                cpu: { field: "cpuCores", type: "percent", prefix: "C", offset: 0 },
+                cpuTemp: { field: "cpuTempCores", type: "temp", prefix: "C", offset: 0 },
+                gpu: { field: "gpuCards", type: "percent", prefix: "G", offset: 0, valueKey: "utilization" },
+                gpuTemp: { field: "gpuCards", type: "temp", prefix: "G", offset: 0, valueKey: "temperature" },
+                gpuMem: { field: "gpuCards", type: "mem", prefix: "G", offset: 0, valueKey: "memUsed" },
+            };
+
+            // Fixed upper bound for temperature arrays (both CPU and GPU). GPU
+            // cards can legitimately exceed 100°C (e.g. GDDR6X memory junction),
+            // so the bar clamps at 110 while the label always shows the real
+            // value. The big card keeps its dynamic scale like cpuTemp.
+            const ARRAY_TEMP_MAX = 110;
 
             const state = {
                 viewMode: {},
                 history: {},
                 barMax: {},
                 coreData: {},
+                // Extension-provided per-card metadata (model / memText) for the
+                // GPU array view, keyed by chart id.
+                cardMeta: {},
                 textMetrics: null,
             };
 
@@ -428,7 +450,8 @@
             const SCALE_HEADROOM = 1.15;
 
             function isPercentId(id) {
-                return id === "cpu" || id === "memActive" || id === "memUsed" || id === "battery";
+                return id === "cpu" || id === "memActive" || id === "memUsed" || id === "battery"
+                    || id === "gpu" || id === "gpuMem";
             }
 
             function isPowerId(id) {
@@ -463,7 +486,7 @@
                     const sign = hasSymmetricScale(id) && v >= 0 ? "+" : "";
                     return sign + v.toFixed(1) + sep + "W";
                 }
-                if (id === "cpuTemp") return v.toFixed(1) + sep + "\u00B0C";
+                if (id === "cpuTemp" || id === "gpuTemp") return v.toFixed(1) + sep + "\u00B0C";
                 if (id === "cpuSpeed") return v.toFixed(2) + sep + "GHz";
                 if (isPercentId(id)) return v.toFixed(1) + sep + "%";
                 return formatRate(v);
@@ -660,6 +683,18 @@
                 return resolveColorValue(name) || colorFor("memActive");
             }
 
+            // Temperature color bands (CPU and GPU): green below 65°C, orange
+            // 65-85°C, red above 85°C. Kept distinct from usageColor because the
+            // threshold semantics differ (absolute thermal limits vs. usage).
+            function tempColor(temp) {
+                const name = temp >= 85
+                    ? "--vscode-charts-red"
+                    : temp >= 65
+                        ? "--vscode-charts-yellow"
+                        : "--vscode-charts-green";
+                return resolveColorValue(name) || colorFor("memActive");
+            }
+
             function renderDiskMountBars(mounts) {
                 const container = document.getElementById("disk-mount-list");
                 if (!container) return;
@@ -746,9 +781,9 @@
             // active data source does not provide one. Platform support is
             // therefore expressed by data presence, never by a platform check.
             function extractArray(history, id) {
-                const field = ARRAY_FIELDS[id];
-                if (!field || !history || !history.length) return [];
-                const arr = history[history.length - 1][field];
+                const cfg = ARRAY_FIELDS[id];
+                if (!cfg || !history || !history.length) return [];
+                const arr = history[history.length - 1][cfg.field];
                 return Array.isArray(arr) ? arr : [];
             }
 
@@ -767,6 +802,9 @@
                     else if (id === "batteryPower") v = dp.batteryPower;
                     else if (id === "cpuTemp") v = dp.cpuTemperature;
                     else if (id === "cpuSpeed") v = dp.cpuSpeedAvg;
+                    else if (id === "gpu") v = dp.gpuUtilization;
+                    else if (id === "gpuTemp") v = dp.gpuTemperature;
+                    else if (id === "gpuMem") v = dp.gpuMemTotal > 0 ? (dp.gpuMemUsed / dp.gpuMemTotal) * 100 : 0;
                     else v = 0;
                     vals.push(v);
                 }
@@ -880,24 +918,61 @@
 
             // Renders the array view: a responsive grid of per-item horizontal
             // bars (CSS auto-fill grows the column count with the card width).
-            // Each cell shows a name, the value bar, and its percentage label.
+            // Three cell types are supported via ARRAY_FIELDS[].type:
+            //   percent - value is 0-100; width = value, label = "%"
+            //   temp    - fixed 0-110 scale; width clamps, label always shows
+            //             the real °C value (never lies even above the bound)
+            //   mem     - per-card used/total percent; label = "%", tooltip =
+            //             model + byte-formatted used/total (from the extension)
             function renderCoreArray(id, cores) {
                 cores = cores || state.coreData[id] || [];
                 const wrap = document.getElementById("array-wrap-" + id);
                 if (!wrap || cores.length === 0) return;
 
+                const cfg = ARRAY_FIELDS[id] || {};
+                const meta = state.cardMeta[id] || [];
+                const isObj = cfg.valueKey !== undefined;
+
+                const cell = (i, item) => {
+                    let value = isObj ? item[cfg.valueKey] : item;
+                    if (cfg.type === "mem" && isObj) {
+                        const total = item.memTotal || 0;
+                        value = total > 0 ? (item.memUsed / total) * 100 : 0;
+                    }
+                    value = Number.isFinite(value) ? value : 0;
+
+                    let pct, label, color, tooltip;
+                    if (cfg.type === "temp") {
+                        pct = Math.max(0, Math.min(100, (value / ARRAY_TEMP_MAX) * 100));
+                        label = Math.round(value) + "\u00B0C";
+                        color = tempColor(value);
+                        tooltip = isObj ? (meta[i]?.model || "") : "";
+                    } else {
+                        pct = Math.max(0, Math.min(100, value));
+                        label = Math.round(value) + "%";
+                        color = usageColor(value);
+                        tooltip = isObj
+                            ? (cfg.type === "mem"
+                                ? (meta[i]?.model || "") + (meta[i]?.memText ? " \u00B7 " + meta[i].memText : "")
+                                : (meta[i]?.model || ""))
+                            : "";
+                    }
+                    const name = cfg.prefix + (i + (cfg.offset || 0));
+                    return (
+                        '<div class="core-cell"' +
+                        (tooltip ? ' title="' + escHtml(tooltip) + '"' : "") + ">" +
+                        '<span class="core-name">' + name + "</span>" +
+                        '<div class="core-bar-track"><div class="core-bar-fill" style="width:' + pct + "%;background:" + color + '"></div></div>' +
+                        '<span class="core-label">' + label + "</span>" +
+                        "</div>"
+                    );
+                };
+
                 let html = '<div class="core-grid">';
                 for (let i = 0; i < cores.length; i++) {
-                    const raw = cores[i];
-                    const v = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0;
-                    html +=
-                        '<div class="core-cell">' +
-                        '<span class="core-name">C' + i + '</span>' +
-                        '<div class="core-bar-track"><div class="core-bar-fill" style="width:' + v + '%;background:' + usageColor(v) + '"></div></div>' +
-                        '<span class="core-label">' + Math.round(v) + '%</span>' +
-                        '</div>';
+                    html += cell(i, cores[i]);
                 }
-                html += '</div>';
+                html += "</div>";
                 wrap.innerHTML = html;
             }
 
@@ -935,6 +1010,15 @@
                     const card = document.querySelector('.card[data-metric="' + metric + '"]');
                     if (card) card.style.display = 'none';
                 }
+
+                // Per-card GPU metadata (model / byte-formatted memText) for
+                // array view tooltips; provided by the extension.
+                try {
+                    const gpuMeta = JSON.parse((formattedText || {}).gpuCards || "[]");
+                    for (const id of ["gpu", "gpuTemp", "gpuMem"]) {
+                        state.cardMeta[id] = gpuMeta;
+                    }
+                } catch { /* ignore malformed metadata */ }
 
                 for (const id of ALL_CHART_IDS) {
                     const c = _charts[id];

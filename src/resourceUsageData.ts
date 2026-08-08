@@ -1,5 +1,22 @@
 import { systemData, SystemSnapshot } from "./systemData";
 import { dedupeFsSize } from "./diskSpace";
+import type { GpuCard } from "./gpuUtil";
+
+// Aggregation helpers for multi-card GPU readings. Empty card lists yield a
+// neutral value so consumers never have to branch on GPU availability.
+function gpuAvg(cards: GpuCard[], pick: (c: GpuCard) => number): number {
+  if (cards.length === 0) {
+    return 0;
+  }
+  return cards.reduce((s, c) => s + pick(c), 0) / cards.length;
+}
+
+function gpuMax(cards: GpuCard[], pick: (c: GpuCard) => number): number {
+  if (cards.length === 0) {
+    return 0;
+  }
+  return Math.max(...cards.map(pick));
+}
 
 class RingBuffer<T> {
   private buffer: T[];
@@ -70,7 +87,15 @@ export interface DataPoint {
   batteryPercent: number;
   batteryPower: number;
   cpuTemperature: number;
+  cpuTempCores: number[];
   cpuSpeedAvg: number;
+  // GPU series (aggregated across cards: utilization = mean, temperature = max,
+  // memory = sum) plus the raw card list for the per-card array view.
+  gpuUtilization: number;
+  gpuTemperature: number;
+  gpuMemUsed: number;
+  gpuMemTotal: number;
+  gpuCards: GpuCard[];
 }
 
 export interface DiskSpaceMount {
@@ -164,7 +189,13 @@ export class ResourceUsageDataCollector {
             ? snap.battery.powerRate
             : 0,
       cpuTemperature: snap.cpuTemperature.main ?? 0,
+      cpuTempCores: snap.cpuTemperature.cores ?? [],
       cpuSpeedAvg: snap.cpuCurrentSpeed.avg,
+      gpuUtilization: gpuAvg(snap.gpu.cards, (c) => c.utilization),
+      gpuTemperature: gpuMax(snap.gpu.cards, (c) => c.temperature),
+      gpuMemUsed: snap.gpu.cards.reduce((s, c) => s + c.memUsed, 0),
+      gpuMemTotal: snap.gpu.cards.reduce((s, c) => s + c.memTotal, 0),
+      gpuCards: snap.gpu.cards,
     };
 
     this.history.push(point);

@@ -122,6 +122,9 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       batteryPower: vscode.l10n.t("Power (W)"),
       cpuTemp: vscode.l10n.t("CPU Temp"),
       cpuSpeed: vscode.l10n.t("CPU Speed"),
+      gpu: vscode.l10n.t("GPU"),
+      gpuTemp: vscode.l10n.t("GPU Temp"),
+      gpuMem: vscode.l10n.t("GPU Memory"),
       diskSpace: vscode.l10n.t("Disk Space"),
       uptime: vscode.l10n.t("Uptime"),
       osDistro: vscode.l10n.t("OS Distro"),
@@ -241,6 +244,25 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
           t.cpuSpeed.avg > 0
             ? fmtNum(t.cpuSpeed.avg, sigDigits.cpuSpeed) + sp + "GHz"
             : vscode.l10n.t("N/A"),
+        // A 0% reading is valid (idle GPU), so gate on card presence rather
+        // than the value (UNAVAILABLE_CHECKERS already hides GPU when no cards).
+        gpu:
+          current.gpuCards.length > 0
+            ? fmtPct(current.gpuUtilization, sigDigits.gpu)
+            : vscode.l10n.t("N/A"),
+        gpuTemp:
+          current.gpuTemperature > 0
+            ? fmtNum(current.gpuTemperature, sigDigits.gpuTemp) + sp + "°C"
+            : vscode.l10n.t("N/A"),
+        // Same used/total presentation as the memory active entry.
+        gpuMem:
+          current.gpuMemTotal > 0
+            ? fmtMem(current.gpuMemUsed, "gpuMem") +
+              sp +
+              "/" +
+              sp +
+              fmtMem(current.gpuMemTotal, "gpuMem")
+            : vscode.l10n.t("N/A"),
       },
       textMetrics: t,
       formattedText: {
@@ -309,6 +331,22 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
         osDistro: t.osDistro || vscode.l10n.t("N/A"),
         uptime: formatUptime(t.uptime, getUptimeFormat()),
         diskSpaceMounts: JSON.stringify(t.diskSpace),
+        // Per-card metadata for the GPU array view: model name plus a
+        // byte-formatted used/total memory string. Formatted here because the
+        // webview has no byteFormat equivalent honoring per-metric sig digits.
+        gpuCards: JSON.stringify(
+          current.gpuCards.map((c) => ({
+            model: c.model,
+            memText:
+              c.memTotal > 0
+                ? fmtMem(c.memUsed, "gpuMem") +
+                  sp +
+                  "/" +
+                  sp +
+                  fmtMem(c.memTotal, "gpuMem")
+                : "",
+          })),
+        ),
       },
     };
   }
