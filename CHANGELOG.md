@@ -4,6 +4,20 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.8.0] - 2026-08-08
+
+### Added
+
+- **NVIDIA GPU monitoring**: Three new resource usage charts — GPU Usage, GPU Temperature, and GPU Memory (VRAM) — enabled by default. Each card has a per-card array view (`G0`, `G1`, …) showing individual GPU utilization / temperature / memory, with the card model on hover. Multi-GPU readings are aggregated for the main chart: utilization = average, temperature = maximum, memory = sum.
+  - **Status bar metrics**: Optional `gpu`, `gpuTemp`, `gpuMem` status bar entries (disabled by default) mirroring the charts: average usage, max temperature, and summed used/total VRAM.
+  - **NVIDIA only**: Metrics come from `nvidia-smi`. When `systeminformation` cannot enumerate controllers (e.g. containers without `lspci`), the data source falls back to parsing `nvidia-smi` directly. Machines without NVIDIA hardware/driver hide all GPU entries automatically.
+  - **GPU temperature array view** uses the same fixed 0–110°C scale as the CPU temperature array, so cards above 100°C (e.g. GDDR6X) still show their real temperature.
+- **Per-core CPU array view**: The CPU Usage and CPU Temperature charts now expose a per-core view (`C0`, `C1`, …) next to the line/bar toggle, showing individual core utilization and temperature with color-coded bars.
+
+### Changed
+
+- **Percentage label spacing tightened** next to usage bars in the webview.
+
 ## [0.7.8] - 2026-08-07
 
 ### Added

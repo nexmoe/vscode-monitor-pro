@@ -69,33 +69,41 @@ Discharge and charge chart transition:
 
 ### Status Bar
 
-11 individually toggleable metrics shown as status bar items with Codicon icons:
+14 individually toggleable metrics shown as status bar items with Codicon icons:
 
 | Metric          | Default | Icon                                | Example                 |
 | --------------- | ------- | ----------------------------------- | ----------------------- |
-| CPU             | on      | `$(pulse)`                          | `73.2%`                 |
-| Memory Active   | on      | `$(server)`                         | `4.21 / 15.6 GiB`       |
+| CPU             | on      | `$(chip)`                           | `73.2%`                 |
+| Memory Active   | on      | `$(pie-chart)`                      | `4.21 / 15.6 GiB`       |
 | Battery         | on      | `$(plug)`                           | `85.2% (Charging)`      |
-| Memory Used     | off     | `$(server)`                         | `8.15 / 15.6 GiB`       |
+| Memory Used     | off     | `$(pie-chart)`                      | `8.15 / 15.6 GiB`       |
 | Network         | off     | `$(cloud-download) $(cloud-upload)` | `125 KiB/s 2.34 MiB/s`  |
 | CPU Temperature | off     | `$(flame)`                          | `52.3°C`                |
 | CPU Speed       | off     | `$(dashboard)`                      | `3.81 GHz`              |
+| GPU             | off     | `$(circuit-board)`                   | `73.2%`                 |
+| GPU Temperature | off     | `$(lightbulb-sparkle)`               | `52.3°C`                |
+| GPU Memory      | off     | `$(layers)`                          | `11.2 / 24 GiB`         |
 | Uptime          | off     | `$(clock)`                          | `2d 14h 32m`            |
 | Disk I/O        | off     | `$(log-in) $(log-out)`              | `50.2 MiB/s 12.1 MiB/s` |
 | Disk Space      | off     | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
 | OS Distro       | off     | —                                   | `Ubuntu 22.04`          |
 
+> GPU metrics require NVIDIA hardware with `nvidia-smi`; they hide automatically otherwise.
+
 ### Resource Usage Webview
 
-A dedicated side panel with live line/bar charts for 11 metrics: CPU, Memory (Active/Used), Network (Down/Up), Disk (Read/Write), Battery, Battery Power / SoC Power, CPU Temperature, CPU Speed. On macOS Apple Silicon with the mactop backend, the power chart switches to SoC Power mode, showing total chip power consumption (CPU + GPU + ANE).
+A dedicated side panel with live line/bar charts for 14 metrics: CPU, Memory (Active/Used), Network (Down/Up), Disk (Read/Write), Battery, Battery Power / SoC Power, CPU Temperature, CPU Speed, GPU, GPU Temperature, GPU Memory. On macOS Apple Silicon with the mactop backend, the power chart switches to SoC Power mode, showing total chip power consumption (CPU + GPU + ANE).
 
 Each chart features:
 
 - Live 2D canvas rendering with gradient fill and Bezier curves
 - Auto-scaling Y-axis; the current scale maximum is labeled with an `↑` prefix
 - Toggle between line and bar view
+- **Per-core / per-card array view**: CPU Usage, CPU Temperature, GPU, GPU Temperature, and GPU Memory cards can switch to a grid of colored bars — one per CPU core (`C0`, `C1`, …) or per GPU (`G0`, `G1`, …) — showing each item's utilization / temperature / memory. Hovering a GPU cell reveals the card model (and used/total memory for the GPU Memory view).
 - Subtitle: battery health, charge/discharge state, temperature min, speed range
 - 10–500 configurable history points
+
+GPU charts are enabled by default and automatically hidden on machines without NVIDIA hardware (`nvidia-smi`).
 
 A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. These cards are part of the `resourceUsage.charts` configuration and can be toggled via `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` (enabled by default).
 

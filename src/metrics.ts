@@ -206,7 +206,7 @@ const gpuText = async () => {
     vscode.l10n.t("GPU - Utilization: {0}% across {1} card(s)", avg.toFixed(2), cards.length),
   );
   const sp = _space ? " " : "";
-  return `$(server) ${fmtSigNum(avg, sig) + sp + "%"}`;
+  return `$(circuit-board) ${fmtSigNum(avg, sig) + sp + "%"}`;
 };
 
 const gpuTempText = async () => {
@@ -223,7 +223,7 @@ const gpuTempText = async () => {
     vscode.l10n.t("GPU - Max temperature: {0}°C", maxTemp.toFixed(2)),
   );
   const sp = _space ? " " : "";
-  return `$(flame) ${fmtSigNum(maxTemp, sig) + sp + "°C"}`;
+  return `$(lightbulb-sparkle) ${fmtSigNum(maxTemp, sig) + sp + "°C"}`;
 };
 
 const gpuMemText = async () => {
@@ -242,7 +242,7 @@ const gpuMemText = async () => {
     ),
   );
   // Same used/total presentation as the memory status entries.
-  return `$(pie-chart) ${prettySig(used, sig)}/${prettySig(total, sig)}`;
+  return `$(layers) ${prettySig(used, sig)}/${prettySig(total, sig)}`;
 };
 
 const cpuTempText = async () => {
