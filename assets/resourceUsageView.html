@@ -167,6 +167,57 @@
             flex-shrink: 0;
         }
 
+        .array-wrap {
+            width: 100%;
+            padding: 6px 0;
+        }
+
+        .core-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 4px 8px;
+        }
+
+        .core-cell {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .core-name {
+            font-size: calc(var(--font-size) - 2px);
+            color: var(--fg-muted);
+            font-variant-numeric: tabular-nums;
+            flex-shrink: 0;
+            min-width: 24px;
+            text-align: right;
+        }
+
+        .core-bar-track {
+            flex: 1;
+            height: 6px;
+            background: rgba(128, 128, 128, 0.12);
+            border-radius: 3px;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .core-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            min-width: 2px;
+        }
+
+        .core-label {
+            font-size: calc(var(--font-size) - 2px);
+            color: var(--fg-muted);
+            font-variant-numeric: tabular-nums;
+            flex-shrink: 0;
+            min-width: 40px;
+            text-align: right;
+        }
+
         .info-card {
             background: var(--card-bg);
             border-radius: 4px;
@@ -228,7 +279,7 @@
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
             flex-shrink: 0;
-            min-width: 48px;
+            min-width: 36px;
             text-align: right;
         }
     </style>
@@ -265,10 +316,15 @@
                 "battery", "batteryPower", "cpuTemp", "cpuSpeed",
             ];
 
+            // Metrics exposing a per-item dimension for the array view, mapped to
+            // the snapshot field carrying the current values. cpu -> per-core usage.
+            const ARRAY_FIELDS = { cpu: "cpuCores" };
+
             const state = {
                 viewMode: {},
                 history: {},
                 barMax: {},
+                coreData: {},
                 textMetrics: null,
             };
 
@@ -305,6 +361,8 @@
                     if (!c || !c.enabled) continue;
                     if (state.viewMode[id] === "line" && state.history[id] && state.history[id].length >= 2) {
                         drawChart(id, state.history[id], colorFor(id));
+                    } else if (state.viewMode[id] === "array" && state.coreData[id] && state.coreData[id].length > 0) {
+                        renderCoreArray(id, state.coreData[id]);
                     }
                 }
             });
@@ -489,6 +547,8 @@
                     const label = _labels[id] || id;
                     const color = colorFor(id);
                     const view = state.viewMode[id] || "line";
+                    const isArrayCapable = ARRAY_FIELDS[id] !== undefined;
+                    const hasCores = state.coreData[id] && state.coreData[id].length;
 
                     html +=
                         '<div class="card" data-metric="' + id + '">' +
@@ -501,17 +561,23 @@
                         '<div class="toggle-group">' +
                         '<button class="toggle-btn' + (view === "line" ? " active" : "") + '" data-metric="' + id + '" data-view="line" title="__LINE_CHART_TITLE__">\u25E0</button>' +
                         '<button class="toggle-btn' + (view === "bar" ? " active" : "") + '" data-metric="' + id + '" data-view="bar" title="__BAR_CHART_TITLE__">\u25A4</button>' +
+                        (isArrayCapable
+                            ? '<button class="toggle-btn' + (view === "array" ? " active" : "") + '" data-metric="' + id + '" data-view="array" title="__ARRAY_CHART_TITLE__" style="display:' + (hasCores ? "" : "none") + '">\u25A6</button>'
+                            : "") +
                         '</div>' +
                         '</div>' +
-                        '<div class="chart-wrap" id="chart-wrap-' + id + '"' + (view === "bar" ? ' style="display:none"' : '') + '>' +
+                        '<div class="chart-wrap" id="chart-wrap-' + id + '"' + (view !== "line" ? ' style="display:none"' : '') + '>' +
                         '<canvas id="canvas-' + id + '"></canvas>' +
                         '</div>' +
-                        '<div class="bar-wrap" id="bar-wrap-' + id + '"' + (view === "line" ? ' style="display:none"' : '') + '>' +
+                        '<div class="bar-wrap" id="bar-wrap-' + id + '"' + (view !== "bar" ? ' style="display:none"' : '') + '>' +
                         '<div class="bar-row">' +
                         '<div class="bar-track"><div class="bar-fill" id="bar-fill-' + id + '" style="width:0%;background:' + color + '"></div></div>' +
                         '<span class="bar-label" id="bar-label-' + id + '">\u2014</span>' +
                         '</div>' +
                         '</div>' +
+                        (isArrayCapable
+                            ? '<div class="array-wrap" id="array-wrap-' + id + '"' + (view !== "array" ? ' style="display:none"' : '') + '></div>'
+                            : "") +
                         '</div>';
                 }
                 container.innerHTML = html;
@@ -582,6 +648,18 @@
 
             // -------- disk space bar helpers --------
 
+            // Shared traffic-light semantics for percentage bars: green below
+            // 60%, yellow from 60%, red from 80%. Used by disk mounts and the
+            // per-core CPU array view.
+            function usageColor(pct) {
+                const name = pct >= 80
+                    ? "--vscode-charts-red"
+                    : pct >= 60
+                        ? "--vscode-charts-yellow"
+                        : "--vscode-charts-green";
+                return resolveColorValue(name) || colorFor("memActive");
+            }
+
             function renderDiskMountBars(mounts) {
                 const container = document.getElementById("disk-mount-list");
                 if (!container) return;
@@ -595,15 +673,7 @@
 
                 let html = "";
                 for (const m of filtered) {
-                    let barColor;
-                    if (m.use >= 80) {
-                        barColor = resolveColorValue("--vscode-charts-red");
-                    } else if (m.use >= 60) {
-                        barColor = resolveColorValue("--vscode-charts-yellow");
-                    } else {
-                        barColor = resolveColorValue("--vscode-charts-green");
-                    }
-                    if (!barColor) barColor = colorFor("memActive");
+                    const barColor = usageColor(m.use);
                     html +=
                         '<div class="info-mount-row">' +
                         '<span class="info-mount-name" title="' + escHtml(m.mount) + '">' + escHtml(m.mount) + '</span>' +
@@ -634,6 +704,15 @@
 
             // -------- view toggle --------
 
+            // Reflect a view mode in the toggle group's active states.
+            function setViewActive(id, view) {
+                const card = document.querySelector('.card[data-metric="' + id + '"]');
+                if (!card) return;
+                for (const btn of card.querySelectorAll(".toggle-btn")) {
+                    btn.classList.toggle("active", btn.dataset.view === view);
+                }
+            }
+
             document.addEventListener("click", function (e) {
                 const btn = e.target.closest(".toggle-btn");
                 if (!btn) return;
@@ -642,25 +721,36 @@
                 if (!metric || !view) return;
 
                 state.viewMode[metric] = view;
-
-                const group = btn.parentElement;
-                for (const child of group.children) {
-                    child.classList.toggle("active", child.dataset.view === view);
-                }
+                setViewActive(metric, view);
 
                 const chartWrap = document.getElementById("chart-wrap-" + metric);
                 const barWrap = document.getElementById("bar-wrap-" + metric);
+                const arrayWrap = document.getElementById("array-wrap-" + metric);
                 if (chartWrap) chartWrap.style.display = view === "line" ? "" : "none";
                 if (barWrap) barWrap.style.display = view === "bar" ? "" : "none";
+                if (arrayWrap) arrayWrap.style.display = view === "array" ? "" : "none";
 
                 if (view === "bar") {
                     updateBar(metric);
+                } else if (view === "array") {
+                    renderCoreArray(metric);
                 } else if (state.history[metric] && state.history[metric].length >= 2) {
                     drawChart(metric, state.history[metric], colorFor(metric));
                 }
             });
 
             // -------- data helpers --------
+
+            // Current per-item values for the array view (e.g. per-core CPU
+            // usage), or [] when the metric has no per-item dimension or the
+            // active data source does not provide one. Platform support is
+            // therefore expressed by data presence, never by a platform check.
+            function extractArray(history, id) {
+                const field = ARRAY_FIELDS[id];
+                if (!field || !history || !history.length) return [];
+                const arr = history[history.length - 1][field];
+                return Array.isArray(arr) ? arr : [];
+            }
 
             function extractHistory(history, id) {
                 const vals = [];
@@ -783,6 +873,34 @@
 
             // -------- bar updates --------
 
+            function updateArrayButton(id, show) {
+                const btn = document.querySelector('.toggle-btn[data-metric="' + id + '"][data-view="array"]');
+                if (btn) btn.style.display = show ? "" : "none";
+            }
+
+            // Renders the array view: a responsive grid of per-item horizontal
+            // bars (CSS auto-fill grows the column count with the card width).
+            // Each cell shows a name, the value bar, and its percentage label.
+            function renderCoreArray(id, cores) {
+                cores = cores || state.coreData[id] || [];
+                const wrap = document.getElementById("array-wrap-" + id);
+                if (!wrap || cores.length === 0) return;
+
+                let html = '<div class="core-grid">';
+                for (let i = 0; i < cores.length; i++) {
+                    const raw = cores[i];
+                    const v = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0;
+                    html +=
+                        '<div class="core-cell">' +
+                        '<span class="core-name">C' + i + '</span>' +
+                        '<div class="core-bar-track"><div class="core-bar-fill" style="width:' + v + '%;background:' + usageColor(v) + '"></div></div>' +
+                        '<span class="core-label">' + Math.round(v) + '%</span>' +
+                        '</div>';
+                }
+                html += '</div>';
+                wrap.innerHTML = html;
+            }
+
             function updateBar(id) {
                 const fill = _barFills[id];
                 if (fill) fill.style.width = getBarPercent(id) + "%";
@@ -826,6 +944,10 @@
                     state.history[id] = extractHistory(h, id);
                     state.barMax[id] = computeScaleMax(id, state.history[id]);
 
+                    const cores = extractArray(h, id);
+                    state.coreData[id] = cores;
+                    updateArrayButton(id, cores.length > 0);
+
                     const valEl = document.getElementById("val-" + id);
                     if (valEl) valEl.textContent = fmt[id] || "\u2014";
 
@@ -835,7 +957,23 @@
                         subEl.textContent = (formattedText || {})[id + "Sub"] || "";
                     }
 
-                    if (state.viewMode[id] === "line") {
+                    if (state.viewMode[id] === "array") {
+                        if (cores.length > 0) {
+                            renderCoreArray(id, cores);
+                        } else {
+                            // Per-item data became unavailable (e.g. data source
+                            // switch); fall back to the line view.
+                            state.viewMode[id] = "line";
+                            setViewActive(id, "line");
+                            const chartWrap = document.getElementById("chart-wrap-" + id);
+                            const arrayWrap = document.getElementById("array-wrap-" + id);
+                            if (chartWrap) chartWrap.style.display = "";
+                            if (arrayWrap) arrayWrap.style.display = "none";
+                            if (state.history[id].length >= 2) {
+                                drawChart(id, state.history[id], colorFor(id));
+                            }
+                        }
+                    } else if (state.viewMode[id] === "line") {
                         drawChart(id, state.history[id], colorFor(id));
                     } else {
                         updateBar(id);

@@ -324,7 +324,8 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
     return html
       .replace(/__NONCE__/g, nonce)
       .replace(/__LINE_CHART_TITLE__/g, vscode.l10n.t("Line chart"))
-      .replace(/__BAR_CHART_TITLE__/g, vscode.l10n.t("Bar chart"));
+      .replace(/__BAR_CHART_TITLE__/g, vscode.l10n.t("Bar chart"))
+      .replace(/__ARRAY_CHART_TITLE__/g, vscode.l10n.t("Array view"));
   }
 }
 
