@@ -8,10 +8,10 @@
         content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-__NONCE__';" />
     <style>
         :root {
-            --bg: var(--vscode-sideBar-background, var(--vscode-editor-background));
-            --fg: var(--vscode-sideBar-foreground, var(--vscode-editor-foreground));
+            --bg: var(--vscode-sideBar-background);
+            --fg: var(--vscode-editor-foreground);
             --fg-muted: var(--vscode-descriptionForeground);
-            --border: var(--vscode-sideBar-border, var(--vscode-editorWidget-border, transparent));
+            --border: var(--vscode-editorWidget-border);
             --font: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
             --font-size: var(--vscode-font-size, 13px);
             --card-bg: var(--vscode-editor-background);
@@ -126,7 +126,7 @@
         .chart-wrap {
             width: 100%;
             height: 56px;
-            border: 1.5px solid var(--vscode-widget-border, transparent);
+            border: 1.5px solid color-mix(in srgb, var(--vscode-editor-foreground) 10%, transparent);
             border-radius: 4px;
         }
 
