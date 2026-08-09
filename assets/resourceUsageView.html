@@ -571,7 +571,11 @@
                     const color = colorFor(id);
                     const view = state.viewMode[id] || "line";
                     const isArrayCapable = ARRAY_FIELDS[id] !== undefined;
-                    const hasCores = state.coreData[id] && state.coreData[id].length;
+                    // GPU arrays only make sense with more than one card; a
+                    // single (e.g. Apple Silicon) GPU has no array dimension.
+                    const coreCount = state.coreData[id] ? state.coreData[id].length : 0;
+                    const hasCores =
+                        isArrayCapable && coreCount > (id.startsWith("gpu") ? 1 : 0);
 
                     html +=
                         '<div class="card" data-metric="' + id + '">' +
@@ -1030,7 +1034,13 @@
 
                     const cores = extractArray(h, id);
                     state.coreData[id] = cores;
-                    updateArrayButton(id, cores.length > 0);
+                    // GPU arrays (gpu/gpuTemp/gpuMem) only make sense with more
+                    // than one card: a single (e.g. Apple Silicon) GPU would
+                    // otherwise surface a pointless G0 array row.
+                    updateArrayButton(
+                        id,
+                        cores.length > (id.startsWith("gpu") ? 1 : 0),
+                    );
 
                     const valEl = document.getElementById("val-" + id);
                     if (valEl) valEl.textContent = fmt[id] || "\u2014";
@@ -1042,11 +1052,12 @@
                     }
 
                     if (state.viewMode[id] === "array") {
-                        if (cores.length > 0) {
+                        if (cores.length > (id.startsWith("gpu") ? 1 : 0)) {
                             renderCoreArray(id, cores);
                         } else {
                             // Per-item data became unavailable (e.g. data source
-                            // switch); fall back to the line view.
+                            // switch, or a single GPU without an array dimension);
+                            // fall back to the line view.
                             state.viewMode[id] = "line";
                             setViewActive(id, "line");
                             const chartWrap = document.getElementById("chart-wrap-" + id);
