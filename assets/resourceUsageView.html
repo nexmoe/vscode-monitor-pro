@@ -401,6 +401,18 @@
                 return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : null;
             }
 
+            // VS Code injects theme colors that carry transparency (e.g.
+            // charts.orange defaults to a translucent find-match highlight) as
+            // "rgba(r,g,b,a)". Chart lines must always be drawn opaque so they
+            // stay readable on every theme, mirroring the other default chart
+            // colors. Any other format (hex, rgb(), color-mix, empty) passes
+            // through untouched.
+            function opaque(color) {
+                if (typeof color !== "string") return color;
+                const m = /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*[\d.]+\)$/.exec(color);
+                return m ? "rgb(" + m[1] + "," + m[2] + "," + m[3] + ")" : color;
+            }
+
             function rgba(color, a) {
                 const rgb = hexToRgb(color);
                 return rgb ? "rgba(" + rgb.r + "," + rgb.g + "," + rgb.b + "," + a + ")" : "rgba(128,128,128," + a + ")";
@@ -517,7 +529,7 @@
             }
 
             function colorFor(id) {
-                const c = resolveColorValue(_chartColors[id]);
+                const c = opaque(resolveColorValue(_chartColors[id]));
                 if (c) return c;
                 return getCachedCSSVar("--vscode-editor-foreground");
             }
@@ -690,10 +702,10 @@
                     : pct >= 60
                         ? "--vscode-charts-yellow"
                         : "--vscode-charts-green";
-                return resolveColorValue(name) || colorFor("memActive");
+                return opaque(resolveColorValue(name)) || colorFor("memActive");
             }
 
-            // Temperature color bands (CPU and GPU): green below 65°C, orange
+            // Temperature color bands (CPU and GPU): green below 65°C, yellow
             // 65-85°C, red above 85°C. Kept distinct from usageColor because the
             // threshold semantics differ (absolute thermal limits vs. usage).
             function tempColor(temp) {
@@ -702,7 +714,7 @@
                     : temp >= 65
                         ? "--vscode-charts-yellow"
                         : "--vscode-charts-green";
-                return resolveColorValue(name) || colorFor("memActive");
+                return opaque(resolveColorValue(name)) || colorFor("memActive");
             }
 
             function renderDiskMountBars(mounts) {
