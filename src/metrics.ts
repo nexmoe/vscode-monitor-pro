@@ -234,6 +234,10 @@ const gpuMemText = async () => {
   }
   const used = cards.reduce((s, c) => s + c.memUsed, 0);
   const total = cards.reduce((s, c) => s + c.memTotal, 0);
+  if (total <= 0) {
+    // No VRAM data (e.g. mactop's Apple Silicon GPU), nothing to show.
+    return "";
+  }
   getLogger().debug(
     vscode.l10n.t(
       "GPU - Memory used: {0} bytes, total: {1} bytes",

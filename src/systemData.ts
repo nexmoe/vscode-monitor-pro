@@ -138,9 +138,12 @@ const UNAVAILABLE_CHECKERS: Record<string, (s: SystemSnapshot) => boolean> = {
   cpuSpeed: (s) => s.cpuCurrentSpeed.avg <= 0,
   // GPU availability is expressed by data presence: no cards (no NVIDIA
   // hardware / driver / unsupported data source) hides any GPU metric.
+  // gpuMem additionally needs at least one card exposing VRAM (memTotal > 0):
+  // mactop's single Apple Silicon GPU has no VRAM metric and must not show a
+  // bogus 0/0.
   gpu: (s) => s.gpu.cards.length === 0,
   gpuTemp: (s) => s.gpu.cards.length === 0,
-  gpuMem: (s) => s.gpu.cards.length === 0,
+  gpuMem: (s) => !s.gpu.cards.some((c) => c.memTotal > 0),
 };
 
 class SystemDataProvider {

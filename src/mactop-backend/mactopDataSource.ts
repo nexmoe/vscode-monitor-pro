@@ -11,6 +11,9 @@
  * - mactop_network_kbytes_per_sec         -> networkStats (KB/s -> B/s, 1024)
  * - mactop_disk_kbytes_per_sec            -> fsStats (KB/s -> B/s, 1024)
  * - mactop_soc_temp_celsius               -> cpuTemperature
+ * - mactop_gpu_usage_percent /            -> gpu cards (single integrated Apple
+ *   mactop_gpu_temp_celsius                   Silicon GPU; no VRAM metric, so
+ *                                              memory stays 0 and gpuMem hides)
  * - mactop_battery_percent / _charging    -> battery (supplemented by SI battery
  *                                              for health/cycleCount)
  * - mactop_power_watts{component="total"} -> battery.powerRate (total SoC power,
@@ -154,6 +157,14 @@ export class MactopDataSource implements DataSource {
     // Total SoC power (always non-negative, reuses the battery.powerRate field)
     const powerTotal = find("mactop_power_watts", { component: "total" }) ?? 0;
 
+    // Single integrated Apple Silicon GPU: utilization + temperature come
+    // from mactop; there is no VRAM metric, so memory stays 0 (the gpuMem
+    // chart hides via UNAVAILABLE_CHECKERS requiring memTotal > 0). The card
+    // list is kept to one entry so the GPU utilization / temperature charts
+    // show on macOS.
+    const gpuUsage = find("mactop_gpu_usage_percent");
+    const gpuTemp = find("mactop_gpu_temp_celsius");
+
     return {
       timestamp: Date.now(),
       currentLoad: cpuUsage,
@@ -233,9 +244,22 @@ export class MactopDataSource implements DataSource {
         cores: [],
         max: socTemp,
       },
-      // mactop upstream exposes GPU metrics, but this iteration keeps the GPU
-      // cards empty so the unified data-presence signal hides all GPU entries.
-      gpu: { cards: [] },
+      // Single integrated Apple Silicon GPU (see comments above). Memory is
+      // left 0: gpuMem stays hidden while utilization/temperature charts show.
+      gpu: {
+        cards:
+          gpuUsage !== undefined || gpuTemp !== undefined
+            ? [
+                {
+                  model: "Apple Silicon GPU",
+                  utilization: gpuUsage ?? 0,
+                  temperature: gpuTemp ?? 0,
+                  memTotal: 0,
+                  memUsed: 0,
+                },
+              ]
+            : [],
+      },
       battery: {
         hasBattery,
         cycleCount: siBat?.cycleCount ?? 0,
