@@ -126,6 +126,12 @@
         .chart-wrap {
             width: 100%;
             height: 56px;
+            border: 1.5px solid var(--vscode-widget-border, transparent);
+            border-radius: 4px;
+        }
+
+        body.vscode-high-contrast .chart-wrap {
+            border-color: var(--vscode-contrastBorder);
         }
 
         .chart-wrap canvas {
@@ -832,7 +838,7 @@
                 ctx.scale(dpr, dpr);
                 ctx.clearRect(0, 0, w, h);
 
-                const padTop = 4, padBot = 4;
+                const padTop = 0, padBot = 0;
                 const drawH = h - padTop - padBot;
 
                 const dataMax = computeScaleMax(id, history);
@@ -846,9 +852,25 @@
                 const xStep = w / (n - 1);
 
                 const fg = getCachedCSSVar("--vscode-editor-foreground");
+                const bg = getCachedCSSVar("--vscode-editor-background");
 
-                ctx.strokeStyle = rgba(fg, 0.06);
-                ctx.lineWidth = 1;
+                // Area fill blends the line color toward the card background in
+                // oklab, so light colors keep their hue instead of going gray at
+                // low alpha. Falls back to plain alpha if the background var is
+                // unexpectedly missing.
+                const grad = ctx.createLinearGradient(0, padTop, 0, padTop + drawH);
+                grad.addColorStop(0, bg ? "color-mix(in oklab, " + color + " 18%, " + bg + ")" : rgba(color, 0.18));
+                grad.addColorStop(1, bg ? "color-mix(in oklab, " + color + " 2%, " + bg + ")" : rgba(color, 0.02));
+                ctx.beginPath();
+                curvePath(ctx, history, xStep, yPos);
+                ctx.lineTo((n - 1) * xStep, padTop + drawH);
+                ctx.lineTo(0, padTop + drawH);
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.strokeStyle = rgba(fg, 0.10);
+                ctx.lineWidth = 1.5;
                 for (let i = 0; i <= 4; i++) {
                     const y = padTop + (drawH / 4) * i;
                     ctx.beginPath();
@@ -859,8 +881,8 @@
 
                 if (hasSymmetricScale(id)) {
                     const yZero = yPos(0);
-                    ctx.strokeStyle = rgba(fg, 0.15);
-                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = rgba(fg, 0.20);
+                    ctx.lineWidth = 1.5;
                     ctx.setLineDash([3, 3]);
                     ctx.beginPath();
                     ctx.moveTo(0, yZero);
@@ -868,17 +890,6 @@
                     ctx.stroke();
                     ctx.setLineDash([]);
                 }
-
-                const grad = ctx.createLinearGradient(0, padTop, 0, padTop + drawH);
-                grad.addColorStop(0, rgba(color, 0.18));
-                grad.addColorStop(1, rgba(color, 0.02));
-                ctx.beginPath();
-                curvePath(ctx, history, xStep, yPos);
-                ctx.lineTo((n - 1) * xStep, padTop + drawH);
-                ctx.lineTo(0, padTop + drawH);
-                ctx.closePath();
-                ctx.fillStyle = grad;
-                ctx.fill();
 
                 ctx.beginPath();
                 curvePath(ctx, history, xStep, yPos);
@@ -891,7 +902,6 @@
                 const last = history[n - 1];
                 const label = formatChartValue(id, last);
 
-                const bg = getCachedCSSVar("--vscode-editor-background");
                 const font = "bold " + Math.round(h * 0.24) + "px var(--vscode-font-family, sans-serif)";
 
                 drawChartLabel(ctx, label, w - 2, padTop + 2, { font, align: "right", color, halo: bg });
