@@ -88,7 +88,7 @@ Discharge and charge chart transition:
 | Disk Space      | off     | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
 | OS Distro       | off     | —                                   | `Ubuntu 22.04`          |
 
-> GPU metrics require NVIDIA hardware with `nvidia-smi`; they hide automatically otherwise.
+> GPU metrics require NVIDIA hardware with `nvidia-smi`, or Apple Silicon with the mactop backend; they hide automatically otherwise. GPU Memory additionally needs VRAM, which the mactop integrated-GPU backend does not expose.
 
 ### Resource Usage Webview
 
@@ -103,7 +103,7 @@ Each chart features:
 - Subtitle: battery health, charge/discharge state, temperature min, speed range
 - 10–500 configurable history points
 
-GPU charts are enabled by default and automatically hidden on machines without NVIDIA hardware (`nvidia-smi`).
+GPU charts are enabled by default and automatically hidden when no GPU data source is available (NVIDIA `nvidia-smi` or the mactop backend on Apple Silicon). The per-card GPU array view only appears with more than one GPU.
 
 A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. These cards are part of the `resourceUsage.charts` configuration and can be toggled via `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` (enabled by default).
 

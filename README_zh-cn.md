@@ -88,7 +88,7 @@ l10n-中文-电量、电池健康度与功率：
 | 磁盘空间   | 关   | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
 | 系统发行版 | 关   | —                                   | `Ubuntu 22.04`          |
 
-> GPU 指标需要 NVIDIA 硬件与 `nvidia-smi`，否则自动隐藏。
+> GPU 指标需要 NVIDIA 硬件（`nvidia-smi`），或 mactop 后端的 Apple Silicon；否则自动隐藏。GPU 显存另需 VRAM，而 mactop 的集成 GPU 后端不提供该数据。
 
 ### 资源占用视图
 
@@ -103,7 +103,7 @@ l10n-中文-电量、电池健康度与功率：
 - 副标题：电池健康度、充放电状态、温度最低值、频率范围
 - 可调节历史点数（10~500）
 
-GPU 图表默认启用，在无 NVIDIA 硬件（`nvidia-smi`）的机器上自动隐藏。
+GPU 图表默认启用，在无 GPU 数据源（NVIDIA `nvidia-smi` 或 Apple Silicon 上的 mactop 后端）时自动隐藏。单卡阵列视图仅在两块及以上 GPU 时显示。
 
 底部**信息区**显示运行时间、系统发行版和彩色磁盘空间进度条。这些信息卡属于 `resourceUsage.charts` 配置的一部分，可通过 `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` 开关（默认启用）。
 

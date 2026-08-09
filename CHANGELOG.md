@@ -4,6 +4,25 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.9.0] - 2026-08-09
+
+### Added
+
+- **GPU metrics from the mactop backend**: On macOS Apple Silicon, the mactop data source now maps `mactop_gpu_usage_percent` and `mactop_gpu_temp_celsius` into a single integrated-GPU card, so the GPU Usage and GPU Temperature charts work on macOS without NVIDIA hardware. VRAM is not available for the integrated GPU, so the GPU Memory chart stays hidden there.
+- **Guided mactop installation**: When mactop is missing on first run, the extension now prompts with `Auto install` / `Don't show again` / `Dismiss` instead of opening the upstream repository page. `Auto install` runs `brew install mactop` and reports success or failure via notification.
+- **mactop opt-out setting**: New `monitor-pro.mactop.enabled` setting (default `true`) gates the mactop backend entirely — set it to `false` to always use the built-in data source, even when mactop is already installed.
+
+### Changed
+
+- **Chart framing**: The resource usage webview now draws a rounded border around the chart area (1.5px, theme-aware `widget.border` with a `contrastBorder` fallback for high-contrast themes) instead of a faint background tint, giving single-GPU and multi-card layouts a cleaner look.
+- **Area fill blends toward the card background**: The line-chart gradient is now computed with `color-mix(in oklab, …)` so light line colors keep their hue instead of washing out to gray at low alpha. It falls back to plain alpha compositing if the theme background var is unavailable.
+- **Chart grid decluttered**: The redundant top/bottom edge lines are removed so the frame border acts as the zero/full-scale reference; the three inner grid lines stay at the original opacity. The gradient area depth was increased (30%/10% blend stops) for a heavier, richer fill.
+
+### Fixed
+
+- **Excessive decimal places on first run**: `fmtNum` in the webview previously applied raw `sig` digits to `toLocaleString`, so a missing `significantDigits` key (a partial user config object, or the GPU keys before first-run config hydration) rendered full float precision — e.g. GPU temperature showed `34.566` instead of `34.6`. It now falls back to 3 significant digits like the sibling formatters.
+- **Per-card GPU array shown for a single GPU**: The GPU array view (`G0`, `G1`, …) and its toggle are now suppressed when only one GPU card is present (e.g., a single integrated Apple Silicon GPU), matching the `>1` core threshold used elsewhere.
+
 ## [0.8.0] - 2026-08-08
 
 ### Added
