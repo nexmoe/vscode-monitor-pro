@@ -4,6 +4,13 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.9.1] - 2026-08-09
+
+### Changed
+
+- **Theme colors are now sourced only from tokens every theme defines**: The webview dropped the layered `var(…, fallback)` chains for its root variables and chart border. Theme colors that VS Code only injects when a theme opts in (e.g. `widget.border`, `sideBar.foreground`) previously rendered the rounded chart frame invisible on many themes; the border is now derived from `editor.foreground` at the same 10% opacity as the grid lines, so framing is always visible and theme-consistent.
+- **Chart lines are always drawn opaque**: `charts.orange` (used by the receive-rate and GPU temperature charts) defaults to a translucent find-match highlight that VS Code injects as `rgba()`, making those lines faint on the default themes. All chart colors are now normalized to opaque `rgb()` at lookup time, so lines stay crisp while user overrides in settings are still respected.
+
 ## [0.9.0] - 2026-08-09
 
 ### Added
