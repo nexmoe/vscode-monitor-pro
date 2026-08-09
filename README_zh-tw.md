@@ -13,7 +13,7 @@
 
 Monitor Pro 是一款即時系統資源監控工具，直接在 VS Code 狀態列和專屬 Webview 面板中呈現。本擴充套件在設計之初就充分考慮到了跨平台與遠端開發機效能監控的能力，在原始系統、Remote SSH、WSL 上均有完善的實作。
 
-採用**混合架構**：Windows 上使用原生 Go 二進位繞過 PowerShell/WMI 開銷，相較於 `systeminformation` 實現 **10 倍以上的資料收集速度提升**；macOS Apple Silicon 機器使用 [mactop](https://github.com/context-labs/mactop)（若已安裝）透過 Prometheus HTTP 端點獲取 SoC 層級指標（CPU/GPU/ANE 功率、溫度）；Linux 和未安裝 mactop 的 macOS 自動回退到 Node.js (`systeminformation`) 資料來源，確保全平台相容。
+採用**混合架構**：Windows 上使用原生 Go 二進位繞過 PowerShell/WMI 開銷，相較於 `systeminformation` 實現 **10 倍以上的資料收集速度提升**；macOS Apple Silicon 機器使用 [mactop](https://github.com/metaspartan/mactop)（若已安裝）透過 Prometheus HTTP 端點獲取 SoC 層級指標（CPU/GPU/ANE 功率、溫度）；Linux 和未安裝 mactop 的 macOS 自動回退到 Node.js (`systeminformation`) 資料來源，確保全平台相容。
 
 > [!WARNING]
 >
@@ -178,7 +178,7 @@ Monitor Pro 支援兩種模式的即時功率監測：
 
 - VS Code 1.104+
 - Windows 10/11（Go 後端需要；Linux/macOS 使用內建回退）
-- macOS 12+ Apple Silicon（可選）：安裝 [mactop](https://github.com/context-labs/mactop) 獲取 SoC 指標（`brew install amoranth/brew/mactop`）
+- macOS 12+ Apple Silicon（可選）：安裝 [mactop](https://github.com/metaspartan/mactop)（v2.1.4+）獲取 SoC 指標（`brew install mactop`）。首次執行時若缺失會彈窗詢問是否自動安裝（可透過 `monitor-pro.mactop.enabled` 關閉該提示）
 
 ## 開發
 

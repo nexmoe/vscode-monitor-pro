@@ -13,7 +13,7 @@
 
 Monitor Pro は、VS Code のステータスバーと専用の Webview パネルで動作するリアルタイムシステムリソース監視ツールです。設計当初からクロスプラットフォームとリモート開発環境のパフォーマンス監視を考慮しており、ローカル環境、Remote SSH、WSL で完全に動作します。
 
-**ハイブリッドアーキテクチャ**を採用：Windows ではネイティブ Go バイナリが PowerShell/WMI のオーバーヘッドを回避し、`systeminformation` と比較して **10 倍以上のデータ収集速度**を実現。macOS Apple Silicon マシンでは [mactop](https://github.com/context-labs/mactop)（インストールされている場合）を介して Prometheus HTTP エンドポイントから SoC レベルのメトリクス（CPU/GPU/ANE 電力、温度）を取得。Linux および mactop なしの macOS は Node.js（`systeminformation`）データソースに自動フォールバックし、全プラットフォームでの互換性を確保します。
+**ハイブリッドアーキテクチャ**を採用：Windows ではネイティブ Go バイナリが PowerShell/WMI のオーバーヘッドを回避し、`systeminformation` と比較して **10 倍以上のデータ収集速度**を実現。macOS Apple Silicon マシンでは [mactop](https://github.com/metaspartan/mactop)（インストールされている場合）を介して Prometheus HTTP エンドポイントから SoC レベルのメトリクス（CPU/GPU/ANE 電力、温度）を取得。Linux および mactop なしの macOS は Node.js（`systeminformation`）データソースに自動フォールバックし、全プラットフォームでの互換性を確保します。
 
 > [!WARNING]
 >
@@ -178,7 +178,7 @@ Monitor Pro は 2 つのモードでリアルタイムの電力消費を報告�
 
 - VS Code 1.104+
 - Windows 10/11（ネイティブ Go バックエンド用；Linux/macOS はビルトインフォールバックを使用）
-- macOS 12+ Apple Silicon（オプション）：SoC メトリクス用に [mactop](https://github.com/context-labs/mactop) を Homebrew でインストール（`brew install amoranth/brew/mactop`）
+- macOS 12+ Apple Silicon（オプション）：SoC メトリクス用に [mactop](https://github.com/metaspartan/mactop)（v2.1.4+）を Homebrew でインストール（`brew install mactop`）。未インストールの場合、初回起動時に自動インストールするか確認するプロンプトが表示されます（`monitor-pro.mactop.enabled` で無効化可能）
 
 ## 開発
 

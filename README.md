@@ -13,7 +13,7 @@ English | [简体中文](./README_zh-cn.md) | [繁體中文](./README_zh-tw.md) 
 
 Monitor Pro is a real-time system resource monitoring tool that works directly in the VS Code status bar and a dedicated Webview panel. From the very beginning, the plugin was designed with cross-platform and remote development machine performance monitoring in mind, with full implementations on local systems, Remote SSH, and WSL.
 
-A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for over 10x faster data collection compared to `systeminformation`; macOS Apple Silicon machines use [mactop](https://github.com/context-labs/mactop) (when installed) for SoC-level metrics (CPU/GPU/ANE power, temperature) via a Prometheus HTTP endpoint; Linux and macOS without mactop fall back to the Node.js (`systeminformation`) data source, ensuring full platform compatibility.
+A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for over 10x faster data collection compared to `systeminformation`; macOS Apple Silicon machines use [mactop](https://github.com/metaspartan/mactop) (when installed) for SoC-level metrics (CPU/GPU/ANE power, temperature) via a Prometheus HTTP endpoint; Linux and macOS without mactop fall back to the Node.js (`systeminformation`) data source, ensuring full platform compatibility.
 
 > [!WARNING]
 >
@@ -178,7 +178,7 @@ Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 
 - VS Code 1.104+
 - Windows 10/11 (for native Go backend; Linux/macOS use built-in fallback)
-- macOS 12+ Apple Silicon (optional): [mactop](https://github.com/context-labs/mactop) via Homebrew for SoC metrics (`brew install amoranth/brew/mactop`)
+- macOS 12+ Apple Silicon (optional): [mactop](https://github.com/metaspartan/mactop) via Homebrew (v2.1.4+) for SoC metrics (`brew install mactop`). When missing, the extension prompts once on first run offering to auto-install it (suppressible via the `monitor-pro.mactop.enabled` setting)
 
 ## Developing
 
