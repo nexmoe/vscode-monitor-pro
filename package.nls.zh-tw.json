@@ -21,6 +21,7 @@
   "config.significantDigits": "每項指標的有效數字位數（例如 3 → \"12.3 MiB\"，4 → \"12.34 MiB\"）",
   "config.uptimeFormat": "系統運作時間的自訂格式。使用佔位符：{d}=天, {h}=小時, {m}=分鐘, {s}=秒。預設 \"auto\" 顯示 \"{d}d {h}h {m}m\"",
   "config.diskSpace": "要顯示的磁碟空間掛載點（\"all\" 顯示所有已掛載檔案系統；預設僅顯示根目錄 / 和 C: 以減少空間佔用；可新增特定掛載路徑進行過濾）",
+  "config.mactop.enabled": "啟用 mactop 後端自動安裝並開啟 macOS SoC 監控（功耗、溫度、GPU）。設為 false 則使用內建資料來源",
   "metric.battery.name": "電池狀態",
   "metric.cpu.name": "CPU 使用情況",
   "metric.cpuSpeed.name": "處理器速度",
