@@ -859,8 +859,8 @@
                 // low alpha. Falls back to plain alpha if the background var is
                 // unexpectedly missing.
                 const grad = ctx.createLinearGradient(0, padTop, 0, padTop + drawH);
-                grad.addColorStop(0, bg ? "color-mix(in oklab, " + color + " 18%, " + bg + ")" : rgba(color, 0.18));
-                grad.addColorStop(1, bg ? "color-mix(in oklab, " + color + " 2%, " + bg + ")" : rgba(color, 0.02));
+                grad.addColorStop(0, bg ? "color-mix(in oklab, " + color + " 30%, " + bg + ")" : rgba(color, 0.30));
+                grad.addColorStop(1, bg ? "color-mix(in oklab, " + color + " 10%, " + bg + ")" : rgba(color, 0.10));
                 ctx.beginPath();
                 curvePath(ctx, history, xStep, yPos);
                 ctx.lineTo((n - 1) * xStep, padTop + drawH);
@@ -871,7 +871,7 @@
 
                 ctx.strokeStyle = rgba(fg, 0.10);
                 ctx.lineWidth = 1.5;
-                for (let i = 0; i <= 4; i++) {
+                for (let i = 1; i <= 3; i++) {
                     const y = padTop + (drawH / 4) * i;
                     ctx.beginPath();
                     ctx.moveTo(0, y);
