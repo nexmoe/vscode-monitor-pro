@@ -151,8 +151,12 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
 
     const fmtNum = (n: number, sig?: number) =>
       n.toLocaleString(undefined, {
-        minimumSignificantDigits: sig,
-        maximumSignificantDigits: sig,
+        // Fall back to 3 like the sibling formatters (fmtPct) and metrics.ts
+        // so a missing significantDigits key (e.g. the user's partial object,
+        // or the GPU keys before first-run config hydration) never degrades to
+        // full float precision.
+        minimumSignificantDigits: sig ?? 3,
+        maximumSignificantDigits: sig ?? 3,
         useGrouping: false,
       });
 
