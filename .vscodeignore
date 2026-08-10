@@ -4,6 +4,7 @@
 
 # source code
 src/**
+scripts/**
 
 # github files
 .github/**
