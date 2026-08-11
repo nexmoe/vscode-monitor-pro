@@ -15,6 +15,7 @@ import { getMetricsEnabled, getUptimeFormat } from "./configuration";
 import byteFormat from "./byteFormat";
 import { formatEstimatedBatteryTime } from "./battery";
 import { systemData } from "./systemData";
+import { latencyMeasurer } from "./remoteLatency";
 
 interface FormattedPayload {
   history: ResourceUsagePayload["history"];
@@ -103,7 +104,14 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
   pushConfigUpdate() {
     if (this._view) {
       this._collector.maxHistory = getResourceUsageConfig().samplingPoints;
+      latencyMeasurer.setMaxHistory(getResourceUsageConfig().samplingPoints);
       this._pushConfig(this._view);
+    }
+  }
+
+  pushLatency(history: number[]) {
+    if (this._view?.visible) {
+      this._view.webview.postMessage({ type: "latency-update", history });
     }
   }
 
@@ -128,6 +136,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       diskSpace: vscode.l10n.t("Disk Space"),
       uptime: vscode.l10n.t("Uptime"),
       osDistro: vscode.l10n.t("OS Distro"),
+      latency: vscode.l10n.t("Remote Latency"),
     };
     webviewView.webview.postMessage({
       type: "config",
