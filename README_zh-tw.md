@@ -215,6 +215,7 @@ pnpm run compile
 ### 致謝
 
 - [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor)：參考其 PDH 查詢生命週期（常駐控制代碼 + 初始基線採集 + 逐次單次採集）重構了 Windows CPU 使用率監控，使讀數與工作管理員完全一致
+- [vscode-remote-latency](https://github.com/JoshOY/vscode-remote-latency)：遠端延遲測量演算法的靈感來源 —— 透過 Extension Host 隧道的 `vscode.workspace.fs.stat()` 批次往返計時
 
 ## 回饋
 

@@ -215,6 +215,7 @@ pnpm run compile
 ### 謝辞
 
 - [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor)：その PDH クエリライフサイクル（常駐ハンドル + 初期ベースライン収集 + 毎回の単一収集）を採用し、Windows Go バックエンドの CPU 使用率監視を再構築。読み取り値がタスクマネージャーと完全に一致するようになりました。
+- [vscode-remote-latency](https://github.com/JoshOY/vscode-remote-latency)：リモート遅延測定アルゴリズムの着想元 —— Extension Host トンネル経由の `vscode.workspace.fs.stat()` バッチ往復計時
 
 ## フィードバック
 
