@@ -95,6 +95,18 @@
           "description": "%config.metrics.uptime%",
           "type": "boolean"
         },
+        "monitor-pro.metrics.latency": {
+          "default": false,
+          "description": "%config.metrics.latency%",
+          "type": "boolean"
+        },
+        "monitor-pro.latency.refreshInterval": {
+          "default": 2000,
+          "description": "%config.latency.refreshInterval%",
+          "maximum": 30000,
+          "minimum": 500,
+          "type": "number"
+        },
         "monitor-pro.metricsOrder": {
           "default": [
             "cpu",
@@ -107,7 +119,8 @@
             "cpuSpeed",
             "osDistro",
             "diskSpace",
-            "uptime"
+            "uptime",
+            "latency"
           ],
           "description": "%config.metricsOrder%",
           "items": {
@@ -125,7 +138,8 @@
               "uptime",
               "gpu",
               "gpuTemp",
-              "gpuMem"
+              "gpuMem",
+              "latency"
             ],
             "type": "string"
           },
@@ -218,6 +232,11 @@
             },
             "diskSpace": {
               "enabled": true
+            },
+            "latency": {
+              "color": "--vscode-charts-orange",
+              "enabled": true,
+              "view": "line"
             }
           },
           "description": "%config.resourceUsage.charts%",
@@ -261,6 +280,7 @@
             "gpu": 3,
             "gpuMem": 4,
             "gpuTemp": 3,
+            "latency": 3,
             "memoryActive": 4,
             "memoryUsed": 4,
             "network": 4
