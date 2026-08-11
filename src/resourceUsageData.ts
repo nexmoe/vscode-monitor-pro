@@ -18,7 +18,7 @@ function gpuMax(cards: GpuCard[], pick: (c: GpuCard) => number): number {
   return Math.max(...cards.map(pick));
 }
 
-class RingBuffer<T> {
+export class RingBuffer<T> {
   private buffer: T[];
   private head = 0;
   private size = 0;
