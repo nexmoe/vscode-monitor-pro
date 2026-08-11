@@ -10,7 +10,7 @@ import {
 } from "vscode";
 import { ResourceUsageProvider } from "./resourceUsageProvider";
 import { powerShellRelease, powerShellStart } from "systeminformation";
-import { getRefreshInterval, isConfigChanged } from "./configuration";
+import { getRefreshInterval, isConfigChanged, getLatencyRefreshInterval } from "./configuration";
 import { Metric, getEnabledMetrics } from "./metricsInit";
 import { updateGlobalConfig } from "./metrics";
 import { systemData } from "./systemData";
@@ -28,6 +28,7 @@ import {
 } from "./configuration";
 import { getLogger, initLogger } from "./logger";
 import sourceMapSupport from "source-map-support";
+import { latencyMeasurer } from "./remoteLatency";
 import type { MetricsExist } from "./constants";
 
 let metrics: Metric[] = [];
@@ -63,6 +64,7 @@ const CHART_TO_METRIC: Record<string, MetricsExist> = {
   diskSpace: "diskSpace",
   osDistro: "osDistro",
   uptime: "uptime",
+  latency: "latency",
 };
 
 /**
@@ -326,6 +328,15 @@ export const activate = async (ctx: ExtensionContext) => {
 
   initDataSource(ctx);
 
+  // Start remote latency measurement if applicable
+  latencyMeasurer.setInterval(getLatencyRefreshInterval());
+  latencyMeasurer.start();
+
+  // Wire latency updates to webview
+  latencyMeasurer.onUpdate((history) => {
+    resourceUsageProvider.pushLatency(history);
+  });
+
   systemData.setInterval(getRefreshInterval());
   systemData.start();
 
@@ -380,6 +391,18 @@ export const activate = async (ctx: ExtensionContext) => {
         getLogger().debug(l10n.t("Disk space config updated"));
       }
 
+      if (event.affectsConfiguration("monitor-pro.latency.refreshInterval")) {
+        latencyMeasurer.setInterval(getLatencyRefreshInterval());
+        getLogger().debug(
+          l10n.t("Latency refresh interval updated to {0}ms", getLatencyRefreshInterval()),
+        );
+      }
+
+      if (event.affectsConfiguration("monitor-pro.metrics.latency")) {
+        rebuildMetrics();
+        getLogger().debug(l10n.t("Latency status bar toggled, metrics rebuilt"));
+      }
+
       if (
         event.affectsConfiguration("monitor-pro.resourceUsage") ||
         event.affectsConfiguration("monitor-pro.metrics.uptime") ||
@@ -403,6 +426,7 @@ export const deactivate = () => {
   mactopBackend = null;
   unsubscribeData?.();
   systemData.stop();
+  latencyMeasurer.stop();
   if (process.platform === "win32") {
     powerShellRelease();
   }
