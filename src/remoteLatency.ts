@@ -51,14 +51,14 @@ export class LatencyMeasurer {
 
   start(): void {
     if (!this.isRemote) {
-      getLogger().debug("LatencyMeasurer: not in remote mode, skipping start");
+      getLogger().debug(vscode.l10n.t("LatencyMeasurer: not in remote mode, skipping start"));
       return;
     }
     if (this._running) {
       return;
     }
     this._running = true;
-    getLogger().info(`LatencyMeasurer: starting with interval ${this._interval}ms`);
+    getLogger().info(vscode.l10n.t("LatencyMeasurer: starting with interval {0}ms", String(this._interval)));
     this._tick();
   }
 
@@ -67,7 +67,7 @@ export class LatencyMeasurer {
     if (this._timer !== null) {
       clearTimeout(this._timer);
       this._timer = null;
-      getLogger().info("LatencyMeasurer: stopped");
+      getLogger().info(vscode.l10n.t("LatencyMeasurer: stopped"));
     }
   }
 

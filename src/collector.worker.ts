@@ -205,12 +205,13 @@ async function tick() {
   const t0 = Date.now();
   try {
     const data = await collect();
+    const elapsed = Date.now() - t0;
+    (data as any).collectElapsedMs = elapsed;
     parentPort?.postMessage({ type: "data", data: JSON.parse(JSON.stringify(data)) });
   } catch (e) {
     parentPort?.postMessage({ type: "error", error: String(e) });
   }
-  const elapsed = Date.now() - t0;
-  timer = setTimeout(tick, Math.max(interval - elapsed, 0));
+  timer = setTimeout(tick, interval);
 }
 
 parentPort?.on("message", (msg: any) => {
