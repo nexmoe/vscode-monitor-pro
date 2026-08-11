@@ -16,6 +16,8 @@
             --font-size: var(--vscode-font-size, 13px);
             --card-bg: var(--vscode-editor-background);
             --hover-bg: var(--vscode-list-hoverBackground);
+            --bar-height: 5px;
+            --bar-radius: 3px;
         }
 
         * {
@@ -142,7 +144,7 @@
 
         .bar-wrap {
             width: 100%;
-            padding: 6px 0;
+            padding: 2px 0;
         }
 
         .bar-row {
@@ -153,15 +155,15 @@
 
         .bar-track {
             flex: 1;
-            height: 6px;
+            height: var(--bar-height);
             background: rgba(128, 128, 128, 0.12);
-            border-radius: 3px;
+            border-radius: var(--bar-radius);
             overflow: hidden;
         }
 
         .bar-fill {
             height: 100%;
-            border-radius: 3px;
+            border-radius: var(--bar-radius);
             min-width: 2px;
         }
 
@@ -202,16 +204,16 @@
 
         .core-bar-track {
             flex: 1;
-            height: 6px;
+            height: var(--bar-height);
             background: rgba(128, 128, 128, 0.12);
-            border-radius: 3px;
+            border-radius: var(--bar-radius);
             overflow: hidden;
             min-width: 0;
         }
 
         .core-bar-fill {
             height: 100%;
-            border-radius: 3px;
+            border-radius: var(--bar-radius);
             min-width: 2px;
         }
 
@@ -267,15 +269,15 @@
 
         .info-bar-track {
             flex: 1;
-            height: 6px;
+            height: var(--bar-height);
             background: rgba(128, 128, 128, 0.12);
-            border-radius: 3px;
+            border-radius: var(--bar-radius);
             overflow: hidden;
         }
 
         .info-bar-fill {
             height: 100%;
-            border-radius: 3px;
+            border-radius: var(--bar-radius);
             min-width: 2px;
         }
 
@@ -316,6 +318,7 @@
             };
 
             const ALL_CHART_IDS = [
+                "latency",
                 "cpu", "memActive", "memUsed",
                 "netRx", "netTx",
                 "diskRx", "diskWx",
@@ -507,6 +510,7 @@
                 if (id === "cpuTemp" || id === "gpuTemp") return v.toFixed(1) + sep + "\u00B0C";
                 if (id === "cpuSpeed") return v.toFixed(2) + sep + "GHz";
                 if (isPercentId(id)) return v.toFixed(1) + sep + "%";
+                if (id === "latency") return v.toFixed(0) + sep + "ms";
                 return formatRate(v);
             }
 
@@ -1047,6 +1051,9 @@
                 } catch { /* ignore malformed metadata */ }
 
                 for (const id of ALL_CHART_IDS) {
+                    // Latency has its own data stream (latency-update message),
+                    // not embedded in the system DataPoint history.
+                    if (id === "latency") continue;
                     const c = _charts[id];
                     if (!c || !c.enabled) continue;
                     if (hidden.has(id)) continue;
@@ -1117,6 +1124,34 @@
                 }
             }
 
+            // -------- latency update handler --------
+
+            function handleLatencyUpdate(history) {
+                const id = "latency";
+                const c = _charts[id];
+                if (!c || !c.enabled) return;
+
+                state.history[id] = history;
+                if (history && history.length > 0) {
+                    state.barMax[id] = computeScaleMax(id, history);
+                }
+
+                // Update card value display.
+                const latest = history && history.length > 0 ? history[history.length - 1] : null;
+                const valEl = document.getElementById("val-" + id);
+                if (valEl) {
+                    const sep = _fmtConfig.showSpace ? " " : "";
+                    valEl.textContent = latest != null ? latest.toFixed(0) + sep + "ms" : "\u2014";
+                }
+
+                // Latency only supports line and bar views (no array view).
+                if (state.viewMode[id] === "bar") {
+                    updateBar(id);
+                } else if (state.viewMode[id] !== "array" && history && history.length >= 2) {
+                    drawChart(id, history, colorFor(id));
+                }
+            }
+
             // -------- message handler --------
 
             window.addEventListener("message", function (e) {
@@ -1125,6 +1160,8 @@
                     handleConfig(msg.data);
                 } else if (msg.type === "update" && msg.data) {
                     handleUpdate(msg.data, msg.formattedText, msg.unavailableMetrics);
+                } else if (msg.type === "latency-update") {
+                    handleLatencyUpdate(msg.history);
                 }
             });
 

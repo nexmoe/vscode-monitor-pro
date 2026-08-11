@@ -83,6 +83,8 @@ function getMetricTitle(section: MetricsExist): string {
       return vscode.l10n.t("Storage Space");
     case "uptime":
       return vscode.l10n.t("Running Time");
+    case "latency":
+      return vscode.l10n.t("Remote Latency");
   }
   return section;
 }

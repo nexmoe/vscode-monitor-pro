@@ -7,6 +7,7 @@ import { systemData } from "./systemData";
 import { dedupeFsSize } from "./diskSpace";
 import { getLogger } from "./logger";
 import { formatEstimatedBatteryTime } from "./battery";
+import { latencyMeasurer } from "./remoteLatency";
 
 let _binary = true;
 let _space = false;
@@ -320,6 +321,16 @@ const uptimeText = async () => {
   return `$(clock) ${days}d ${hours}h ${minutes}m`;
 };
 
+const latencyText = async () => {
+  const val = latencyMeasurer.lastValue;
+  if (val === null) {
+    return "";
+  }
+  const sig = getSigDigits("latency");
+  const sp = _space ? " " : "";
+  return `$(radio-tower) ${fmtSigNum(val, sig) + sp + "ms"}`;
+};
+
 const metrics: MetricCtrProps[] = [
   {
     func: cpuText,
@@ -376,6 +387,10 @@ const metrics: MetricCtrProps[] = [
   {
     func: uptimeText,
     section: "uptime",
+  },
+  {
+    func: latencyText,
+    section: "latency",
   },
 ];
 

@@ -215,6 +215,7 @@ pnpm run compile
 ### Acknowledgments
 
 - [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor): Adopted its PDH query lifecycle pattern (persistent handle + baseline collection + single collection per tick) for the Windows Go backend CPU monitoring, ensuring readings match Task Manager exactly.
+- [vscode-remote-latency](https://github.com/JoshOY/vscode-remote-latency): Inspired the remote latency measurement algorithm — `vscode.workspace.fs.stat()` batched round-trip timing through the extension host tunnel.
 
 ## Feedback
 
