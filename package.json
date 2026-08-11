@@ -234,7 +234,7 @@
               "enabled": true
             },
             "latency": {
-              "color": "--vscode-charts-orange",
+              "color": "--vscode-charts-purple",
               "enabled": true,
               "view": "line"
             }

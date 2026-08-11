@@ -153,7 +153,7 @@ const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
   osDistro: { enabled: true },
   uptime: { enabled: true },
   diskSpace: { enabled: true },
-  latency: { enabled: true, view: "line", color: "--vscode-charts-orange" },
+  latency: { enabled: true, view: "line", color: "--vscode-charts-purple" },
 };
 
 const CHART_SECTION = "resourceUsage";
