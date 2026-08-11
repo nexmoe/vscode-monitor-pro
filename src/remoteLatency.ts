@@ -2,8 +2,6 @@ import * as vscode from "vscode";
 import { RingBuffer } from "./resourceUsageData";
 import { getLogger } from "./logger";
 
-const BATCHING_LOOP = 2;
-
 type LatencyListener = (history: number[]) => void;
 
 export class LatencyMeasurer {
@@ -101,18 +99,18 @@ export class LatencyMeasurer {
     }
 
     const startTime = performance.now();
-    for (let i = 0; i < BATCHING_LOOP; i++) {
-      try {
-        await vscode.workspace.fs.stat(uri);
-      } catch {
-        // skip individual stat failures
-      }
+    try {
+      await vscode.workspace.fs.stat(uri);
+    } catch {
+      // Discard the sample when the round trip fails, so a transient error
+      // cannot be recorded as a ~0ms latency.
+      return;
     }
     const endTime = performance.now();
-    const avgLatency = (endTime - startTime) / BATCHING_LOOP;
+    const latency = endTime - startTime;
 
-    this._lastValue = avgLatency;
-    this._history.push(avgLatency);
+    this._lastValue = latency;
+    this._history.push(latency);
 
     const snapshot = this._history.toArray();
     for (const cb of this._listeners) {
