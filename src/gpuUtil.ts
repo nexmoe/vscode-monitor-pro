@@ -1,6 +1,5 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
-import * as SI from "systeminformation";
 
 const execFileP = promisify(execFile);
 
@@ -14,48 +13,6 @@ export interface GpuCard {
 
 const MIB = 1024 * 1024;
 
-function safeNum(v: number | undefined | null): number {
-  return Number.isFinite(v) ? (v as number) : 0;
-}
-
-/**
- * Normalize systeminformation graphics controllers into the unified GPU card
- * list (NVIDIA only).
- *
- * Only NVIDIA controllers merged with nvidia-smi output carry live metrics
- * (utilization / temperature / memory). AMD/Intel entries from lspci/clinfo
- * only expose vendor/model/vram, so they are excluded. Availability is
- * therefore expressed by data presence, never by a platform check.
- *
- * NOTE: nvidia-smi reports memory in MiB (not bytes), so both memory fields
- * are converted here so callers always deal with bytes.
- */
-export function extractGpuCards(
-  g: SI.Systeminformation.GraphicsData | null | undefined,
-): GpuCard[] {
-  if (!g?.controllers?.length) {
-    return [];
-  }
-  const cards: GpuCard[] = [];
-  for (const c of g.controllers) {
-    if (
-      c.utilizationGpu === undefined &&
-      c.temperatureGpu === undefined &&
-      c.memoryUsed === undefined
-    ) {
-      continue;
-    }
-    cards.push({
-      model: c.model || c.name || "",
-      utilization: safeNum(c.utilizationGpu),
-      temperature: safeNum(c.temperatureGpu),
-      memTotal: safeNum(c.memoryTotal) * MIB,
-      memUsed: safeNum(c.memoryUsed) * MIB,
-    });
-  }
-  return cards;
-}
-
 const NVIDIA_SMI_QUERY = [
   "--query-gpu=name,utilization.gpu,temperature.gpu,memory.used,memory.total",
   "--format=csv,noheader,nounits",
@@ -64,8 +21,8 @@ const NVIDIA_SMI_QUERY = [
 /**
  * Parse `nvidia-smi --query-gpu=... --format=csv` output into GpuCard[].
  *
- * Memory is reported in MiB, so it is converted to bytes (same as the
- * systeminformation path) to keep callers consistent.
+ * Memory is reported in MiB, so it is converted to bytes (same as before) to
+ * keep callers consistent.
  */
 async function parseNvidiaSmi(): Promise<GpuCard[]> {
   let stdout: string;
@@ -108,19 +65,11 @@ async function parseNvidiaSmi(): Promise<GpuCard[]> {
 /**
  * Resolve the GPU card list for one sampling cycle.
  *
- * Prefers the systeminformation snapshot; when it yields no controllers (e.g.
- * container environments lacking `lspci`, where SI.graphics() returns an empty
- * list even though nvidia-smi works), falls back to parsing nvidia-smi
- * directly. The nvidia-smi fallback only runs when the gpu dimension is
- * explicitly requested, so disabled metrics stay free of extra child
- * processes.
+ * Queries nvidia-smi directly via async execFile (a single child process,
+ * no synchronous blocking). Returns an empty array when nvidia-smi is
+ * unavailable, making all GPU metrics auto-hide via the existing
+ * data-presence availability checkers.
  */
-export async function resolveGpuCards(
-  g: SI.Systeminformation.GraphicsData | null | undefined,
-): Promise<GpuCard[]> {
-  const cards = extractGpuCards(g);
-  if (cards.length > 0) {
-    return cards;
-  }
+export async function resolveGpuCards(): Promise<GpuCard[]> {
   return parseNvidiaSmi();
 }
