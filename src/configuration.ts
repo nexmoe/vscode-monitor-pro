@@ -18,7 +18,16 @@ const allMetrics: MetricsExist[] = [
   "osDistro",
   "diskSpace",
   "uptime",
+  "latency",
 ];
+
+export function getLatencyRefreshInterval(): number {
+  return (
+    workspace
+      .getConfiguration(CONFIG_SECTION)
+      .get<number>("latency.refreshInterval") ?? 2000
+  );
+}
 
 export function getRefreshInterval(): number {
   return (
@@ -144,6 +153,7 @@ const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
   osDistro: { enabled: true },
   uptime: { enabled: true },
   diskSpace: { enabled: true },
+  latency: { enabled: true, view: "line", color: "--vscode-charts-orange" },
 };
 
 const CHART_SECTION = "resourceUsage";
