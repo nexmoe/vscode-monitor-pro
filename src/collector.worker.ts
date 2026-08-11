@@ -4,7 +4,9 @@ import { dedupeFsSize } from "./diskSpace";
 import { resolveGpuCards } from "./gpuUtil";
 
 let interval = 2000;
-let timer: ReturnType<typeof setTimeout> | null = null;
+let broadcastTimer: ReturnType<typeof setInterval> | null = null;
+let collectTimer: ReturnType<typeof setTimeout> | null = null;
+let latestData: Record<string, any> | null = null;
 let prev: Record<string, any> | null = null;
 
 /**
@@ -202,15 +204,19 @@ async function collect() {
 }
 
 async function tick() {
-  const t0 = Date.now();
   try {
     const data = await collect();
-    parentPort?.postMessage({ type: "data", data: JSON.parse(JSON.stringify(data)) });
-  } catch (e) {
-    parentPort?.postMessage({ type: "error", error: String(e) });
+    latestData = JSON.parse(JSON.stringify(data));
+  } catch {
+    /* collect failure: keep previous snapshot, retry next cycle */
   }
-  const elapsed = Date.now() - t0;
-  timer = setTimeout(tick, Math.max(interval - elapsed, 0));
+  collectTimer = setTimeout(tick, interval);
+}
+
+function broadcast() {
+  if (latestData) {
+    parentPort?.postMessage({ type: "data", data: latestData });
+  }
 }
 
 parentPort?.on("message", (msg: any) => {
@@ -220,11 +226,17 @@ parentPort?.on("message", (msg: any) => {
       enabledMetrics = new Set(msg.enabled);
     }
     tick();
+    broadcastTimer = setInterval(broadcast, interval);
   } else if (msg.type === "stop") {
-    if (timer) clearTimeout(timer);
-    timer = null;
+    if (collectTimer) clearTimeout(collectTimer);
+    collectTimer = null;
+    if (broadcastTimer) clearInterval(broadcastTimer);
+    broadcastTimer = null;
+    latestData = null;
   } else if (msg.type === "setInterval") {
     interval = msg.interval;
+    if (broadcastTimer) clearInterval(broadcastTimer);
+    broadcastTimer = setInterval(broadcast, interval);
   } else if (msg.type === "setEnabled") {
     if (Array.isArray(msg.enabled)) {
       enabledMetrics = new Set(msg.enabled);
