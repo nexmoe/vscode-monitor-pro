@@ -127,6 +127,8 @@ export interface SystemSnapshot {
     current: number;
   };
   unavailableMetrics: string[];
+  /** Duration of the last data source collect() call in milliseconds. */
+  collectElapsedMs?: number;
 }
 
 type Listener = (data: SystemSnapshot) => void;
@@ -439,10 +441,15 @@ class SystemDataProvider {
       return this._collectPromise;
     }
 
-    const sourcePromise = this._source.collect(
-      this._snapshot,
-      this._enabledMetrics,
-    );
+    const sourcePromise = (async () => {
+      const t0 = Date.now();
+      const result = await this._source.collect(
+        this._snapshot,
+        this._enabledMetrics,
+      );
+      result.collectElapsedMs = Date.now() - t0;
+      return result;
+    })();
     const failSafe = new Promise<never>((_, reject) => {
       setTimeout(() => {
         reject(new Error("collect() timed out; promise cache cleared for retry"));

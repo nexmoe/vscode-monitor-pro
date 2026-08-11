@@ -340,16 +340,13 @@ export const activate = async (ctx: ExtensionContext) => {
   systemData.setInterval(getRefreshInterval());
   systemData.start();
 
-  unsubscribeData = systemData.subscribe(() => {
-    const t0 = Date.now();
-    Promise.all(metrics.map((x) => x.update()))
-      .then(() => {
-        const elapsed = Date.now() - t0;
-        getLogger().debug(l10n.t("Update cycle completed in {0}ms", elapsed));
-      })
-      .catch((e) => {
-        getLogger().error(l10n.t("Update cycle failed: {0}", String(e)));
-      });
+  unsubscribeData = systemData.subscribe((data) => {
+    Promise.all(metrics.map((x) => x.update())).catch((e) => {
+      getLogger().error(l10n.t("Update cycle failed: {0}", String(e)));
+    });
+    if (data.collectElapsedMs !== undefined) {
+      getLogger().debug(l10n.t("Data collected in {0}ms", data.collectElapsedMs));
+    }
   });
 
   // ── Hot-reload: react to config changes without restart ──
