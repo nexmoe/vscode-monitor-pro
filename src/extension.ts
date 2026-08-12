@@ -9,7 +9,6 @@ import {
   workspace,
 } from "vscode";
 import { ResourceUsageProvider } from "./resourceUsageProvider";
-import { powerShellRelease, powerShellStart } from "systeminformation";
 import { getRefreshInterval, isConfigChanged } from "./configuration";
 import { Metric, getEnabledMetrics } from "./metricsInit";
 import { updateGlobalConfig } from "./metrics";
@@ -130,29 +129,28 @@ function rebuildMetrics() {
   getLogger().info(l10n.t("Metrics initialized: {0}", metrics.length));
 }
 
-function tryStartGoBackend(ctx: ExtensionContext) {
+async function tryStartGoBackend(ctx: ExtensionContext): Promise<boolean> {
   const binaryPath = getGoBinaryPath(ctx);
   goBackend = new GoBackendManager();
-  goBackend
-    .start(binaryPath)
-    .then(() => {
-      systemData.setSource(new GoDataSource(goBackend!));
-      getLogger().info(
-        l10n.t(
-          "Go backend started on port {0}, source: {1}",
-          goBackend!.port!,
-          systemData.sourceName,
-        ),
-      );
-    })
-    .catch((err) => {
-      getLogger().warn(
-        l10n.t("Go backend unavailable: {0}, using fallback", String(err)),
-      );
-      goBackend?.stop();
-      goBackend = null;
-      systemData.setSource(new SIDataSource());
-    });
+  try {
+    await goBackend.start(binaryPath);
+    systemData.setSource(new GoDataSource(goBackend));
+    getLogger().info(
+      l10n.t(
+        "Go backend started on port {0}, source: {1}",
+        goBackend.port!,
+        systemData.sourceName,
+      ),
+    );
+    return true;
+  } catch (err) {
+    goBackend?.stop();
+    goBackend = null;
+    getLogger().error(
+      l10n.t("Go backend failed to start: {0}", String(err)),
+    );
+    return false;
+  }
 }
 
 /**
@@ -286,25 +284,22 @@ async function tryStartMactopBackend() {
   }
 }
 
-function initDataSource(ctx: ExtensionContext) {
+async function initDataSource(ctx: ExtensionContext): Promise<boolean> {
   if (shouldUseGoBackend()) {
-    tryStartGoBackend(ctx);
+    return tryStartGoBackend(ctx);
   } else if (shouldUseMactopBackend()) {
     tryStartMactopBackend();
   } else {
     getLogger().info(l10n.t("Using built-in data source: {0}", "systeminformation"));
     systemData.useWorker();
   }
+  return true;
 }
 
 export const activate = async (ctx: ExtensionContext) => {
   sourceMapSupport.install();
   initLogger("Monitor Pro");
   getLogger().info(l10n.t("Extension activating"));
-
-  if (process.platform === "win32") {
-    powerShellStart();
-  }
 
   applyFormatConfig();
   rebuildMetrics();
@@ -324,10 +319,12 @@ export const activate = async (ctx: ExtensionContext) => {
   );
   getLogger().info(l10n.t("Resource Usage view registered"));
 
-  initDataSource(ctx);
+  const sourceReady = await initDataSource(ctx);
 
-  systemData.setInterval(getRefreshInterval());
-  systemData.start();
+  if (sourceReady) {
+    systemData.setInterval(getRefreshInterval());
+    systemData.start();
+  }
 
   unsubscribeData = systemData.subscribe(() => {
     const t0 = Date.now();
@@ -403,9 +400,6 @@ export const deactivate = () => {
   mactopBackend = null;
   unsubscribeData?.();
   systemData.stop();
-  if (process.platform === "win32") {
-    powerShellRelease();
-  }
   metrics.forEach((x) => x.dispose());
   getLogger().info(l10n.t("Disposed {0} metrics", metrics.length));
 };
