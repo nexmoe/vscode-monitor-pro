@@ -4,6 +4,14 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.9.2] - 2026-08-12
+
+### Changed
+
+- **GPU data now comes straight from `nvidia-smi`**: The GPU collector queries `nvidia-smi` directly via an async child process instead of enumerating controllers with `systeminformation`. This removes the implicit `lspci` dependency that hid GPU metrics in container environments, drops a per-cycle synchronous enquiry, and no longer constructs an intermediate graphics snapshot. Memory is still reported in bytes.
+- **Go backend startup is deterministic**: Backend startup now uses `async/await`; when the Go backend fails to start, the data source is no longer silently swapped for the `systeminformation` fallback — the extension logs the error and does not start collection. The Windows `powerShellStart` / `powerShellRelease` hooks are removed, and the l10n strings for the removed fallback message are replaced.
+- **Chart vertical headroom reduced**: `SCALE_HEADROOM` drops from 1.15 to 1.0, so auto-scaled line charts no longer reserve 15% empty space above the peak value and use the full chart height.
+
 ## [0.9.1] - 2026-08-09
 
 ### Changed
