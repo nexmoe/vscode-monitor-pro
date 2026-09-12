@@ -381,6 +381,7 @@
     "package:vsix:win32-x64": "pnpm run go:build:win32-x64 && pnpm exec vsce package --no-dependencies --target win32-x64 -o monitor-pro-$(node -p \"require('./package.json').version\")-win32-x64.vsix",
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
     "test": "node ./out/test/runTest.js",
+    "test:unit": "pnpm run compile-tests && mocha \"out/**/*.test.js\"",
     "vscode:prepublish": "pnpm run package",
     "watch": "npm-run-all -p watch:*",
     "watch-tests": "tsc -p . -w --outDir out",

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"net/http"
 	"runtime"
 	"strings"
@@ -87,13 +88,10 @@ func getBatteryData() batteryInfo {
 
 	percent := 0.0
 	if bat.Full > 0 {
-		percent = (bat.Current / bat.Full) * 100
+		percent = clampBatteryPercent((bat.Current / bat.Full) * 100)
 	}
 
-	health := 0.0
-	if bat.Design > 0 {
-		health = (bat.Full / bat.Design) * 100
-	}
+	health := batteryHealthPercent(bat.Full, bat.Design)
 
 	return batteryInfo{
 		HasBattery: true,
@@ -106,6 +104,24 @@ func getBatteryData() batteryInfo {
 		Design:     bat.Design,
 		Voltage:    bat.Voltage,
 	}
+}
+
+func batteryHealthPercent(full, design float64) float64 {
+	if design <= 0 {
+		return 0
+	}
+	// Report health as a percentage even when measured capacity exceeds the design rating.
+	return clampBatteryPercent((full / design) * 100)
+}
+
+func clampBatteryPercent(percent float64) float64 {
+	if math.IsNaN(percent) || percent < 0 {
+		return 0
+	}
+	if percent > 100 {
+		return 100
+	}
+	return percent
 }
 
 func usageWithTimeout(mountpoint string) *disk.UsageStat {

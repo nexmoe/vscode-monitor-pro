@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -18,6 +19,46 @@ func checkSuccess(t *testing.T, body []byte) {
 	}
 	if resp.Data == nil {
 		t.Fatal("expected Data to be non-nil")
+	}
+}
+
+func TestClampBatteryPercent(t *testing.T) {
+	tests := []struct {
+		name  string
+		input float64
+		want  float64
+	}{
+		{name: "within range", input: 75, want: 75},
+		{name: "above range", input: 101, want: 100},
+		{name: "below range", input: -1, want: 0},
+		{name: "not a number", input: math.NaN(), want: 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := clampBatteryPercent(tt.input); got != tt.want {
+				t.Fatalf("clampBatteryPercent(%v) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBatteryHealthPercent(t *testing.T) {
+	for _, tt := range []struct {
+		name               string
+		full, design, want float64
+	}{
+		{"above design capacity", 5050, 5000, 100},
+		{"degraded battery", 4000, 5000, 80},
+		{"zero design capacity", 5000, 0, 0},
+		{"negative design capacity", 5000, -1, 0},
+		{"invalid capacity", math.NaN(), 5000, 0},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := batteryHealthPercent(tt.full, tt.design); got != tt.want {
+				t.Fatalf("batteryHealthPercent(%v, %v) = %v, want %v", tt.full, tt.design, got, tt.want)
+			}
+		})
 	}
 }
 

@@ -4,6 +4,7 @@ import { l10n } from "vscode";
 import type { DataSource } from "./dataSource";
 import { SIDataSource } from "./dataSource";
 import { getLogger } from "./logger";
+import { normalizeBatteryPercentages } from "./batteryPercent";
 import type { MetricsExist } from "./constants";
 import type { GpuCard } from "./gpuUtil";
 
@@ -269,6 +270,9 @@ class SystemDataProvider {
           return;
         }
         this._consecutiveFailures = 0;
+        // Common normalization for every data source (Go, systeminformation,
+        // mactop) before the snapshot reaches the UI.
+        normalizeBatteryPercentages(data.battery);
         data.unavailableMetrics = this.computeUnavailableMetrics(data);
         this._snapshot = data;
 
@@ -363,6 +367,8 @@ class SystemDataProvider {
       this._worker.on("message", (msg: any) => {
         if (msg.type === "data") {
           const data = msg.data as SystemSnapshot;
+          // Apply the same common battery normalization to worker snapshots.
+          normalizeBatteryPercentages(data.battery);
           data.unavailableMetrics = this.computeUnavailableMetrics(data);
           this._snapshot = data;
 
