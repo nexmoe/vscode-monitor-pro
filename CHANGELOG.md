@@ -4,6 +4,12 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.9.3] - 2026-09-17
+
+### Fixed
+
+- **macOS 27 battery health returns 0%**: Upgraded `systeminformation` from `5.31.7` to `5.33.11`. Apple removed `AppleRawMaxCapacity`/`AppleRawCurrentCapacity` from the top-level `AppleSmartBattery` IORegistry entry in macOS 27 (Golden Gate). The upstream library now falls back to `FullChargeCapacity`/`RemainingCapacity` inside the `BatteryData` dictionary when the raw capacity keys are absent.
+
 ## [0.9.2] - 2026-08-12
 
 ### Changed
