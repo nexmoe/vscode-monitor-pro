@@ -6,16 +6,24 @@
  * - Temporary file port discovery: writes port+PID to a temp file on first start
  *   and reuses it in subsequent windows
  * - Process liveness check (process.kill(pid, 0)) and HTTP health check
- * - Detached process: mactop stays alive after VS Code windows close, enabling
- *   reuse across windows
+ * - Detached process: mactop outlives an individual window so all windows share
+ *   one instance
+ * - Reference-counted shutdown: mactop is killed once the last window using it
+ *   deactivates (see hostRegistry)
  * - Allocate a free port with the Node net module (mactop does not support the
  *   random port :0)
  * - Poll the /metrics endpoint via HTTP to fetch Prometheus text data
  *
  * Design decisions:
- * - Do not kill mactop in deactivate, and do not delete the temp file. Let
- *   mactop stay alive so the next VS Code window can reuse the same process
- *   via the temp file + PID check + health check.
+ * - mactop is not killed by whichever window started it, because the other
+ *   windows are still sharing it. Each extension host instead holds a marker
+ *   file while it uses the backend, and the window that drops the last marker
+ *   kills mactop and deletes the temp file. Windows keep reusing one instance
+ *   through the temp file + PID check + health check in the meantime.
+ * - A marker left behind by a crashed window is pruned by the next window that
+ *   stops, so a single window crash heals itself. A crash that takes down every
+ *   window leaves mactop running, since no extension host is left to shut it
+ *   down; covering that needs an external watchdog and is not implemented.
  * - The temp file is naturally overwritten when the existing process is found
  *   dead and a new one is started.
  * - Launch mactop in --headless mode to avoid TUI initialization failures in a
@@ -32,12 +40,16 @@ import * as os from "os";
 import * as net from "net";
 import { l10n } from "vscode";
 import { getLogger } from "../logger";
+import { HostRegistry } from "./hostRegistry";
 import { parsePrometheusText, type PrometheusMetric } from "./prometheusParser";
 
 const HEALTH_CHECK_TIMEOUT = 500;
 const STARTUP_TIMEOUT = 10000;
 const HEALTH_POLL_INTERVAL = 300;
 const FETCH_TIMEOUT = 5000;
+/** Time mactop gets to honour SIGTERM before it is killed outright. */
+const SHUTDOWN_GRACE_MS = 1500;
+const EXIT_POLL_INTERVAL = 50;
 
 /** Temporary file path storing mactop's port and PID for reuse across windows. */
 const PORT_FILE = path.join(os.tmpdir(), "vscode-monitor-pro-mactop.json");
@@ -52,6 +64,10 @@ export class MactopBackendManager {
   private _port: number | null = null;
   private _ready = false;
   private _binaryPath: string | null = null;
+  /** mactop process backing this window, whether spawned here or reused. */
+  private _mactopPid: number | null = null;
+  private _registered = false;
+  private readonly _registry = new HostRegistry();
 
   get ready(): boolean {
     return this._ready;
@@ -97,19 +113,27 @@ export class MactopBackendManager {
    * Start or reuse the mactop backend.
    *
    * Flow:
-   * 1. Read temp file -> PID liveness check -> HTTP health check -> reuse
-   * 2. Otherwise allocate a free port and spawn mactop --prometheus <port>
-   * 3. Poll health check until it passes or times out
-   * 4. Write temp file (port + PID) for later windows to reuse
+   * 1. Claim a host marker (before any reuse decision, see hostRegistry)
+   * 2. Read temp file -> PID liveness check -> HTTP health check -> reuse
+   * 3. Otherwise allocate a free port and spawn mactop --prometheus <port>
+   * 4. Poll health check until it passes or times out
+   * 5. Write temp file (port + PID) for later windows to reuse
    */
   async start(): Promise<void> {
+    // Registering first keeps a window that shuts down right now from killing
+    // the instance this window is about to reuse.
+    this._registry.register();
+    this._registered = true;
+
     // Try to reuse an existing instance
-    const existingPort = await this._tryReuseExisting();
-    if (existingPort !== null) {
-      this._port = existingPort;
+    const existing = await this._tryReuseExisting();
+    if (existing !== null) {
+      this._port = existing.port;
+      this._mactopPid = existing.pid;
       this._ready = true;
+      this._registry.attach(existing.port, existing.pid);
       getLogger().info(
-        l10n.t("mactop backend reused on port {0}", String(existingPort)),
+        l10n.t("mactop backend reused on port {0}", String(existing.port)),
       );
       return;
     }
@@ -130,6 +154,10 @@ export class MactopBackendManager {
     // Write temp file
     this._writePortFile(port);
 
+    if (this._mactopPid !== null) {
+      this._registry.attach(port, this._mactopPid);
+    }
+
     getLogger().info(
       l10n.t("mactop backend started on port {0}", String(port)),
     );
@@ -137,9 +165,9 @@ export class MactopBackendManager {
 
   /**
    * Try to reuse a running mactop instance recorded in the temp file.
-   * Returns the reusable port, or null if a new instance must be started.
+   * Returns the reusable instance, or null if a new one must be started.
    */
-  private async _tryReuseExisting(): Promise<number | null> {
+  private async _tryReuseExisting(): Promise<PortFileContent | null> {
     try {
       const content = fs.readFileSync(PORT_FILE, "utf-8");
       const info = JSON.parse(content) as PortFileContent;
@@ -167,7 +195,7 @@ export class MactopBackendManager {
         return null;
       }
 
-      return info.port;
+      return info;
     } catch {
       return null;
     }
@@ -230,8 +258,8 @@ export class MactopBackendManager {
   }
 
   /**
-   * Spawn mactop --headless --prometheus <port>, detached so it survives after
-   * VS Code closes.
+   * Spawn mactop --headless --prometheus <port>, detached so it outlives this
+   * window and can be shared with the next one.
    *
    * --headless is mandatory: without it mactop enters TUI mode and calls
    * ui.Init(), which crashes immediately with exit code 1 in a non-terminal
@@ -262,6 +290,10 @@ export class MactopBackendManager {
         reject(err);
         return;
       }
+
+      // Recorded before the health check so a timed-out startup can still be
+      // torn down by the caller's stop().
+      this._mactopPid = this._process.pid ?? null;
 
       // Capture stderr to diagnose startup failures
       this._process.stderr?.on("data", (chunk: Buffer) => {
@@ -371,13 +403,118 @@ export class MactopBackendManager {
   }
 
   /**
-   * Clean up this instance's references. Does not kill the mactop process
-   * (it is detached and may be reused by other windows) and does not delete the
-   * temp file (reused by later windows).
+   * Release this window's claim on the shared mactop backend.
+   *
+   * mactop is shared by every VS Code window, so it is only killed here when
+   * this is the last window using it; otherwise the other windows keep reusing
+   * it through the temp file. The port file is removed together with the
+   * process so the next window starts a fresh instance rather than finding a
+   * dead PID.
    */
-  stop(): void {
+  async stop(): Promise<void> {
+    const child = this._process;
+    const mactopPid = this._mactopPid;
+
     this._process = null;
-    this._ready = false;
+    this._mactopPid = null;
     this._port = null;
+    this._ready = false;
+
+    if (!this._registered) {
+      return;
+    }
+    this._registered = false;
+
+    // Drop our own marker before counting the others, so a window stopping at
+    // the same time cannot count us as a live user of the shared instance.
+    this._registry.unregister();
+
+    if (mactopPid === null) {
+      // start() never got as far as a process; nothing owns the port file.
+      return;
+    }
+
+    if (this._registry.hasOtherLiveHosts(mactopPid)) {
+      getLogger().info(
+        l10n.t("mactop backend kept alive, other VS Code windows still use it"),
+      );
+      return;
+    }
+
+    await this._terminate(mactopPid, child);
+    this._deletePortFile();
+    getLogger().info(
+      l10n.t("mactop backend shut down, no other VS Code window is using it"),
+    );
+  }
+
+  /**
+   * Ask mactop to exit and wait for it, escalating to SIGKILL when it ignores
+   * SIGTERM. A detached process is signalled by PID; when this window spawned
+   * it, the child's "exit" event reports the exit immediately instead of
+   * waiting for the next poll.
+   */
+  private _terminate(pid: number, child: ChildProcess | null): Promise<void> {
+    if (!this._isProcessAlive(pid)) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      let settled = false;
+      let poll: ReturnType<typeof setInterval> | null = null;
+      let grace: ReturnType<typeof setTimeout> | null = null;
+
+      const finish = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        if (poll) {
+          clearInterval(poll);
+        }
+        if (grace) {
+          clearTimeout(grace);
+        }
+        resolve();
+      };
+
+      child?.once("exit", finish);
+      poll = setInterval(() => {
+        if (!this._isProcessAlive(pid)) {
+          finish();
+        }
+      }, EXIT_POLL_INTERVAL);
+      grace = setTimeout(() => {
+        if (this._isProcessAlive(pid)) {
+          getLogger().warn(
+            l10n.t(
+              "mactop process (PID {0}) ignored SIGTERM, sending SIGKILL",
+              String(pid),
+            ),
+          );
+          try {
+            process.kill(pid, "SIGKILL");
+          } catch {
+            // exited between the liveness check and the signal
+          }
+        }
+        finish();
+      }, SHUTDOWN_GRACE_MS);
+
+      try {
+        process.kill(pid, "SIGTERM");
+      } catch {
+        finish();
+      }
+    });
+  }
+
+  /** Remove the port file so the next window does not reuse a dead instance. */
+  private _deletePortFile(): void {
+    try {
+      fs.unlinkSync(PORT_FILE);
+    } catch {
+      // already gone
+    }
   }
 }

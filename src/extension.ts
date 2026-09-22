@@ -233,7 +233,7 @@ async function tryStartMactopBackend() {
             getLogger().warn(
               l10n.t("mactop backend unavailable: {0}, using fallback", String(err)),
             );
-            newManager.stop();
+            await newManager.stop();
           }
         }
       } else {
@@ -264,7 +264,7 @@ async function tryStartMactopBackend() {
     getLogger().warn(
       l10n.t("mactop backend unavailable: {0}, using fallback", String(err)),
     );
-    manager.stop();
+    await manager.stop();
     fallbackToSIDataSource();
   }
 }
@@ -366,14 +366,18 @@ export const activate = async (ctx: ExtensionContext) => {
   );
 };
 
-export const deactivate = () => {
+export const deactivate = async () => {
   getLogger().info(l10n.t("Extension deactivating"));
   goBackend?.stop();
   goBackend = null;
-  mactopBackend?.stop();
+  const mactop = mactopBackend;
   mactopBackend = null;
   unsubscribeData?.();
   systemData.stop();
   metrics.forEach((x) => x.dispose());
   getLogger().info(l10n.t("Disposed {0} metrics", metrics.length));
+  // Awaited last: the shared mactop backend may need to wait out the SIGTERM
+  // grace period before it is killed, and the polling loop must already be
+  // stopped so no collection races the shutdown.
+  await mactop?.stop();
 };
