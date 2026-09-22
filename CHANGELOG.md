@@ -4,6 +4,12 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.9.4] - 2026-09-22
+
+### Fixed
+
+- **mactop is shut down when the last window closes**: On macOS Apple Silicon, `mactop` was spawned detached and left running indefinitely so later windows could reuse it, so it kept consuming CPU and memory long after VS Code was closed. Each extension host now holds a usage marker for as long as it uses the backend, and the window that drops the last marker terminates the shared process (SIGTERM, escalating to SIGKILL when it does not respond) and removes the port file. Cross-window reuse is unchanged — closing one window while others are still open leaves `mactop` running for them — and a broken startup no longer leaks a detached process either. A forced VS Code kill can still leave `mactop` behind, since no extension host is left to run the shutdown.
+
 ## [0.9.3] - 2026-09-17
 
 ### Fixed
