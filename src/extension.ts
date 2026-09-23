@@ -273,7 +273,9 @@ async function initDataSource(ctx: ExtensionContext): Promise<boolean> {
   if (shouldUseGoBackend()) {
     return tryStartGoBackend(ctx);
   } else if (shouldUseMactopBackend()) {
-    tryStartMactopBackend();
+    // Awaited, so activation does not continue against a data source that is
+    // about to be replaced by mactop (see the view registration in activate).
+    await tryStartMactopBackend();
   } else {
     getLogger().info(l10n.t("Using built-in data source: {0}", "systeminformation"));
     systemData.useWorker();
@@ -291,6 +293,12 @@ export const activate = async (ctx: ExtensionContext) => {
     l10n.t("Platform: {0}, Architecture: {1}", process.platform, process.arch),
   );
 
+  // The data source is resolved before the view is registered: the webview
+  // snapshots source-dependent config (powerMode) when it resolves and does not
+  // re-read it, so registering it first would freeze the pre-mactop value in any
+  // window whose panel is already visible.
+  const sourceReady = await initDataSource(ctx);
+
   const resourceUsageProvider = new ResourceUsageProvider(ctx.extensionPath);
   ctx.subscriptions.push(
     window.registerWebviewViewProvider(
@@ -302,8 +310,6 @@ export const activate = async (ctx: ExtensionContext) => {
     }),
   );
   getLogger().info(l10n.t("Resource Usage view registered"));
-
-  const sourceReady = await initDataSource(ctx);
 
   if (sourceReady) {
     systemData.setInterval(getRefreshInterval());
