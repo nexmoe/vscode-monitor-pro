@@ -18,8 +18,11 @@
  * - mactop is not killed by whichever window started it, because the other
  *   windows are still sharing it. Each extension host instead holds a marker
  *   file while it uses the backend, and the window that drops the last marker
- *   kills mactop and deletes the temp file. Windows keep reusing one instance
- *   through the temp file + PID check + health check in the meantime.
+ *   removes the temp file and then kills mactop: a window reloading in the
+ *   meantime (deactivate, then activate ~1s later) cannot adopt an instance
+ *   that is already dying and starts a fresh one instead. Windows keep reusing
+ *   one instance through the temp file + PID check + health check in the
+ *   meantime.
  * - A marker left behind by a crashed window is pruned by the next window that
  *   stops, so a single window crash heals itself. A crash that takes down every
  *   window leaves mactop running, since no extension host is left to shut it
@@ -47,8 +50,13 @@ const HEALTH_CHECK_TIMEOUT = 500;
 const STARTUP_TIMEOUT = 10000;
 const HEALTH_POLL_INTERVAL = 300;
 const FETCH_TIMEOUT = 5000;
-/** Time mactop gets to honour SIGTERM before it is killed outright. */
-const SHUTDOWN_GRACE_MS = 1500;
+/**
+ * Time mactop gets to honour SIGTERM before it is killed outright. Kept short
+ * because mactop ignores SIGTERM in practice, and every millisecond of grace is
+ * a window in which another window could adopt an instance that is already
+ * being shut down.
+ */
+const SHUTDOWN_GRACE_MS = 200;
 const EXIT_POLL_INTERVAL = 50;
 
 /** Temporary file path storing mactop's port and PID for reuse across windows. */
@@ -407,9 +415,9 @@ export class MactopBackendManager {
    *
    * mactop is shared by every VS Code window, so it is only killed here when
    * this is the last window using it; otherwise the other windows keep reusing
-   * it through the temp file. The port file is removed together with the
-   * process so the next window starts a fresh instance rather than finding a
-   * dead PID.
+   * it through the temp file. When it is killed, the port file is removed
+   * before any signal is sent, so a window that is activating right now starts
+   * a fresh instance instead of adopting this one and losing it mid-flight.
    */
   async stop(): Promise<void> {
     const child = this._process;
@@ -441,8 +449,11 @@ export class MactopBackendManager {
       return;
     }
 
-    await this._terminate(mactopPid, child);
+    // Unpublish before signalling: the instance is doomed from here on, and a
+    // window activating right now must start a fresh one rather than adopt this
+    // one and lose it mid-flight.
     this._deletePortFile();
+    await this._terminate(mactopPid, child);
     getLogger().info(
       l10n.t("mactop backend shut down, no other VS Code window is using it"),
     );
@@ -509,7 +520,7 @@ export class MactopBackendManager {
     });
   }
 
-  /** Remove the port file so the next window does not reuse a dead instance. */
+  /** Remove the port file, so the next window starts a fresh instance. */
   private _deletePortFile(): void {
     try {
       fs.unlinkSync(PORT_FILE);
