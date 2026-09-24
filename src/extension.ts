@@ -12,10 +12,9 @@ import { ResourceUsageProvider } from "./resourceUsageProvider";
 import { getRefreshInterval, isConfigChanged } from "./configuration";
 import { Metric, getEnabledMetrics } from "./metricsInit";
 import { systemData } from "./systemData";
-import { GoBackendManager } from "./goBackend";
-import { GoDataSource, SIDataSource } from "./dataSource";
 import { NativeBackendManager } from "./backend/nativeBackendManager";
-import { MACTOP_SPEC } from "./backend/spec";
+import { MACTOP_SPEC, createGoSpec } from "./backend/spec";
+import { GoDataSource, SIDataSource } from "./dataSource";
 import { MactopDataSource } from "./mactop-backend/mactopDataSource";
 import {
   getMetricsEnabled,
@@ -27,7 +26,7 @@ import type { MetricsExist } from "./constants";
 
 let metrics: Metric[] = [];
 let unsubscribeData: (() => void) | null = null;
-let goBackend: GoBackendManager | null = null;
+let goBackend: NativeBackendManager | null = null;
 let mactopBackend: NativeBackendManager | null = null;
 
 const execAsync = promisify(exec);
@@ -87,12 +86,6 @@ function computeEnabledMetrics(): Set<MetricsExist> {
   return enabled;
 }
 
-const GO_BINARY_NAME = process.platform === "win32" ? "monitor.exe" : "monitor";
-
-function getGoBinaryPath(ctx: ExtensionContext): string {
-  return `${ctx.extensionPath}/go-backend/bin/${GO_BINARY_NAME}`;
-}
-
 function shouldUseGoBackend(): boolean {
   return process.platform === "win32";
 }
@@ -115,25 +108,25 @@ function rebuildMetrics() {
   getLogger().info(l10n.t("Metrics initialized: {0}", metrics.length));
 }
 
+/**
+ * Start the Windows Go backend, which is shared by every VS Code window.
+ *
+ * A failure is reported and returns false without falling back to the in-process
+ * data source: the Go binary is the only backend on Windows, and collecting
+ * nothing is preferable to silently collecting with different semantics.
+ */
 async function tryStartGoBackend(ctx: ExtensionContext): Promise<boolean> {
-  const binaryPath = getGoBinaryPath(ctx);
-  goBackend = new GoBackendManager();
+  const manager = new NativeBackendManager(createGoSpec(ctx.extensionPath));
+  goBackend = manager;
   try {
-    await goBackend.start(binaryPath);
-    systemData.setSource(new GoDataSource(goBackend));
-    getLogger().info(
-      l10n.t(
-        "Go backend started on port {0}, source: {1}",
-        goBackend.port!,
-        systemData.sourceName,
-      ),
-    );
+    await manager.start();
+    systemData.setSource(new GoDataSource(manager));
     return true;
   } catch (err) {
-    goBackend?.stop();
     goBackend = null;
+    await manager.stop();
     getLogger().error(
-      l10n.t("Go backend failed to start: {0}", String(err)),
+      l10n.t("{0} backend failed to start: {1}", manager.displayName, String(err)),
     );
     return false;
   }
@@ -221,13 +214,6 @@ async function tryStartMactopBackend() {
             await newManager.start();
             mactopBackend = newManager;
             systemData.setSource(new MactopDataSource(newManager));
-            getLogger().info(
-              l10n.t(
-                "mactop backend started on port {0}, source: {1}",
-                String(newManager.port!),
-                systemData.sourceName,
-              ),
-            );
             window.showInformationMessage(l10n.t("mactop installed successfully!"));
             return;
           } catch (err) {
@@ -254,13 +240,6 @@ async function tryStartMactopBackend() {
   try {
     await manager.start();
     systemData.setSource(new MactopDataSource(manager));
-    getLogger().info(
-      l10n.t(
-        "mactop backend started on port {0}, source: {1}",
-        String(manager.port!),
-        systemData.sourceName,
-      ),
-    );
   } catch (err) {
     getLogger().warn(
       l10n.t("mactop backend unavailable: {0}, using fallback", String(err)),
@@ -375,7 +354,7 @@ export const activate = async (ctx: ExtensionContext) => {
 
 export const deactivate = async () => {
   getLogger().info(l10n.t("Extension deactivating"));
-  goBackend?.stop();
+  const go = goBackend;
   goBackend = null;
   const mactop = mactopBackend;
   mactopBackend = null;
@@ -383,8 +362,9 @@ export const deactivate = async () => {
   systemData.stop();
   metrics.forEach((x) => x.dispose());
   getLogger().info(l10n.t("Disposed {0} metrics", metrics.length));
-  // Awaited last: the shared mactop backend may need to wait out the SIGTERM
-  // grace period before it is killed, and the polling loop must already be
-  // stopped so no collection races the shutdown.
+  // Awaited last: both backends are shared and refcounted, so stopping one may
+  // need to wait out the SIGTERM grace period before its process is killed, and
+  // the polling loop must already be stopped so no collection races it.
+  await go?.stop();
   await mactop?.stop();
 };

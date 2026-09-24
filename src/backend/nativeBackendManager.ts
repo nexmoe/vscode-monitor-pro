@@ -64,6 +64,11 @@ export class NativeBackendManager {
     return this._port;
   }
 
+  /** Name used in the callers' log messages. */
+  get displayName(): string {
+    return this.spec.displayName;
+  }
+
   /**
    * Detect whether the backend is installed. The resolved path is cached for
    * the later start() call, because resolving may probe the file system or PATH.

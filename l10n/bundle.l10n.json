@@ -107,6 +107,7 @@
     "mactop process (PID {0}) ignored SIGTERM, sending SIGKILL": "mactop process (PID {0}) ignored SIGTERM, sending SIGKILL",
     "mactop process (PID {0}) not alive, starting new": "mactop process (PID {0}) not alive, starting new",
     "mactop stderr: {0}": "mactop stderr: {0}",
+    "{0} backend failed to start: {1}": "{0} backend failed to start: {1}",
     "{0} backend kept alive, other VS Code windows still use it": "{0} backend kept alive, other VS Code windows still use it",
     "{0} backend on port {1} failed health check, starting new": "{0} backend on port {1} failed health check, starting new",
     "{0} backend reused on port {1}": "{0} backend reused on port {1}",

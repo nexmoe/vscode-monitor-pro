@@ -107,6 +107,7 @@
     "mactop process (PID {0}) ignored SIGTERM, sending SIGKILL": "mactop プロセス (PID {0}) が SIGTERM に応答しないため、SIGKILL を送信します",
     "mactop process (PID {0}) not alive, starting new": "mactop プロセス (PID {0}) が応答しません。新しく起動します",
     "mactop stderr: {0}": "mactop stderr: {0}",
+    "{0} backend failed to start: {1}": "{0} バックエンドの起動に失敗しました: {1}",
     "{0} backend kept alive, other VS Code windows still use it": "{0} バックエンドを維持します。他の VS Code ウィンドウがまだ使用中です",
     "{0} backend on port {1} failed health check, starting new": "ポート {1} の {0} バックエンドのヘルスチェックに失敗しました。新しく起動します",
     "{0} backend reused on port {1}": "{0} バックエンドをポート {1} で再利用中",

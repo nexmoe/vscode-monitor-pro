@@ -1,6 +1,7 @@
 import * as SI from "systeminformation";
-import type { GoBackendManager } from "./goBackend";
+import type { NativeBackendManager } from "./backend/nativeBackendManager";
 import { RawDataAdapter } from "./rawDataAdapter";
+import type { GoAllResponse } from "./rawDataTypes";
 import type { SystemSnapshot } from "./systemData";
 import type { MetricsExist } from "./constants";
 import { dimensionsForEnabled, type CollectDimension } from "./metricMap";
@@ -19,14 +20,40 @@ export class GoDataSource implements DataSource {
   readonly name = "go";
   private adapter = new RawDataAdapter();
 
-  constructor(private backend: GoBackendManager) {}
+  constructor(private backend: NativeBackendManager) {}
 
   async collect(
     _prev: SystemSnapshot | null,
     enabled: Set<MetricsExist>,
   ): Promise<SystemSnapshot> {
-    const raw = await this.backend.fetchAll(enabled);
-    return this.adapter.toSnapshot(raw);
+    return this.adapter.toSnapshot(await this._fetchAll(enabled));
+  }
+
+  /** GET /api/v1/all and unwrap its {success, data} envelope. */
+  private async _fetchAll(enabled: Set<MetricsExist>): Promise<GoAllResponse> {
+    // Forward enabled metrics so the backend only collects the corresponding
+    // dimensions (true on-demand querying).
+    const query =
+      enabled.size > 0 ? `?metrics=${encodeURIComponent([...enabled].join(","))}` : "";
+
+    const res = await this.backend.request(`/api/v1/all${query}`);
+    if (res === null || res.status !== 200) {
+      throw new Error("Go backend request failed");
+    }
+    if (!res.contentType.includes("application/json")) {
+      throw new Error(
+        `Expected JSON response but got content-type: ${res.contentType || "none"}`,
+      );
+    }
+
+    const parsed = JSON.parse(res.body) as {
+      success?: boolean;
+      data?: GoAllResponse;
+    };
+    if (!parsed.success || parsed.data === undefined) {
+      throw new Error("Go backend returned success=false");
+    }
+    return parsed.data;
   }
 }
 
