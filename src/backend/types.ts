@@ -21,6 +21,12 @@ export interface NativeBackendSpec {
   spawnArgs(port: number): string[];
   /** Milliseconds the backend gets to honour SIGTERM before it is killed. */
   graceMs: number;
+  /**
+   * Milliseconds to wait for the health check after spawning. Optional; the
+   * manager falls back to its default. Overridable so tests can exercise a
+   * startup timeout without waiting the production delay.
+   */
+  startupTimeoutMs?: number;
   /** Absolute path of the executable, or null when it is not installed. */
   resolveBinary(): string | null;
 }

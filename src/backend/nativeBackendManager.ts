@@ -174,8 +174,17 @@ export class NativeBackendManager {
     // the same time cannot count us as a live user of the shared instance.
     this._registry.unregister();
 
-    if (backendPid === null || port === null) {
-      // start() never got as far as a process; nothing was published.
+    if (backendPid === null) {
+      // start() never got as far as a process; nothing to stop or unpublish.
+      return;
+    }
+
+    // The instance was never published (startup failed after spawning, e.g. a
+    // health-check timeout), so it was never shared with another window: stop
+    // the process we own outright. Guarding on the port here instead would leak
+    // the detached process, since _port is only assigned after a healthy spawn.
+    if (port === null) {
+      await terminateProcess(backendPid, this.spec.graceMs);
       return;
     }
 
@@ -356,7 +365,7 @@ export class NativeBackendManager {
       checkHealth();
       const timeout = setTimeout(
         () => fail(new Error(`${this.spec.id} startup timed out`)),
-        STARTUP_TIMEOUT,
+        this.spec.startupTimeoutMs ?? STARTUP_TIMEOUT,
       );
 
       this._process.on("error", (err: Error) => fail(err));

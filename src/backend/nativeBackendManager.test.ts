@@ -256,4 +256,34 @@ describe("NativeBackendManager", () => {
 
     await assert.rejects(() => broken.start());
   });
+
+  it("stops a backend that was spawned but never published", async () => {
+    // The process stays alive but never reports healthy, so start() times out
+    // before the port is published. stop() must still terminate it instead of
+    // leaking the detached child.
+    const neverHealthy: NativeBackendSpec = {
+      ...spec(),
+      startupTimeoutMs: 300,
+      spawnArgs: (port) => {
+        const script =
+          'const fs=require("fs"),http=require("http");' +
+          "fs.appendFileSync(process.argv[2],process.pid+String.fromCharCode(10));" +
+          "http.createServer((req,res)=>{res.writeHead(500);res.end()}).listen(Number(process.argv[1]));";
+        return ["-e", script, String(port), spawnLog];
+      },
+    };
+    const mgr = new NativeBackendManager(neverHealthy);
+    running.add(mgr);
+
+    await assert.rejects(() => mgr.start());
+
+    const pids = spawnedPids();
+    assert.equal(pids.length, 1);
+    assert.equal(isProcessAlive(pids[0]), true);
+    assert.equal(readPortFile(portFile), null);
+
+    await mgr.stop();
+    running.delete(mgr);
+    assert.equal(await waitUntilDead(pids[0]), true);
+  });
 });
