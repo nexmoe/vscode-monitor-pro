@@ -20,14 +20,6 @@ import (
 
 const diskUsageTimeout = 2 * time.Second
 
-const sampleWindow = 5
-
-var (
-	powerHistory     []float64
-	powerHistoryMu   sync.Mutex
-	lastBatteryState string
-)
-
 type batteryInfo struct {
 	HasBattery bool    `json:"hasBattery"`
 	State      string  `json:"state"`
@@ -40,32 +32,6 @@ type batteryInfo struct {
 	Voltage    float64 `json:"voltage"`
 }
 
-func getAveragePowerRate(bat *battery.Battery) float64 {
-	powerHistoryMu.Lock()
-	defer powerHistoryMu.Unlock()
-
-	currentState := bat.State.String()
-	if currentState != lastBatteryState && (currentState == "Charging" || currentState == "Discharging") {
-		powerHistory = nil
-		lastBatteryState = currentState
-	}
-
-	rate := bat.ChargeRate / 1000
-	powerHistory = append(powerHistory, rate)
-	if len(powerHistory) > sampleWindow {
-		powerHistory = powerHistory[1:]
-	}
-
-	var sum float64
-	for _, r := range powerHistory {
-		sum += r
-	}
-	if len(powerHistory) == 0 {
-		return 0
-	}
-	return sum / float64(len(powerHistory))
-}
-
 func getBatteryData() batteryInfo {
 	batteries, _ := battery.GetAll()
 	if len(batteries) == 0 {
@@ -73,17 +39,6 @@ func getBatteryData() batteryInfo {
 	}
 
 	bat := batteries[0]
-	avgPower := getAveragePowerRate(bat)
-
-	var signedPower float64
-	switch bat.State.String() {
-	case "Charging":
-		signedPower = avgPower
-	case "Discharging":
-		signedPower = -avgPower
-	default:
-		signedPower = 0
-	}
 
 	percent := 0.0
 	if bat.Full > 0 {
@@ -99,7 +54,7 @@ func getBatteryData() batteryInfo {
 		HasBattery: true,
 		State:      bat.State.String(),
 		Percent:    percent,
-		PowerRate:  signedPower,
+		PowerRate:  currentBatteryWatts(),
 		Health:     health,
 		Current:    bat.Current,
 		Full:       bat.Full,
@@ -180,13 +135,8 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBasicMetrics(w http.ResponseWriter, r *http.Request) {
-	cpuPercents, _ := getCPUPercent(1, false)
+	cpuPct := currentCPUPercent()
 	vm, _ := mem.VirtualMemory()
-
-	var cpuPct float64
-	if len(cpuPercents) > 0 {
-		cpuPct = cpuPercents[0]
-	}
 
 	writeJSON(w, Response{Success: true, Data: map[string]interface{}{
 		"cpuPercent":   cpuPct,
@@ -202,7 +152,7 @@ func getBasicMetrics(w http.ResponseWriter, r *http.Request) {
 func getCPU(w http.ResponseWriter, r *http.Request) {
 	info, _ := cpu.Info()
 	info = patchCPUFreq(info)
-	perc, _ := getCPUPercent(2*time.Second, false)
+	perc := []float64{currentCPUPercent()}
 	times, _ := cpu.Times(true)
 
 	writeJSON(w, Response{Success: true, Data: struct {
@@ -327,7 +277,7 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 
 			info, _ := cpu.InfoWithContext(ctx)
 			info = patchCPUFreq(info)
-			perc, _ := getCPUPercent(2*time.Second, false)
+			perc := []float64{currentCPUPercent()}
 			times, _ := cpu.TimesWithContext(ctx, true)
 
 			mu.Lock()
