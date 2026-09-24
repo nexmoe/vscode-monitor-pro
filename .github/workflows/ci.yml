@@ -27,6 +27,16 @@ jobs:
       - run: pnpm run format:check
         if: runner.os == 'Linux'
 
+      # gen-l10n rewrites bundle.l10n.json from source, so the diff check can
+      # only run where the checkout is LF (see the formatting note above).
+      - name: Verify l10n bundles are in sync with source
+        run: pnpm run l10n:check
+        if: runner.os == 'Linux'
+
+      - name: Verify l10n locales are aligned
+        run: pnpm run l10n:parity
+        if: runner.os == 'Linux'
+
       - run: pnpm run lint
 
       # The backend lifecycle tests spawn stand-in processes and talk to
