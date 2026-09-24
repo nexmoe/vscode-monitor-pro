@@ -2,6 +2,9 @@
 .vscode/**
 .vscode-test/**
 
+# test build output
+out/**
+
 # source code
 src/**
 scripts/**
@@ -10,8 +13,9 @@ scripts/**
 .github/**
 
 .eslintrc.json
+.prettierignore
+.prettierrc.json
 .gitignore
-.yarnrc
 pnpm-lock.yaml
 pnpm-workspace.yaml
 esbuild.js
