@@ -55,17 +55,17 @@ function formatUptime(seconds: number, format: string): string {
 /**
  * Build the secondary battery line for the webview.
  *
- * Split out of _formatPayload to keep the (deeply nested) mactop vs. generic
- * battery branching in a single place; it is reused for the batteryPower
- * subtitle. `isMactop` is the already-computed data-source flag so the caller
- * does not re-evaluate systemData.sourceName here.
+ * Split out of _formatPayload to keep the (deeply nested) SoC vs. battery
+ * power branching in a single place; it is reused for the batteryPower
+ * subtitle. `isSocPower` is the already-resolved data-source capability so the
+ * caller does not re-derive it here.
  */
 function formatBatterySubtitle(
   battery: TextMetrics["battery"],
-  isMactop: boolean,
+  isSocPower: boolean,
 ): string {
   if (!battery.hasBattery) {
-    return isMactop && battery.powerRate !== 0
+    return isSocPower && battery.powerRate !== 0
       ? vscode.l10n.t("SoC Power")
       : "";
   }
@@ -77,7 +77,7 @@ function formatBatterySubtitle(
         ? vscode.l10n.t("Discharging")
         : vscode.l10n.t("Idle");
 
-  if (isMactop) {
+  if (isSocPower) {
     // timeRemaining comes from SI.battery(), which on macOS is provided by
     // IOPMPowerSources. When the device is plugged in but not charging (e.g. a
     // charge limit is set), this value may return stale cached data, so it
@@ -195,7 +195,9 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
         diskSpaceMounts: config.diskSpaceMounts,
         samplingPoints: config.samplingPoints,
         labels,
-        powerMode: systemData.sourceName === "mactop" ? "soc" : "battery",
+        // The webview's chart vocabulary matches the data-source capability:
+        // "soc" draws a zero-based scale, "battery" a signed one.
+        powerMode: systemData.powerRateKind,
       },
     });
   }
@@ -252,7 +254,7 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       });
 
     const t = textMetrics;
-    const isMactop = systemData.sourceName === "mactop";
+    const isSocPower = systemData.powerRateKind === "soc";
 
     return {
       history: data.history,
@@ -286,13 +288,13 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
           ? fmtNum(t.battery.percent, sigDigits.battery) + sp + "%"
           : vscode.l10n.t("N/A"),
         batteryPower: (() => {
-          if (isMactop) {
-            // mactop SoC power is always non-negative, so show it even without a battery
+          if (isSocPower) {
+            // SoC power is always a positive draw, so show it even without a battery
             return t.battery.powerRate !== 0
               ? fmtNum(t.battery.powerRate, sigDigits.battery) + sp + "W"
               : vscode.l10n.t("N/A");
           }
-          // Other data sources: battery net power, shown with +/- prefix when a battery exists
+          // Battery net power, shown with +/- prefix when a battery exists
           return t.battery.hasBattery
             ? (t.battery.powerRate >= 0 ? "+" : "-") +
                 fmtNum(Math.abs(t.battery.powerRate), sigDigits.battery) +
@@ -332,10 +334,10 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       formattedText: {
         batterySub: t.battery.hasBattery
           ? `${vscode.l10n.t("Health")}: ${fmtNum(t.battery.health, sigDigits.battery)}${sp}%`
-          : isMactop && t.battery.powerRate !== 0
+          : isSocPower && t.battery.powerRate !== 0
             ? vscode.l10n.t("SoC Power")
             : "",
-        batteryPowerSub: formatBatterySubtitle(t.battery, isMactop),
+        batteryPowerSub: formatBatterySubtitle(t.battery, isSocPower),
         cpuTempSub: "",
         cpuSpeedSub:
           t.cpuSpeed.avg > 0

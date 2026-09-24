@@ -222,8 +222,13 @@ class SystemDataProvider {
     this._useWorker = true;
   }
 
-  get sourceName(): string {
-    return this._source.name;
+  /**
+   * Semantics of the active source's battery power reading. Consumers use this
+   * instead of comparing source names, so a source change never requires
+   * touching them.
+   */
+  get powerRateKind(): "battery" | "soc" {
+    return this._source.powerRateKind;
   }
 
   get snapshot(): SystemSnapshot | null {

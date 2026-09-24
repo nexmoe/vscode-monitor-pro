@@ -77,6 +77,8 @@ async function getPmsetTimeRemaining(): Promise<number> {
 
 export class MactopDataSource implements DataSource {
   readonly name = "mactop";
+  /** mactop reports total SoC power, not battery net power. */
+  readonly powerRateKind = "soc";
 
   constructor(private backend: NativeBackendManager) {}
 

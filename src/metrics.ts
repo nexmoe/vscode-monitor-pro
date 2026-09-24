@@ -133,11 +133,11 @@ const batteryText = async () => {
   const pct = fmtSigNum(b.percent, sig) + sp + "%";
   const icon = b.isCharging || b.acConnected ? "$(plug)" : "$(symbol-event)";
 
-  // For the mactop data source, powerRate is total SoC power, not battery
-  // charge/discharge rate, so it cannot be used with formatEstimatedBatteryTime.
+  // An SoC power source reports total chip draw, not the battery charge or
+  // discharge rate, so powerRate cannot be used with formatEstimatedBatteryTime.
   // Use the system-provided timeRemaining instead, and only show it while
   // charging or discharging.
-  if (systemData.sourceName === "mactop") {
+  if (systemData.powerRateKind === "soc") {
     if (
       (b.powerState === "charging" || b.powerState === "discharging") &&
       b.timeRemaining > 0 &&

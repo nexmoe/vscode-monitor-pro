@@ -10,6 +10,14 @@ import { resolveGpuCards } from "./gpuUtil";
 
 export interface DataSource {
   readonly name: string;
+  /**
+   * Semantics of battery.powerRate for this source. "battery" is signed battery
+   * net power (positive while charging, negative while discharging, 0 when
+   * idle); "soc" is total SoC power, which is a positive draw and is reported
+   * even without a battery. Consumers branch on this instead of comparing the
+   * source name.
+   */
+  readonly powerRateKind: "battery" | "soc";
   collect(
     prev: SystemSnapshot | null,
     enabled: Set<MetricsExist>,
@@ -18,6 +26,7 @@ export interface DataSource {
 
 export class GoDataSource implements DataSource {
   readonly name = "go";
+  readonly powerRateKind = "battery";
   private adapter = new RawDataAdapter();
 
   constructor(private backend: NativeBackendManager) {}
@@ -59,6 +68,7 @@ export class GoDataSource implements DataSource {
 
 export class SIDataSource implements DataSource {
   readonly name = "systeminformation";
+  readonly powerRateKind = "battery";
 
   async collect(
     prev: SystemSnapshot | null,

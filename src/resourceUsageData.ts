@@ -183,7 +183,7 @@ export class ResourceUsageDataCollector {
       diskSpaceUse: avgUse,
       batteryPercent: snap.battery.hasBattery ? snap.battery.percent : -1,
       batteryPower:
-        systemData.sourceName === "mactop"
+        systemData.powerRateKind === "soc"
           ? snap.battery.powerRate
           : snap.battery.hasBattery
             ? snap.battery.powerRate
