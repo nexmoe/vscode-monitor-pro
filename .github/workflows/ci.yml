@@ -21,6 +21,8 @@ jobs:
 
       - uses: ./.github/actions/setup
 
+      - run: pnpm run format:check
+
       - run: pnpm run lint
 
       # The backend lifecycle tests spawn stand-in processes and talk to
