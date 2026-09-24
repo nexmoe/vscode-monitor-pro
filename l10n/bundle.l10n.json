@@ -34,6 +34,7 @@
     "Failed to create worker: {0}, falling back to inline polling": "Failed to create worker: {0}, falling back to inline polling",
     "Failed to install mactop. Please try manually: brew install mactop": "Failed to install mactop. Please try manually: brew install mactop",
     "Failed to write mactop port file: {0}": "Failed to write mactop port file: {0}",
+    "Failed to write {0} port file": "Failed to write {0} port file",
     "File System (Read/Write)": "File System (Read/Write)",
     "Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms": "Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms",
     "Format config updated": "Format config updated",
@@ -106,6 +107,14 @@
     "mactop process (PID {0}) ignored SIGTERM, sending SIGKILL": "mactop process (PID {0}) ignored SIGTERM, sending SIGKILL",
     "mactop process (PID {0}) not alive, starting new": "mactop process (PID {0}) not alive, starting new",
     "mactop stderr: {0}": "mactop stderr: {0}",
+    "{0} backend kept alive, other VS Code windows still use it": "{0} backend kept alive, other VS Code windows still use it",
+    "{0} backend on port {1} failed health check, starting new": "{0} backend on port {1} failed health check, starting new",
+    "{0} backend reused on port {1}": "{0} backend reused on port {1}",
+    "{0} backend shut down, no other VS Code window is using it": "{0} backend shut down, no other VS Code window is using it",
+    "{0} backend started on port {1}": "{0} backend started on port {1}",
+    "{0} process (PID {1}) did not exit, killing it": "{0} process (PID {1}) did not exit, killing it",
+    "{0} process (PID {1}) not alive, starting new": "{0} process (PID {1}) not alive, starting new",
+    "{0} stderr: {1}": "{0} stderr: {1}",
     "{0}h {1}m until empty": "{0}h {1}m until empty",
     "{0}h {1}m until full": "{0}h {1}m until full"
 }

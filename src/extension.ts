@@ -14,7 +14,8 @@ import { Metric, getEnabledMetrics } from "./metricsInit";
 import { systemData } from "./systemData";
 import { GoBackendManager } from "./goBackend";
 import { GoDataSource, SIDataSource } from "./dataSource";
-import { MactopBackendManager } from "./mactop-backend/mactopBackendManager";
+import { NativeBackendManager } from "./backend/nativeBackendManager";
+import { MACTOP_SPEC } from "./backend/spec";
 import { MactopDataSource } from "./mactop-backend/mactopDataSource";
 import {
   getMetricsEnabled,
@@ -27,7 +28,7 @@ import type { MetricsExist } from "./constants";
 let metrics: Metric[] = [];
 let unsubscribeData: (() => void) | null = null;
 let goBackend: GoBackendManager | null = null;
-let mactopBackend: MactopBackendManager | null = null;
+let mactopBackend: NativeBackendManager | null = null;
 
 const execAsync = promisify(exec);
 
@@ -175,9 +176,9 @@ async function tryStartMactopBackend() {
     return;
   }
 
-  const manager = new MactopBackendManager();
+  const manager = new NativeBackendManager(MACTOP_SPEC);
 
-  if (!manager.isMactopInstalled()) {
+  if (!manager.isInstalled()) {
     getLogger().warn(l10n.t("mactop is not installed, using fallback data source"));
 
     const autoInstallAction = l10n.t("Auto install");
@@ -214,8 +215,8 @@ async function tryStartMactopBackend() {
       );
 
       if (succeeded) {
-        const newManager = new MactopBackendManager();
-        if (newManager.isMactopInstalled()) {
+        const newManager = new NativeBackendManager(MACTOP_SPEC);
+        if (newManager.isInstalled()) {
           try {
             await newManager.start();
             mactopBackend = newManager;

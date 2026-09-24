@@ -42,8 +42,8 @@ import type { DataSource } from "../dataSource";
 import type { SystemSnapshot } from "../systemData";
 import type { MetricsExist } from "../constants";
 import { dedupeFsSize } from "../diskSpace";
-import type { MactopBackendManager } from "./mactopBackendManager";
-import { findMetricValue, type PrometheusMetric } from "./prometheusParser";
+import type { NativeBackendManager } from "../backend/nativeBackendManager";
+import { findMetricValue, parsePrometheusText, type PrometheusMetric } from "./prometheusParser";
 
 const execAsync = promisify(exec);
 
@@ -78,20 +78,29 @@ async function getPmsetTimeRemaining(): Promise<number> {
 export class MactopDataSource implements DataSource {
   readonly name = "mactop";
 
-  constructor(private backend: MactopBackendManager) {}
+  constructor(private backend: NativeBackendManager) {}
 
   async collect(
     prev: SystemSnapshot | null,
     _enabled: Set<MetricsExist>,
   ): Promise<SystemSnapshot> {
     const [metrics, siBat, siFsSize, siOs, pmsetTime] = await Promise.all([
-      this.backend.fetchMetrics(),
+      this._fetchMetrics(),
       SI.battery().catch(() => null),
       SI.fsSize().catch(() => null),
       SI.osInfo().catch(() => null),
       getPmsetTimeRemaining(),
     ]);
     return this._toSnapshot(metrics, prev, siBat, siFsSize, siOs, pmsetTime);
+  }
+
+  /** Fetch /metrics and parse the Prometheus exposition text. */
+  private async _fetchMetrics(): Promise<PrometheusMetric[]> {
+    const res = await this.backend.request("/metrics");
+    if (res === null || res.status !== 200) {
+      throw new Error("mactop metrics request failed");
+    }
+    return parsePrometheusText(res.body);
   }
 
   private _toSnapshot(

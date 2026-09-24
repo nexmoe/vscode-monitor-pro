@@ -1,62 +1,46 @@
 /**
- * Cross-process usage registry for the shared mactop backend.
+ * Cross-process usage registry for a shared native backend.
  *
- * mactop is spawned detached so every VS Code window (each owning its own
+ * A backend is spawned detached so every VS Code window (each owning its own
  * extension host process) shares one instance. To keep that sharing without
  * leaking a process after VS Code is fully closed, each extension host holds a
  * marker file for as long as it uses the backend. Shutdown is ownership-based:
- * the window that drops the last marker is the one that kills mactop.
+ * the window that drops the last marker is the one that stops the backend.
  *
  * A marker is dropped as stale when its extension host is no longer alive
  * (crashed or force-killed window) or when the file cannot be read. Markers
- * belonging to a live host that is attached to a *different* mactop instance
+ * belonging to a live host that is attached to a *different* backend instance
  * are kept but not counted: two instances can coexist when one window fails to
  * reuse the instance another window is running, and such a marker must neither
  * block our own shutdown nor be destroyed while its owner still uses it.
  *
- * Unattached markers (mactopPid 0) belong to a window that registered but has
- * not resolved its mactop instance yet; they count as live so a window that is
- * concurrently shutting down cannot kill an instance another window is about
- * to reuse.
- *
- * This module deliberately avoids importing vscode so it stays unit-testable.
+ * Unattached markers (pid 0) belong to a window that registered but has not
+ * resolved its backend instance yet; they count as live so a window that is
+ * concurrently shutting down cannot stop an instance another window is about to
+ * reuse.
  */
 
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
-
-export const DEFAULT_MARKER_DIR = path.join(
-  os.tmpdir(),
-  "vscode-monitor-pro-mactop-hosts",
-);
-
-export interface HostMarker {
-  /** Extension host process of the window holding the backend. */
-  hostPid: number;
-  /** mactop process this host is attached to; 0 while start() is in flight. */
-  mactopPid: number;
-  /** mactop HTTP port, 0 while start() is in flight. */
-  port: number;
-}
+import { isProcessAlive as defaultIsProcessAlive } from "./backendLifecycle";
 
 type IsProcessAlive = (pid: number) => boolean;
 
-function defaultIsProcessAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export class HostRegistry {
+export class UsageRegistry {
   private readonly hostPid = process.pid;
   private readonly markerPath: string;
 
+  /**
+   * @param dir directory holding one marker per extension host
+   * @param pidField name of the marker field carrying the backend PID. Must not
+   *   change for a backend that already ships: windows running an older version
+   *   read and write the same field, and if the two disagree each side counts
+   *   only itself, so the last window to leave stops a backend the other is
+   *   still using.
+   */
   constructor(
-    private readonly dir: string = DEFAULT_MARKER_DIR,
+    private readonly dir: string,
+    private readonly pidField: string,
     private readonly isProcessAlive: IsProcessAlive = defaultIsProcessAlive,
   ) {
     this.markerPath = path.join(dir, `${this.hostPid}.json`);
@@ -68,12 +52,12 @@ export class HostRegistry {
    * the shared instance alone.
    */
   register(): void {
-    this.write({ hostPid: this.hostPid, mactopPid: 0, port: 0 });
+    this.write(0, 0);
   }
 
-  /** Record the resolved mactop instance once start() succeeded. */
-  attach(port: number, mactopPid: number): void {
-    this.write({ hostPid: this.hostPid, mactopPid, port });
+  /** Record the resolved backend instance once start() succeeded. */
+  attach(port: number, backendPid: number): void {
+    this.write(backendPid, port);
   }
 
   /** Drop this host's marker. Idempotent. */
@@ -82,10 +66,10 @@ export class HostRegistry {
   }
 
   /**
-   * Whether another live host still uses the same mactop instance. Markers of
+   * Whether another live host still uses the same backend instance. Markers of
    * dead hosts are pruned on the way so they cannot block a later shutdown.
    */
-  hasOtherLiveHosts(mactopPid: number): boolean {
+  hasOtherLiveHosts(backendPid: number): boolean {
     let names: string[];
     try {
       names = fs.readdirSync(this.dir);
@@ -106,28 +90,35 @@ export class HostRegistry {
         continue;
       }
 
-      // mactopPid 0 means the host has not attached yet (start() in flight).
-      if (marker.mactopPid === 0 || marker.mactopPid === mactopPid) {
+      // A PID of 0 means the host has not attached yet (start() in flight).
+      if (marker.pid === 0 || marker.pid === backendPid) {
         found = true;
       }
     }
     return found;
   }
 
-  private write(marker: HostMarker): void {
+  private write(backendPid: number, port: number): void {
     try {
       fs.mkdirSync(this.dir, { recursive: true });
+      const marker: Record<string, number> = { hostPid: this.hostPid };
+      marker[this.pidField] = backendPid;
+      marker.port = port;
       fs.writeFileSync(this.markerPath, JSON.stringify(marker), "utf-8");
     } catch {
-      // A lost marker only costs precision when deciding who shuts mactop
-      // down; the liveness checks on the remaining markers still apply.
+      // A lost marker only costs precision when deciding who stops the backend;
+      // the liveness checks on the remaining markers still apply.
     }
   }
 
-  private read(file: string): HostMarker | null {
+  private read(file: string): { hostPid: number; pid: number } | null {
     try {
-      const parsed = JSON.parse(fs.readFileSync(file, "utf-8")) as HostMarker;
-      return typeof parsed?.hostPid === "number" ? parsed : null;
+      const parsed = JSON.parse(fs.readFileSync(file, "utf-8")) as Record<string, unknown>;
+      if (typeof parsed?.hostPid !== "number") {
+        return null;
+      }
+      const pid = parsed[this.pidField];
+      return { hostPid: parsed.hostPid, pid: typeof pid === "number" ? pid : 0 };
     } catch {
       return null;
     }
