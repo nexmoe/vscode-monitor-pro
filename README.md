@@ -80,9 +80,9 @@ Discharge and charge chart transition:
 | Network         | off     | `$(cloud-download) $(cloud-upload)` | `125 KiB/s 2.34 MiB/s`  |
 | CPU Temperature | off     | `$(flame)`                          | `52.3°C`                |
 | CPU Speed       | off     | `$(dashboard)`                      | `3.81 GHz`              |
-| GPU             | off     | `$(circuit-board)`                   | `73.2%`                 |
-| GPU Temperature | off     | `$(lightbulb-sparkle)`               | `52.3°C`                |
-| GPU Memory      | off     | `$(layers)`                          | `11.2 / 24 GiB`         |
+| GPU             | off     | `$(circuit-board)`                  | `73.2%`                 |
+| GPU Temperature | off     | `$(lightbulb-sparkle)`              | `52.3°C`                |
+| GPU Memory      | off     | `$(layers)`                         | `11.2 / 24 GiB`         |
 | Uptime          | off     | `$(clock)`                          | `2d 14h 32m`            |
 | Disk I/O        | off     | `$(log-in) $(log-out)`              | `50.2 MiB/s 12.1 MiB/s` |
 | Disk Space      | off     | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
@@ -153,20 +153,20 @@ These settings apply to the status bar and webview alike.
 
 Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 
-| Setting                                     | Default       | Description                                   |
-| ------------------------------------------- | ------------- | --------------------------------------------- |
-| `monitor-pro.metrics.*`                     | varies        | Toggle each status bar metric on/off          |
-| `monitor-pro.metricsOrder`                  | —             | Reorder status bar items                      |
-| `monitor-pro.refresh-interval`              | `2000` ms     | Polling interval (500–30000ms)                |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary` (KiB/MiB) or `decimal` (kB/MB)       |
-| `monitor-pro.showSpace`                     | `false`       | Space between number and unit                 |
-| `monitor-pro.singleUnit`                    | `false`       | Abbreviate unit to first letter (K, M, G)     |
-| `monitor-pro.significantDigits`             | per-metric    | Significant digits (1–6) per metric           |
-| `monitor-pro.uptimeFormat`                  | `auto`        | Custom format with `{d}`, `{h}`, `{m}`, `{s}` |
+| Setting                                     | Default       | Description                                                                       |
+| ------------------------------------------- | ------------- | --------------------------------------------------------------------------------- |
+| `monitor-pro.metrics.*`                     | varies        | Toggle each status bar metric on/off                                              |
+| `monitor-pro.metricsOrder`                  | —             | Reorder status bar items                                                          |
+| `monitor-pro.refresh-interval`              | `2000` ms     | Polling interval (500–30000ms)                                                    |
+| `monitor-pro.unitSystem`                    | `binary`      | `binary` (KiB/MiB) or `decimal` (kB/MB)                                           |
+| `monitor-pro.showSpace`                     | `false`       | Space between number and unit                                                     |
+| `monitor-pro.singleUnit`                    | `false`       | Abbreviate unit to first letter (K, M, G)                                         |
+| `monitor-pro.significantDigits`             | per-metric    | Significant digits (1–6) per metric                                               |
+| `monitor-pro.uptimeFormat`                  | `auto`        | Custom format with `{d}`, `{h}`, `{m}`, `{s}`                                     |
 | `monitor-pro.resourceUsage.charts`          | —             | Chart/card enable/view/color per metric (incl. `osDistro`, `uptime`, `diskSpace`) |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | Chart history length (10–500)                 |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space card              |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | Mount filter for status bar                   |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | Chart history length (10–500)                                                     |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space card                                                  |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]` | Mount filter for status bar                                                       |
 
 ## Screenshots (pre-0.6.0, still compatible with the current version)
 

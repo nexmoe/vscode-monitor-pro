@@ -1,13 +1,13 @@
-name: 'Setup Build Environment'
-description: 'Setup Node.js, pnpm, and install dependencies'
+name: "Setup Build Environment"
+description: "Setup Node.js, pnpm, and install dependencies"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-          node-version: '22'
+        node-version: "22"
 
     - name: Install pnpm
       shell: bash

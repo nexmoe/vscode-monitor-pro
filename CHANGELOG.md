@@ -119,10 +119,11 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Added
 
 - **Battery estimated time in status bar & webview**: Status bar now shows e.g.
-  
+
   `$(plug) 75% · 1h 30m until full` or `$(symbol-event) 50% · 2h 10m until empty`.
-  
+
   The webview battery card appends the same estimate after the charge state.
+
 - **Localized chart toggle tooltips**: The Line / Bar chart toggle buttons in the resource usage webview now show localized tooltips (`Line chart` / `Bar chart`).
 
 ### Changed

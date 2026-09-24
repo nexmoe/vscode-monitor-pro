@@ -127,7 +127,10 @@ describe("backendLifecycle process handling", () => {
   }
 
   /** A killed process stays visible until its parent reaps it. */
-  async function waitUntilDead(pid: number, timeoutMs = 2000): Promise<boolean> {
+  async function waitUntilDead(
+    pid: number,
+    timeoutMs = 2000,
+  ): Promise<boolean> {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
       if (!isProcessAlive(pid)) {

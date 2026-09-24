@@ -43,7 +43,9 @@ export class GoDataSource implements DataSource {
     // Forward enabled metrics so the backend only collects the corresponding
     // dimensions (true on-demand querying).
     const query =
-      enabled.size > 0 ? `?metrics=${encodeURIComponent([...enabled].join(","))}` : "";
+      enabled.size > 0
+        ? `?metrics=${encodeURIComponent([...enabled].join(","))}`
+        : "";
 
     const res = await this.backend.request(`/api/v1/all${query}`);
     if (res === null || res.status !== 200) {
@@ -93,9 +95,7 @@ export class SIDataSource implements DataSource {
         need("fsStats")
           ? SI.fsStats().catch(() => null)
           : Promise.resolve(null),
-        need("fsSize")
-          ? SI.fsSize().catch(() => null)
-          : Promise.resolve(null),
+        need("fsSize") ? SI.fsSize().catch(() => null) : Promise.resolve(null),
         need("cpuCurrentSpeed")
           ? SI.cpuCurrentSpeed().catch(() => null)
           : Promise.resolve(null),
@@ -168,9 +168,7 @@ export class SIDataSource implements DataSource {
           tx_sec: null,
           ms: 0,
         },
-      fsSize: fsSize
-        ? dedupeFsSize(fsSize)
-        : (prev?.fsSize ?? []),
+      fsSize: fsSize ? dedupeFsSize(fsSize) : (prev?.fsSize ?? []),
       cpuCurrentSpeed: cpuSpeed ??
         prev?.cpuCurrentSpeed ?? { min: 0, max: 0, avg: 0, cores: [] },
       cpuTemperature: cpuTemp ??

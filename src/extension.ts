@@ -16,10 +16,7 @@ import { NativeBackendManager } from "./backend/nativeBackendManager";
 import { MACTOP_SPEC, createGoSpec } from "./backend/spec";
 import { GoDataSource, SIDataSource } from "./dataSource";
 import { MactopDataSource } from "./mactop-backend/mactopDataSource";
-import {
-  getMetricsEnabled,
-  getResourceUsageConfig,
-} from "./configuration";
+import { getMetricsEnabled, getResourceUsageConfig } from "./configuration";
 import { getLogger, initLogger } from "./logger";
 import sourceMapSupport from "source-map-support";
 import type { MetricsExist } from "./constants";
@@ -126,7 +123,11 @@ async function tryStartGoBackend(ctx: ExtensionContext): Promise<boolean> {
     goBackend = null;
     await manager.stop();
     getLogger().error(
-      l10n.t("{0} backend failed to start: {1}", manager.displayName, String(err)),
+      l10n.t(
+        "{0} backend failed to start: {1}",
+        manager.displayName,
+        String(err),
+      ),
     );
     return false;
   }
@@ -172,15 +173,15 @@ async function tryStartMactopBackend() {
   const manager = new NativeBackendManager(MACTOP_SPEC);
 
   if (!manager.isInstalled()) {
-    getLogger().warn(l10n.t("mactop is not installed, using fallback data source"));
+    getLogger().warn(
+      l10n.t("mactop is not installed, using fallback data source"),
+    );
 
     const autoInstallAction = l10n.t("Auto install");
     const neverAction = l10n.t("Don't show again");
     const dismissAction = l10n.t("Dismiss");
     const selection = await window.showInformationMessage(
-      l10n.t(
-        "mactop is not installed. Auto-install runs: brew install mactop",
-      ),
+      l10n.t("mactop is not installed. Auto-install runs: brew install mactop"),
       autoInstallAction,
       neverAction,
       dismissAction,
@@ -214,7 +215,9 @@ async function tryStartMactopBackend() {
             await newManager.start();
             mactopBackend = newManager;
             systemData.setSource(new MactopDataSource(newManager));
-            window.showInformationMessage(l10n.t("mactop installed successfully!"));
+            window.showInformationMessage(
+              l10n.t("mactop installed successfully!"),
+            );
             return;
           } catch (err) {
             getLogger().warn(
@@ -229,7 +232,9 @@ async function tryStartMactopBackend() {
         }
       } else {
         window.showErrorMessage(
-          l10n.t("Failed to install mactop. Please try manually: brew install mactop"),
+          l10n.t(
+            "Failed to install mactop. Please try manually: brew install mactop",
+          ),
         );
       }
     } else if (selection === neverAction) {
@@ -265,7 +270,9 @@ async function initDataSource(ctx: ExtensionContext): Promise<boolean> {
     // about to be replaced by mactop (see the view registration in activate).
     await tryStartMactopBackend();
   } else {
-    getLogger().info(l10n.t("Using built-in data source: {0}", "systeminformation"));
+    getLogger().info(
+      l10n.t("Using built-in data source: {0}", "systeminformation"),
+    );
     systemData.useWorker();
   }
   return true;

@@ -52,7 +52,9 @@ export function findFreePort(): Promise<number> {
 /** Read the published instance; null when missing, unreadable or malformed. */
 export function readPortFile(file: string): PortFileContent | null {
   try {
-    const parsed = JSON.parse(fs.readFileSync(file, "utf-8")) as PortFileContent;
+    const parsed = JSON.parse(
+      fs.readFileSync(file, "utf-8"),
+    ) as PortFileContent;
     if (typeof parsed?.pid !== "number" || typeof parsed?.port !== "number") {
       return null;
     }
@@ -69,12 +71,20 @@ export type PublishResult = "ok" | "exists" | "error";
  * Publish the instance. Returns "exists" when the file already exists, which
  * means another window claimed the backend first.
  */
-export function writePortFile(file: string, content: PortFileContent): PublishResult {
+export function writePortFile(
+  file: string,
+  content: PortFileContent,
+): PublishResult {
   try {
-    fs.writeFileSync(file, JSON.stringify(content), { encoding: "utf-8", flag: "wx" });
+    fs.writeFileSync(file, JSON.stringify(content), {
+      encoding: "utf-8",
+      flag: "wx",
+    });
     return "ok";
   } catch (err) {
-    return (err as NodeJS.ErrnoException)?.code === "EEXIST" ? "exists" : "error";
+    return (err as NodeJS.ErrnoException)?.code === "EEXIST"
+      ? "exists"
+      : "error";
   }
 }
 
@@ -92,9 +102,16 @@ export function removePortFile(file: string): void {
  * another window may have published a newer instance in the meantime, and
  * deleting that would make it undiscoverable.
  */
-export function deletePortFileIfOwned(file: string, owned: PortFileContent): boolean {
+export function deletePortFileIfOwned(
+  file: string,
+  owned: PortFileContent,
+): boolean {
   const current = readPortFile(file);
-  if (current === null || current.pid !== owned.pid || current.port !== owned.port) {
+  if (
+    current === null ||
+    current.pid !== owned.pid ||
+    current.port !== owned.port
+  ) {
     return false;
   }
   removePortFile(file);
@@ -140,7 +157,10 @@ export function httpGet(
  *
  * Returns true when the process had to be killed outright.
  */
-export function terminateProcess(pid: number, graceMs: number): Promise<boolean> {
+export function terminateProcess(
+  pid: number,
+  graceMs: number,
+): Promise<boolean> {
   if (!isProcessAlive(pid)) {
     return Promise.resolve(false);
   }

@@ -52,7 +52,9 @@ const cpuText = async () => {
   const data = await systemData.getSnapshot();
   const sp = getSpace() ? " " : "";
   const val = fmtSigNum(data.currentLoad, sig) + sp + "%";
-  getLogger().debug(vscode.l10n.t("CPU load: {0}%", data.currentLoad.toFixed(2)));
+  getLogger().debug(
+    vscode.l10n.t("CPU load: {0}%", data.currentLoad.toFixed(2)),
+  );
   return `$(chip) ${val}`;
 };
 
@@ -199,7 +201,11 @@ const gpuText = async () => {
   }
   const avg = cards.reduce((s, c) => s + c.utilization, 0) / cards.length;
   getLogger().debug(
-    vscode.l10n.t("GPU - Utilization: {0}% across {1} card(s)", avg.toFixed(2), cards.length),
+    vscode.l10n.t(
+      "GPU - Utilization: {0}% across {1} card(s)",
+      avg.toFixed(2),
+      cards.length,
+    ),
   );
   const sp = getSpace() ? " " : "";
   return `$(circuit-board) ${fmtSigNum(avg, sig) + sp + "%"}`;
@@ -282,7 +288,9 @@ const diskSpaceText = async () => {
     const total = disk.size;
     const used = disk.used;
     if (total === 0) {
-      getLogger().warn(vscode.l10n.t("Disk {0} has size=0, skipping", disk.mount));
+      getLogger().warn(
+        vscode.l10n.t("Disk {0} has size=0, skipping", disk.mount),
+      );
       return null;
     }
     const sp = getSpace() ? " " : "";

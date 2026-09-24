@@ -120,7 +120,11 @@ describe("UsageRegistry", () => {
   });
 
   it("reports no other hosts when the marker directory is missing", () => {
-    const reg = new UsageRegistry(path.join(dir, "missing"), PID_FIELD, () => true);
+    const reg = new UsageRegistry(
+      path.join(dir, "missing"),
+      PID_FIELD,
+      () => true,
+    );
     assert.equal(reg.hasOtherLiveHosts(BACKEND_PID), false);
   });
 

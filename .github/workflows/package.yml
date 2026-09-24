@@ -1,102 +1,102 @@
 name: Package Extension
 
 on:
-    push:
-        branches:
-            - '**'
-        tags:
-            - '[0-9]*.[0-9]*.[0-9]*.dev.*'
-    workflow_dispatch:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "[0-9]*.[0-9]*.[0-9]*.dev.*"
+  workflow_dispatch:
 
 permissions:
-    contents: write
+  contents: write
 
 env:
-    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-    package:
-        runs-on: ubuntu-latest
+  package:
+    runs-on: ubuntu-latest
 
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - uses: ./.github/actions/setup
+      - uses: ./.github/actions/setup
 
-            - uses: actions/setup-go@v5
-              with:
-                  go-version: '1.26'
-                  cache-dependency-path: go-backend/go.sum
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: go-backend/go.sum
 
-            - name: Get version info
-              id: get_version
-              run: |
-                  if [ "${{ github.ref_type }}" = "tag" ]; then
-                    VERSION=${GITHUB_REF#refs/tags/}
-                  else
-                    PKG_VERSION=$(node -p "require('./package.json').version")
-                    SAFE_BRANCH="${GITHUB_REF_NAME//\//-}"
-                    VERSION="${PKG_VERSION}.dev.${SAFE_BRANCH}$(date +%Y%m%d)"
-                  fi
-                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Get version info
+        id: get_version
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            PKG_VERSION=$(node -p "require('./package.json').version")
+            SAFE_BRANCH="${GITHUB_REF_NAME//\//-}"
+            VERSION="${PKG_VERSION}.dev.${SAFE_BRANCH}$(date +%Y%m%d)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-            - name: Build universal package
-              run: pnpm run package:vsix:universal
+      - name: Build universal package
+        run: pnpm run package:vsix:universal
 
-            - name: Build Windows x64 package
-              run: pnpm run package:vsix:win32-x64
+      - name: Build Windows x64 package
+        run: pnpm run package:vsix:win32-x64
 
-            - name: Restore .vscodeignore after Windows x64
-              run: git checkout .vscodeignore
+      - name: Restore .vscodeignore after Windows x64
+        run: git checkout .vscodeignore
 
-            - name: Build Windows arm64 package
-              run: pnpm run package:vsix:win32-arm64
+      - name: Build Windows arm64 package
+        run: pnpm run package:vsix:win32-arm64
 
-            - name: List packages
-              run: ls -lh monitor-pro-*.vsix
+      - name: List packages
+        run: ls -lh monitor-pro-*.vsix
 
-            - name: Find previous stable tag
-              id: previous_stable_tag
-              run: |
-                  PREV=$(git tag -l --sort=-version:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
-                  echo "previous_stable_tag=$PREV" >> $GITHUB_OUTPUT
+      - name: Find previous stable tag
+        id: previous_stable_tag
+        run: |
+          PREV=$(git tag -l --sort=-version:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+          echo "previous_stable_tag=$PREV" >> $GITHUB_OUTPUT
 
-            - name: Create development release
-              if: github.ref_type == 'tag'
-              uses: softprops/action-gh-release@v2
-              with:
-                  tag_name: ${{ steps.get_version.outputs.version }}
-                  name: 'Monitor Pro v${{ steps.get_version.outputs.version }} (Dev Build)'
-                  body: |
-                      # Development Build -- For Testing Only
+      - name: Create development release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: "Monitor Pro v${{ steps.get_version.outputs.version }} (Dev Build)"
+          body: |
+            # Development Build -- For Testing Only
 
-                      This is a development build for internal testing. Do not use in production.
+            This is a development build for internal testing. Do not use in production.
 
-                      - **Version**: ${{ steps.get_version.outputs.version }}
-                      - **Build**: ${{ github.run_id }}
-                      - **Commit**: ${{ github.sha }}
+            - **Version**: ${{ steps.get_version.outputs.version }}
+            - **Build**: ${{ github.run_id }}
+            - **Commit**: ${{ github.sha }}
 
-                      This build will NOT be published to the VS Code Marketplace. Download via GitHub Release only.
+            This build will NOT be published to the VS Code Marketplace. Download via GitHub Release only.
 
-                      **What's Changed:** [Compare with ${{ steps.previous_stable_tag.outputs.previous_stable_tag }}](https://github.com/${{ github.repository }}/compare/${{ steps.previous_stable_tag.outputs.previous_stable_tag }}...${{ steps.get_version.outputs.version }})
+            **What's Changed:** [Compare with ${{ steps.previous_stable_tag.outputs.previous_stable_tag }}](https://github.com/${{ github.repository }}/compare/${{ steps.previous_stable_tag.outputs.previous_stable_tag }}...${{ steps.get_version.outputs.version }})
 
-                      **Installation:** Download the .vsix file for your platform and install manually in VS Code.
+            **Installation:** Download the .vsix file for your platform and install manually in VS Code.
 
-                      | Package | Platform |
-                      |---------|----------|
-                      | `monitor-pro-${{ steps.get_version.outputs.version }}-universal.vsix` | macOS / Linux |
-                      | `monitor-pro-${{ steps.get_version.outputs.version }}-win32-x64.vsix` | Windows x64 |
-                      | `monitor-pro-${{ steps.get_version.outputs.version }}-win32-arm64.vsix` | Windows ARM64 |
-                  files: monitor-pro-*.vsix
-                  draft: false
-                  prerelease: true
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            | Package | Platform |
+            |---------|----------|
+            | `monitor-pro-${{ steps.get_version.outputs.version }}-universal.vsix` | macOS / Linux |
+            | `monitor-pro-${{ steps.get_version.outputs.version }}-win32-x64.vsix` | Windows x64 |
+            | `monitor-pro-${{ steps.get_version.outputs.version }}-win32-arm64.vsix` | Windows ARM64 |
+          files: monitor-pro-*.vsix
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: vsix-${{ steps.get_version.outputs.version }}
-                  path: 'monitor-pro-*.vsix'
-                  retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix-${{ steps.get_version.outputs.version }}
+          path: "monitor-pro-*.vsix"
+          retention-days: 90

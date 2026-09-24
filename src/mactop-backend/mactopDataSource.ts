@@ -43,7 +43,11 @@ import type { SystemSnapshot } from "../systemData";
 import type { MetricsExist } from "../constants";
 import { dedupeFsSize } from "../diskSpace";
 import type { NativeBackendManager } from "../backend/nativeBackendManager";
-import { findMetricValue, parsePrometheusText, type PrometheusMetric } from "./prometheusParser";
+import {
+  findMetricValue,
+  parsePrometheusText,
+  type PrometheusMetric,
+} from "./prometheusParser";
 
 const execAsync = promisify(exec);
 
@@ -142,20 +146,24 @@ export class MactopDataSource implements DataSource {
     const swapUsed = swapUsedGB * GB_TO_BYTES;
 
     // Network (mactop reports KB/s; convert to B/s)
-    const netRx = (find("mactop_network_kbytes_per_sec", {
-      direction: "download",
-    }) ?? 0) * KB_TO_BYTES;
-    const netTx = (find("mactop_network_kbytes_per_sec", {
-      direction: "upload",
-    }) ?? 0) * KB_TO_BYTES;
+    const netRx =
+      (find("mactop_network_kbytes_per_sec", {
+        direction: "download",
+      }) ?? 0) * KB_TO_BYTES;
+    const netTx =
+      (find("mactop_network_kbytes_per_sec", {
+        direction: "upload",
+      }) ?? 0) * KB_TO_BYTES;
 
     // Disk (mactop reports KB/s; convert to B/s)
-    const diskRead = (find("mactop_disk_kbytes_per_sec", {
-      operation: "read",
-    }) ?? 0) * KB_TO_BYTES;
-    const diskWrite = (find("mactop_disk_kbytes_per_sec", {
-      operation: "write",
-    }) ?? 0) * KB_TO_BYTES;
+    const diskRead =
+      (find("mactop_disk_kbytes_per_sec", {
+        operation: "read",
+      }) ?? 0) * KB_TO_BYTES;
+    const diskWrite =
+      (find("mactop_disk_kbytes_per_sec", {
+        operation: "write",
+      }) ?? 0) * KB_TO_BYTES;
 
     // Temperature
     const socTemp = find("mactop_soc_temp_celsius") ?? 0;
@@ -240,9 +248,7 @@ export class MactopDataSource implements DataSource {
         ms: 0,
       },
       // Disk space usage: mactop Prometheus does not provide it, supplement with SI.fsSize()
-      fsSize: siFsSize
-        ? dedupeFsSize(siFsSize)
-        : (prev?.fsSize ?? []),
+      fsSize: siFsSize ? dedupeFsSize(siFsSize) : (prev?.fsSize ?? []),
       // mactop does not provide CPU frequency
       cpuCurrentSpeed: prev?.cpuCurrentSpeed ?? {
         min: 0,

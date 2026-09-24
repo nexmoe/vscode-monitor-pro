@@ -19,13 +19,18 @@ const nodeModule = require("module") as {
   _load(request: string, parent: unknown, isMain: boolean): unknown;
 };
 const originalLoad = nodeModule._load;
-nodeModule._load = function (request: string, parent: unknown, isMain: boolean) {
+nodeModule._load = function (
+  request: string,
+  parent: unknown,
+  isMain: boolean,
+) {
   if (request === "vscode") {
     return {
       l10n: {
         t: (message: string, ...args: unknown[]) =>
           args.reduce(
-            (acc: string, value, index) => acc.replace(`{${index}}`, String(value)),
+            (acc: string, value, index) =>
+              acc.replace(`{${index}}`, String(value)),
             message,
           ),
       },
@@ -35,7 +40,8 @@ nodeModule._load = function (request: string, parent: unknown, isMain: boolean) 
 };
 
 // Loaded after the stub is installed, so the manager's l10n import resolves.
-type NativeBackendManager = import("./nativeBackendManager").NativeBackendManager;
+type NativeBackendManager =
+  import("./nativeBackendManager").NativeBackendManager;
 const { NativeBackendManager } =
   require("./nativeBackendManager") as typeof import("./nativeBackendManager");
 
@@ -79,8 +85,8 @@ describe("NativeBackendManager", () => {
     const script =
       'const fs=require("fs"),http=require("http");' +
       "fs.appendFileSync(process.argv[2],process.pid+String.fromCharCode(10));" +
-      "http.createServer((req,res)=>{res.setHeader(\"Content-Type\",\"application/json\");" +
-      'res.writeHead(200);res.end(\'{"ok":true}\')}).listen(Number(process.argv[1]));';
+      'http.createServer((req,res)=>{res.setHeader("Content-Type","application/json");' +
+      "res.writeHead(200);res.end('{\"ok\":true}')}).listen(Number(process.argv[1]));";
     return ["-e", script, String(port), spawnLog];
   }
 
@@ -115,7 +121,10 @@ describe("NativeBackendManager", () => {
       .map((line) => Number(line.trim()));
   }
 
-  async function waitForHealth(port: number, timeoutMs = 3000): Promise<boolean> {
+  async function waitForHealth(
+    port: number,
+    timeoutMs = 3000,
+  ): Promise<boolean> {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
       const res = await httpGet(port, HEALTH_PATH, 300);
@@ -127,7 +136,10 @@ describe("NativeBackendManager", () => {
     return false;
   }
 
-  async function waitUntilDead(pid: number, timeoutMs = 2000): Promise<boolean> {
+  async function waitUntilDead(
+    pid: number,
+    timeoutMs = 2000,
+  ): Promise<boolean> {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
       if (!isProcessAlive(pid)) {
@@ -139,7 +151,10 @@ describe("NativeBackendManager", () => {
   }
 
   /** An instance another window published, as this window would find it. */
-  async function publishForeignInstance(): Promise<{ port: number; pid: number }> {
+  async function publishForeignInstance(): Promise<{
+    port: number;
+    pid: number;
+  }> {
     const port = await findFreePort();
     const child = spawn(process.execPath, spawnArgs(port), {
       detached: true,

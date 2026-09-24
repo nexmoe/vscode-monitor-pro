@@ -130,7 +130,9 @@ export class NativeBackendManager {
 
       const winner = await this._tryReuse();
       if (winner === null) {
-        throw new Error(`${this.spec.id} backend instance could not be published`);
+        throw new Error(
+          `${this.spec.id} backend instance could not be published`,
+        );
       }
       this._adopt(winner);
       this._logReused(winner.port);
@@ -215,7 +217,10 @@ export class NativeBackendManager {
    * GET a backend path. Returns null on connection error or timeout; the data
    * source decides what a useful response looks like.
    */
-  request(pathname: string, timeoutMs: number = REQUEST_TIMEOUT): Promise<HttpResult | null> {
+  request(
+    pathname: string,
+    timeoutMs: number = REQUEST_TIMEOUT,
+  ): Promise<HttpResult | null> {
     if (!this._ready || this._port === null) {
       return Promise.resolve(null);
     }

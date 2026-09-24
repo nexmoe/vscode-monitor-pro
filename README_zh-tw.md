@@ -71,22 +71,22 @@ l10n — 中文、電量、電池健康度與功率：
 
 14 項可獨立開關的指標，以 Codicon 圖示 + 格式化數值展示：
 
-| 指標       | 預設 | 圖示                                | 範例                    |
-| ---------- | ---- | ----------------------------------- | ----------------------- |
-| CPU        | 開   | `$(chip)`                           | `73.2%`                 |
-| 活躍記憶體 | 開   | `$(pie-chart)`                      | `4.21 / 15.6 GiB`       |
-| 電池       | 開   | `$(plug)`                           | `85.2% (充電中)`        |
-| 已用記憶體 | 關   | `$(pie-chart)`                      | `8.15 / 15.6 GiB`       |
-| 網路       | 關   | `$(cloud-download) $(cloud-upload)` | `125 KiB/s 2.34 MiB/s`  |
-| CPU 溫度   | 關   | `$(flame)`                          | `52.3°C`                |
-| CPU 頻率   | 關   | `$(dashboard)`                      | `3.81 GHz`              |
-| GPU        | 關   | `$(circuit-board)`                   | `73.2%`                 |
-| GPU 溫度   | 關   | `$(lightbulb-sparkle)`               | `52.3°C`                |
-| GPU 顯示記憶體 | 關   | `$(layers)`                          | `11.2 / 24 GiB`         |
-| 執行時間   | 關   | `$(clock)`                          | `2d 14h 32m`            |
-| 磁碟 I/O   | 關   | `$(log-in) $(log-out)`              | `50.2 MiB/s 12.1 MiB/s` |
-| 磁碟空間   | 關   | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
-| 系統發行版 | 關   | —                                   | `Ubuntu 22.04`          |
+| 指標           | 預設 | 圖示                                | 範例                    |
+| -------------- | ---- | ----------------------------------- | ----------------------- |
+| CPU            | 開   | `$(chip)`                           | `73.2%`                 |
+| 活躍記憶體     | 開   | `$(pie-chart)`                      | `4.21 / 15.6 GiB`       |
+| 電池           | 開   | `$(plug)`                           | `85.2% (充電中)`        |
+| 已用記憶體     | 關   | `$(pie-chart)`                      | `8.15 / 15.6 GiB`       |
+| 網路           | 關   | `$(cloud-download) $(cloud-upload)` | `125 KiB/s 2.34 MiB/s`  |
+| CPU 溫度       | 關   | `$(flame)`                          | `52.3°C`                |
+| CPU 頻率       | 關   | `$(dashboard)`                      | `3.81 GHz`              |
+| GPU            | 關   | `$(circuit-board)`                  | `73.2%`                 |
+| GPU 溫度       | 關   | `$(lightbulb-sparkle)`              | `52.3°C`                |
+| GPU 顯示記憶體 | 關   | `$(layers)`                         | `11.2 / 24 GiB`         |
+| 執行時間       | 關   | `$(clock)`                          | `2d 14h 32m`            |
+| 磁碟 I/O       | 關   | `$(log-in) $(log-out)`              | `50.2 MiB/s 12.1 MiB/s` |
+| 磁碟空間       | 關   | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
+| 系統發行版     | 關   | —                                   | `Ubuntu 22.04`          |
 
 > GPU 指標需要 NVIDIA 硬體搭配 `nvidia-smi`，或使用 mactop 後端的 Apple Silicon；否則自動隱藏。GPU 記憶體另需 VRAM，而 mactop 的整合式 GPU 後端不提供此資料。
 
@@ -153,20 +153,20 @@ Monitor Pro 支援兩種模式的即時功率監測：
 
 所有設定項以 `monitor-pro.*` 開頭，修改後即時熱重載。
 
-| 設定                                        | 預設值        | 說明                                     |
-| ------------------------------------------- | ------------- | ---------------------------------------- |
-| `monitor-pro.metrics.*`                     | 見上表        | 開關狀態列各項指標                       |
-| `monitor-pro.metricsOrder`                  | —             | 調整狀態列顯示順序                       |
-| `monitor-pro.refresh-interval`              | `2000` ms     | 輪詢間隔（500~30000ms）                  |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）或 `decimal`（kB/MB） |
-| `monitor-pro.showSpace`                     | `false`       | 數字與單位間是否加空格                   |
-| `monitor-pro.singleUnit`                    | `false`       | 單位縮寫為首字母（K, M, G）              |
-| `monitor-pro.significantDigits`             | 各指標不同    | 有效數字位數（1~6）                      |
-| `monitor-pro.uptimeFormat`                  | `auto`        | 自訂格式，支援 `{d}` `{h}` `{m}` `{s}`   |
+| 設定                                        | 預設值        | 說明                                                              |
+| ------------------------------------------- | ------------- | ----------------------------------------------------------------- |
+| `monitor-pro.metrics.*`                     | 見上表        | 開關狀態列各項指標                                                |
+| `monitor-pro.metricsOrder`                  | —             | 調整狀態列顯示順序                                                |
+| `monitor-pro.refresh-interval`              | `2000` ms     | 輪詢間隔（500~30000ms）                                           |
+| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）或 `decimal`（kB/MB）                          |
+| `monitor-pro.showSpace`                     | `false`       | 數字與單位間是否加空格                                            |
+| `monitor-pro.singleUnit`                    | `false`       | 單位縮寫為首字母（K, M, G）                                       |
+| `monitor-pro.significantDigits`             | 各指標不同    | 有效數字位數（1~6）                                               |
+| `monitor-pro.uptimeFormat`                  | `auto`        | 自訂格式，支援 `{d}` `{h}` `{m}` `{s}`                            |
 | `monitor-pro.resourceUsage.charts`          | —             | 圖表/卡片啟用、檢視、顏色（含 `osDistro`、`uptime`、`diskSpace`） |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 圖表歷史點數（10~500）                   |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁碟空間卡片掛載點過濾                   |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | 狀態列磁碟空間掛載點過濾                 |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 圖表歷史點數（10~500）                                            |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁碟空間卡片掛載點過濾                                            |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]` | 狀態列磁碟空間掛載點過濾                                          |
 
 ## 0.6.0 前螢幕截圖（目前版本仍保持相容）
 

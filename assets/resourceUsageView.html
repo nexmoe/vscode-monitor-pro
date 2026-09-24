@@ -1,1165 +1,1395 @@
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-__NONCE__';" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-__NONCE__';"
+    />
     <style>
-        :root {
-            --bg: var(--vscode-sideBar-background);
-            --fg: var(--vscode-editor-foreground);
-            --fg-muted: var(--vscode-descriptionForeground);
-            --border: var(--vscode-editorWidget-border);
-            --font: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
-            --font-size: var(--vscode-font-size, 13px);
-            --card-bg: var(--vscode-editor-background);
-            --hover-bg: var(--vscode-list-hoverBackground);
-        }
+      :root {
+        --bg: var(--vscode-sideBar-background);
+        --fg: var(--vscode-editor-foreground);
+        --fg-muted: var(--vscode-descriptionForeground);
+        --border: var(--vscode-editorWidget-border);
+        --font: var(
+          --vscode-font-family,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif
+        );
+        --font-size: var(--vscode-font-size, 13px);
+        --card-bg: var(--vscode-editor-background);
+        --hover-bg: var(--vscode-list-hoverBackground);
+      }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        html {
-            scrollbar-width: none;
-        }
+      html {
+        scrollbar-width: none;
+      }
 
-        body {
-            font-family: var(--font);
-            font-size: var(--font-size);
-            color: var(--fg);
-            background: var(--bg);
-            padding: 8px;
-            overflow-x: hidden;
-            user-select: none;
-        }
+      body {
+        font-family: var(--font);
+        font-size: var(--font-size);
+        color: var(--fg);
+        background: var(--bg);
+        padding: 8px;
+        overflow-x: hidden;
+        user-select: none;
+      }
 
-        ::-webkit-scrollbar {
-            display: none;
-        }
+      ::-webkit-scrollbar {
+        display: none;
+      }
 
-        .section-title {
-            font-size: calc(var(--font-size) - 1px);
-            font-weight: 600;
-            color: var(--fg-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 12px 0 6px 2px;
-        }
+      .section-title {
+        font-size: calc(var(--font-size) - 1px);
+        font-weight: 600;
+        color: var(--fg-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 12px 0 6px 2px;
+      }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 4px;
-            padding: 6px;
-            margin-bottom: 6px;
-        }
+      .card {
+        background: var(--card-bg);
+        border-radius: 4px;
+        padding: 6px;
+        margin-bottom: 6px;
+      }
 
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 2px;
-            font-size: calc(var(--font-size) - 1px);
-            font-weight: 600;
-            color: var(--fg-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2px;
+        font-size: calc(var(--font-size) - 1px);
+        font-weight: 600;
+        color: var(--fg-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
 
-        .card-left {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+      .card-left {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
 
-        .card-value {
-            font-weight: 700;
-            font-size: calc(var(--font-size) - 1px);
-            color: var(--fg);
-            font-variant-numeric: tabular-nums;
-        }
+      .card-value {
+        font-weight: 700;
+        font-size: calc(var(--font-size) - 1px);
+        color: var(--fg);
+        font-variant-numeric: tabular-nums;
+      }
 
-        .card-sub {
-            font-size: calc(var(--font-size) - 2px);
-            color: var(--fg-muted);
-            font-weight: 400;
-            text-transform: none;
-            letter-spacing: 0;
-            margin-top: 1px;
-            width: 100%;
-        }
+      .card-sub {
+        font-size: calc(var(--font-size) - 2px);
+        color: var(--fg-muted);
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+        margin-top: 1px;
+        width: 100%;
+      }
 
-        .toggle-group {
-            display: flex;
-            gap: 2px;
-            flex-shrink: 0;
-        }
+      .toggle-group {
+        display: flex;
+        gap: 2px;
+        flex-shrink: 0;
+      }
 
-        .toggle-btn {
-            background: none;
-            border: 1px solid transparent;
-            color: var(--fg-muted);
-            cursor: pointer;
-            font-size: calc(var(--font-size) + 1px);
-            line-height: 1;
-            padding: 1px 4px;
-            border-radius: 3px;
-            opacity: 0.4;
-        }
+      .toggle-btn {
+        background: none;
+        border: 1px solid transparent;
+        color: var(--fg-muted);
+        cursor: pointer;
+        font-size: calc(var(--font-size) + 1px);
+        line-height: 1;
+        padding: 1px 4px;
+        border-radius: 3px;
+        opacity: 0.4;
+      }
 
-        .toggle-btn:hover {
-            opacity: 0.8;
-            background: var(--hover-bg);
-        }
+      .toggle-btn:hover {
+        opacity: 0.8;
+        background: var(--hover-bg);
+      }
 
-        .toggle-btn.active {
-            opacity: 1;
-            background: var(--card-bg);
-            border-color: var(--border);
-        }
+      .toggle-btn.active {
+        opacity: 1;
+        background: var(--card-bg);
+        border-color: var(--border);
+      }
 
-        .chart-wrap {
-            width: 100%;
-            height: 56px;
-            border: 1.5px solid color-mix(in srgb, var(--vscode-editor-foreground) 10%, transparent);
-            border-radius: 4px;
-        }
+      .chart-wrap {
+        width: 100%;
+        height: 56px;
+        border: 1.5px solid
+          color-mix(in srgb, var(--vscode-editor-foreground) 10%, transparent);
+        border-radius: 4px;
+      }
 
-        body.vscode-high-contrast .chart-wrap {
-            border-color: var(--vscode-contrastBorder);
-        }
+      body.vscode-high-contrast .chart-wrap {
+        border-color: var(--vscode-contrastBorder);
+      }
 
-        .chart-wrap canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
+      .chart-wrap canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
 
-        .bar-wrap {
-            width: 100%;
-            padding: 6px 0;
-        }
+      .bar-wrap {
+        width: 100%;
+        padding: 6px 0;
+      }
 
-        .bar-row {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
 
-        .bar-track {
-            flex: 1;
-            height: 6px;
-            background: rgba(128, 128, 128, 0.12);
-            border-radius: 3px;
-            overflow: hidden;
-        }
+      .bar-track {
+        flex: 1;
+        height: 6px;
+        background: rgba(128, 128, 128, 0.12);
+        border-radius: 3px;
+        overflow: hidden;
+      }
 
-        .bar-fill {
-            height: 100%;
-            border-radius: 3px;
-            min-width: 2px;
-        }
+      .bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        min-width: 2px;
+      }
 
-        .bar-label {
-            font-size: calc(var(--font-size) - 2px);
-            color: var(--fg-muted);
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
+      .bar-label {
+        font-size: calc(var(--font-size) - 2px);
+        color: var(--fg-muted);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
 
-        .array-wrap {
-            width: 100%;
-            padding: 6px 0;
-        }
+      .array-wrap {
+        width: 100%;
+        padding: 6px 0;
+      }
 
-        .core-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-            gap: 4px 8px;
-        }
+      .core-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 4px 8px;
+      }
 
-        .core-cell {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            min-width: 0;
-        }
+      .core-cell {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+      }
 
-        .core-name {
-            font-size: calc(var(--font-size) - 2px);
-            color: var(--fg-muted);
-            font-variant-numeric: tabular-nums;
-            flex-shrink: 0;
-            min-width: 24px;
-            text-align: right;
-        }
+      .core-name {
+        font-size: calc(var(--font-size) - 2px);
+        color: var(--fg-muted);
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+        min-width: 24px;
+        text-align: right;
+      }
 
-        .core-bar-track {
-            flex: 1;
-            height: 6px;
-            background: rgba(128, 128, 128, 0.12);
-            border-radius: 3px;
-            overflow: hidden;
-            min-width: 0;
-        }
+      .core-bar-track {
+        flex: 1;
+        height: 6px;
+        background: rgba(128, 128, 128, 0.12);
+        border-radius: 3px;
+        overflow: hidden;
+        min-width: 0;
+      }
 
-        .core-bar-fill {
-            height: 100%;
-            border-radius: 3px;
-            min-width: 2px;
-        }
+      .core-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        min-width: 2px;
+      }
 
-        .core-label {
-            font-size: calc(var(--font-size) - 2px);
-            color: var(--fg-muted);
-            font-variant-numeric: tabular-nums;
-            flex-shrink: 0;
-            min-width: 30px;
-            text-align: right;
-        }
+      .core-label {
+        font-size: calc(var(--font-size) - 2px);
+        color: var(--fg-muted);
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+        min-width: 30px;
+        text-align: right;
+      }
 
-        .info-card {
-            background: var(--card-bg);
-            border-radius: 4px;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-        }
+      .info-card {
+        background: var(--card-bg);
+        border-radius: 4px;
+        padding: 8px 10px;
+        margin-bottom: 6px;
+      }
 
-        .info-header {
-            font-size: calc(var(--font-size) - 1px);
-            font-weight: 600;
-            color: var(--fg-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-bottom: 4px;
-        }
+      .info-header {
+        font-size: calc(var(--font-size) - 1px);
+        font-weight: 600;
+        color: var(--fg-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 4px;
+      }
 
-        .info-value {
-            font-weight: 700;
-            font-size: var(--font-size);
-            color: var(--fg);
-            font-variant-numeric: tabular-nums;
-        }
+      .info-value {
+        font-weight: 700;
+        font-size: var(--font-size);
+        color: var(--fg);
+        font-variant-numeric: tabular-nums;
+      }
 
-        .info-mount-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 3px;
-        }
+      .info-mount-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 3px;
+      }
 
-        .info-mount-name {
-            font-size: calc(var(--font-size) - 2px);
-            color: var(--fg-muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 30%;
-            flex-shrink: 1;
-            min-width: 0;
-        }
+      .info-mount-name {
+        font-size: calc(var(--font-size) - 2px);
+        color: var(--fg-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 30%;
+        flex-shrink: 1;
+        min-width: 0;
+      }
 
-        .info-bar-track {
-            flex: 1;
-            height: 6px;
-            background: rgba(128, 128, 128, 0.12);
-            border-radius: 3px;
-            overflow: hidden;
-        }
+      .info-bar-track {
+        flex: 1;
+        height: 6px;
+        background: rgba(128, 128, 128, 0.12);
+        border-radius: 3px;
+        overflow: hidden;
+      }
 
-        .info-bar-fill {
-            height: 100%;
-            border-radius: 3px;
-            min-width: 2px;
-        }
+      .info-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        min-width: 2px;
+      }
 
-        .info-bar-label {
-            font-size: calc(var(--font-size) - 2px);
-            color: var(--fg-muted);
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-            flex-shrink: 0;
-            min-width: 36px;
-            text-align: right;
-        }
+      .info-bar-label {
+        font-size: calc(var(--font-size) - 2px);
+        color: var(--fg-muted);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: 36px;
+        text-align: right;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="app"></div>
 
     <script nonce="__NONCE__">
-        (function () {
-            "use strict";
+      (function () {
+        "use strict";
 
-            const vscode = acquireVsCodeApi();
+        const vscode = acquireVsCodeApi();
 
-            // -------- state --------
+        // -------- state --------
 
-            let _charts = {};
-            let _chartColors = {};
-            let _show = { uptime: true, osDistro: true };
-            let _labels = {};
-            let _diskSpaceMounts = ["all"];
-            let _powerMode = "battery"; // "battery" (signed) | "soc" (mactop, always non-negative)
+        let _charts = {};
+        let _chartColors = {};
+        let _show = { uptime: true, osDistro: true };
+        let _labels = {};
+        let _diskSpaceMounts = ["all"];
+        let _powerMode = "battery"; // "battery" (signed) | "soc" (mactop, always non-negative)
 
-            let _fmtConfig = {
-                unitSystem: "binary",
-                showSpace: false,
-                significantDigits: {},
-            };
+        let _fmtConfig = {
+          unitSystem: "binary",
+          showSpace: false,
+          significantDigits: {},
+        };
 
-            const ALL_CHART_IDS = [
-                "cpu", "memActive", "memUsed",
-                "netRx", "netTx",
-                "diskRx", "diskWx",
-                "battery", "batteryPower", "cpuTemp", "cpuSpeed",
-                "gpu", "gpuTemp", "gpuMem",
-            ];
+        const ALL_CHART_IDS = [
+          "cpu",
+          "memActive",
+          "memUsed",
+          "netRx",
+          "netTx",
+          "diskRx",
+          "diskWx",
+          "battery",
+          "batteryPower",
+          "cpuTemp",
+          "cpuSpeed",
+          "gpu",
+          "gpuTemp",
+          "gpuMem",
+        ];
 
-            // Metrics exposing a per-item dimension for the array view. The
-            // value may be a plain number array (cpu cores, cpu temp cores) or
-            // an array of objects (gpuCards) from which `valueKey` selects the
-            // per-card field. `type` drives cell semantics:
-            //   percent - 0-100 bar with usageColor, "%" label
-            //   temp    - fixed 0-110 bar with tempColor, "°C" label
-            //   mem     - per-card used/total percent, tooltip shows model +
-            //             byte-formatted used/total (provided by the extension)
-            const ARRAY_FIELDS = {
-                cpu: { field: "cpuCores", type: "percent", prefix: "C", offset: 0 },
-                cpuTemp: { field: "cpuTempCores", type: "temp", prefix: "C", offset: 0 },
-                gpu: { field: "gpuCards", type: "percent", prefix: "G", offset: 0, valueKey: "utilization" },
-                gpuTemp: { field: "gpuCards", type: "temp", prefix: "G", offset: 0, valueKey: "temperature" },
-                gpuMem: { field: "gpuCards", type: "mem", prefix: "G", offset: 0, valueKey: "memUsed" },
-            };
+        // Metrics exposing a per-item dimension for the array view. The
+        // value may be a plain number array (cpu cores, cpu temp cores) or
+        // an array of objects (gpuCards) from which `valueKey` selects the
+        // per-card field. `type` drives cell semantics:
+        //   percent - 0-100 bar with usageColor, "%" label
+        //   temp    - fixed 0-110 bar with tempColor, "°C" label
+        //   mem     - per-card used/total percent, tooltip shows model +
+        //             byte-formatted used/total (provided by the extension)
+        const ARRAY_FIELDS = {
+          cpu: { field: "cpuCores", type: "percent", prefix: "C", offset: 0 },
+          cpuTemp: {
+            field: "cpuTempCores",
+            type: "temp",
+            prefix: "C",
+            offset: 0,
+          },
+          gpu: {
+            field: "gpuCards",
+            type: "percent",
+            prefix: "G",
+            offset: 0,
+            valueKey: "utilization",
+          },
+          gpuTemp: {
+            field: "gpuCards",
+            type: "temp",
+            prefix: "G",
+            offset: 0,
+            valueKey: "temperature",
+          },
+          gpuMem: {
+            field: "gpuCards",
+            type: "mem",
+            prefix: "G",
+            offset: 0,
+            valueKey: "memUsed",
+          },
+        };
 
-            // Fixed upper bound for temperature arrays (both CPU and GPU). GPU
-            // cards can legitimately exceed 100°C (e.g. GDDR6X memory junction),
-            // so the bar clamps at 110 while the label always shows the real
-            // value. The big card keeps its dynamic scale like cpuTemp.
-            const ARRAY_TEMP_MAX = 110;
+        // Fixed upper bound for temperature arrays (both CPU and GPU). GPU
+        // cards can legitimately exceed 100°C (e.g. GDDR6X memory junction),
+        // so the bar clamps at 110 while the label always shows the real
+        // value. The big card keeps its dynamic scale like cpuTemp.
+        const ARRAY_TEMP_MAX = 110;
 
-            const state = {
-                viewMode: {},
-                history: {},
-                barMax: {},
-                coreData: {},
-                // Extension-provided per-card metadata (model / memText) for the
-                // GPU array view, keyed by chart id.
-                cardMeta: {},
-                textMetrics: null,
-            };
+        const state = {
+          viewMode: {},
+          history: {},
+          barMax: {},
+          coreData: {},
+          // Extension-provided per-card metadata (model / memText) for the
+          // GPU array view, keyed by chart id.
+          cardMeta: {},
+          textMetrics: null,
+        };
 
-            // -------- color resolution --------
+        // -------- color resolution --------
 
-            var _cssCache = {};
+        var _cssCache = {};
 
-            function resolveColorValue(val) {
-                if (!val) return "";
-                if (val.startsWith("--")) {
-                    if (_cssCache[val] === undefined) {
-                        _cssCache[val] = getComputedStyle(document.documentElement).getPropertyValue(val).trim();
-                    }
-                    return _cssCache[val];
-                }
-                return val;
+        function resolveColorValue(val) {
+          if (!val) return "";
+          if (val.startsWith("--")) {
+            if (_cssCache[val] === undefined) {
+              _cssCache[val] = getComputedStyle(document.documentElement)
+                .getPropertyValue(val)
+                .trim();
             }
+            return _cssCache[val];
+          }
+          return val;
+        }
 
-            function resetCSSCache() {
-                _cssCache = {};
+        function resetCSSCache() {
+          _cssCache = {};
+        }
+
+        function getCachedCSSVar(name) {
+          if (_cssCache[name] === undefined) {
+            _cssCache[name] = getComputedStyle(document.documentElement)
+              .getPropertyValue(name)
+              .trim();
+          }
+          return _cssCache[name];
+        }
+
+        var _themeObserver = new MutationObserver(function () {
+          resetCSSCache();
+          for (const id of ALL_CHART_IDS) {
+            const c = _charts[id];
+            if (!c || !c.enabled) continue;
+            if (
+              state.viewMode[id] === "line" &&
+              state.history[id] &&
+              state.history[id].length >= 2
+            ) {
+              drawChart(id, state.history[id], colorFor(id));
+            } else if (
+              state.viewMode[id] === "array" &&
+              state.coreData[id] &&
+              state.coreData[id].length > 0
+            ) {
+              renderCoreArray(id, state.coreData[id]);
             }
+          }
+        });
+        _themeObserver.observe(document.body, {
+          attributes: true,
+          attributeFilter: ["class"],
+        });
 
-            function getCachedCSSVar(name) {
-                if (_cssCache[name] === undefined) {
-                    _cssCache[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-                }
-                return _cssCache[name];
+        function hexToRgb(hex) {
+          const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          return m
+            ? {
+                r: parseInt(m[1], 16),
+                g: parseInt(m[2], 16),
+                b: parseInt(m[3], 16),
+              }
+            : null;
+        }
+
+        // VS Code injects theme colors that carry transparency (e.g.
+        // charts.orange defaults to a translucent find-match highlight) as
+        // "rgba(r,g,b,a)". Chart lines must always be drawn opaque so they
+        // stay readable on every theme, mirroring the other default chart
+        // colors. Any other format (hex, rgb(), color-mix, empty) passes
+        // through untouched.
+        function opaque(color) {
+          if (typeof color !== "string") return color;
+          const m =
+            /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*[\d.]+\)$/.exec(
+              color,
+            );
+          return m ? "rgb(" + m[1] + "," + m[2] + "," + m[3] + ")" : color;
+        }
+
+        function rgba(color, a) {
+          const rgb = hexToRgb(color);
+          return rgb
+            ? "rgba(" + rgb.r + "," + rgb.g + "," + rgb.b + "," + a + ")"
+            : "rgba(128,128,128," + a + ")";
+        }
+
+        // -------- formatting --------
+
+        function unitLabel(units, i, suffix) {
+          const u = units[i];
+          if (_fmtConfig.singleUnit) return u[0] + suffix;
+          return u + suffix;
+        }
+
+        function formatRate(v) {
+          if (v < 1) return "0 B/s";
+          const isBinary = _fmtConfig.unitSystem === "binary";
+          const sp = _fmtConfig.showSpace ? " " : "";
+          const divisor = isBinary ? 1024 : 1000;
+          const units = isBinary
+            ? ["B", "KiB", "MiB", "GiB", "TiB", "PiB"]
+            : ["B", "kB", "MB", "GB", "TB", "PB"];
+          let i = 0,
+            val = v;
+          while (val >= divisor && i < units.length - 1) {
+            val /= divisor;
+            i++;
+          }
+          const sig = _fmtConfig.significantDigits?.network ?? 3;
+          return val.toPrecision(sig) + sp + unitLabel(units, i, "/s");
+        }
+
+        function formatBytes(v, sig) {
+          if (v < 1) return "0 B";
+          const isBinary = _fmtConfig.unitSystem === "binary";
+          const sp = _fmtConfig.showSpace ? " " : "";
+          const divisor = isBinary ? 1024 : 1000;
+          const units = isBinary
+            ? ["B", "KiB", "MiB", "GiB", "TiB", "PiB"]
+            : ["B", "kB", "MB", "GB", "TB", "PB"];
+          let i = 0,
+            val = v;
+          while (val >= divisor && i < units.length - 1) {
+            val /= divisor;
+            i++;
+          }
+          const s = sig != null ? val.toPrecision(sig) : val.toFixed(1);
+          return s + sp + unitLabel(units, i, "");
+        }
+
+        function formatUptimeSimple(seconds) {
+          const d = Math.floor(seconds / 86400);
+          const h = Math.floor((seconds % 86400) / 3600);
+          const m = Math.floor((seconds % 3600) / 60);
+          const parts = [];
+          if (d > 0) parts.push(d + "d");
+          if (h > 0) parts.push(h + "h");
+          parts.push(m + "m");
+          return parts.join(" ");
+        }
+
+        const SCALE_HEADROOM = 1.0;
+
+        function isPercentId(id) {
+          return (
+            id === "cpu" ||
+            id === "memActive" ||
+            id === "memUsed" ||
+            id === "battery" ||
+            id === "gpu" ||
+            id === "gpuMem"
+          );
+        }
+
+        function isPowerId(id) {
+          return id === "batteryPower";
+        }
+
+        // Non-percentage metrics derive their scale from the collected data, so their
+        // current scale must be displayed (unlike the fixed 0-100% scale).
+        function isDynamicScaleId(id) {
+          return !isPercentId(id);
+        }
+
+        // Battery net power in battery mode is signed, so the chart is symmetric
+        // about zero; every other scale starts at zero.
+        function hasSymmetricScale(id) {
+          return isPowerId(id) && _powerMode === "battery";
+        }
+
+        // Single source of truth for a metric's scale maximum: drives the line chart
+        // y-axis, the bar fill width, and the scale label on both views.
+        function computeScaleMax(id, vals) {
+          if (isPercentId(id)) return 100;
+          const peak = hasSymmetricScale(id)
+            ? Math.max(1, ...vals.map(Math.abs))
+            : Math.max(1, ...vals);
+          return peak * SCALE_HEADROOM;
+        }
+
+        function formatChartValue(id, v) {
+          const sep = _fmtConfig.showSpace ? " " : "";
+          if (isPowerId(id)) {
+            const sign = hasSymmetricScale(id) && v >= 0 ? "+" : "";
+            return sign + v.toFixed(1) + sep + "W";
+          }
+          if (id === "cpuTemp" || id === "gpuTemp")
+            return v.toFixed(1) + sep + "\u00B0C";
+          if (id === "cpuSpeed") return v.toFixed(2) + sep + "GHz";
+          if (isPercentId(id)) return v.toFixed(1) + sep + "%";
+          return formatRate(v);
+        }
+
+        // Marks scale labels on both views as the chart's current maximum scale,
+        // rather than the latest value.
+        const SCALE_LABEL_PREFIX = "\u2191 ";
+
+        // Draw a chart label with a background halo for contrast. Value and
+        // scale labels use identical formatting and share this path.
+        function drawChartLabel(ctx, text, x, y, opts) {
+          ctx.font = opts.font;
+          ctx.textAlign = opts.align;
+          ctx.textBaseline = "top";
+          ctx.strokeStyle = opts.halo;
+          ctx.lineWidth = 3;
+          ctx.lineJoin = "round";
+          ctx.strokeText(text, x, y);
+          ctx.fillStyle = opts.color;
+          ctx.fillText(text, x, y);
+        }
+
+        function colorFor(id) {
+          const c = opaque(resolveColorValue(_chartColors[id]));
+          if (c) return c;
+          return getCachedCSSVar("--vscode-editor-foreground");
+        }
+
+        // -------- config handler --------
+
+        function handleConfig(cfg) {
+          resetCSSCache();
+          _charts = cfg.charts || {};
+          _diskSpaceMounts = cfg.diskSpaceMounts || ["all"];
+          _powerMode = cfg.powerMode || "battery";
+
+          _chartColors = {};
+          for (const id of ALL_CHART_IDS) {
+            const c = _charts[id];
+            _chartColors[id] = c && c.color ? c.color : "";
+          }
+
+          _show = {
+            uptime:
+              (cfg.charts && cfg.charts.uptime && cfg.charts.uptime.enabled) !==
+              false,
+            osDistro:
+              (cfg.charts &&
+                cfg.charts.osDistro &&
+                cfg.charts.osDistro.enabled) !== false,
+            diskSpace:
+              (cfg.charts &&
+                cfg.charts.diskSpace &&
+                cfg.charts.diskSpace.enabled) !== false,
+          };
+          _labels = cfg.labels || {};
+
+          for (const id of ALL_CHART_IDS) {
+            const c = _charts[id];
+            if (c && c.enabled) {
+              state.viewMode[id] = c.view || "line";
+              if (!state.history[id]) state.history[id] = [];
+              state.barMax[id] = state.barMax[id] || 1;
             }
-
-            var _themeObserver = new MutationObserver(function () {
-                resetCSSCache();
-                for (const id of ALL_CHART_IDS) {
-                    const c = _charts[id];
-                    if (!c || !c.enabled) continue;
-                    if (state.viewMode[id] === "line" && state.history[id] && state.history[id].length >= 2) {
-                        drawChart(id, state.history[id], colorFor(id));
-                    } else if (state.viewMode[id] === "array" && state.coreData[id] && state.coreData[id].length > 0) {
-                        renderCoreArray(id, state.coreData[id]);
-                    }
-                }
-            });
-            _themeObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-
-            function hexToRgb(hex) {
-                const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : null;
-            }
-
-            // VS Code injects theme colors that carry transparency (e.g.
-            // charts.orange defaults to a translucent find-match highlight) as
-            // "rgba(r,g,b,a)". Chart lines must always be drawn opaque so they
-            // stay readable on every theme, mirroring the other default chart
-            // colors. Any other format (hex, rgb(), color-mix, empty) passes
-            // through untouched.
-            function opaque(color) {
-                if (typeof color !== "string") return color;
-                const m = /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*[\d.]+\)$/.exec(color);
-                return m ? "rgb(" + m[1] + "," + m[2] + "," + m[3] + ")" : color;
-            }
-
-            function rgba(color, a) {
-                const rgb = hexToRgb(color);
-                return rgb ? "rgba(" + rgb.r + "," + rgb.g + "," + rgb.b + "," + a + ")" : "rgba(128,128,128," + a + ")";
-            }
-
-            // -------- formatting --------
-
-            function unitLabel(units, i, suffix) {
-                const u = units[i];
-                if (_fmtConfig.singleUnit) return u[0] + suffix;
-                return u + suffix;
-            }
-
-            function formatRate(v) {
-                if (v < 1) return "0 B/s";
-                const isBinary = _fmtConfig.unitSystem === "binary";
-                const sp = _fmtConfig.showSpace ? " " : "";
-                const divisor = isBinary ? 1024 : 1000;
-                const units = isBinary
-                    ? ["B", "KiB", "MiB", "GiB", "TiB", "PiB"]
-                    : ["B", "kB", "MB", "GB", "TB", "PB"];
-                let i = 0, val = v;
-                while (val >= divisor && i < units.length - 1) { val /= divisor; i++; }
-                const sig = _fmtConfig.significantDigits?.network ?? 3;
-                return val.toPrecision(sig) + sp + unitLabel(units, i, "/s");
-            }
-
-            function formatBytes(v, sig) {
-                if (v < 1) return "0 B";
-                const isBinary = _fmtConfig.unitSystem === "binary";
-                const sp = _fmtConfig.showSpace ? " " : "";
-                const divisor = isBinary ? 1024 : 1000;
-                const units = isBinary
-                    ? ["B", "KiB", "MiB", "GiB", "TiB", "PiB"]
-                    : ["B", "kB", "MB", "GB", "TB", "PB"];
-                let i = 0, val = v;
-                while (val >= divisor && i < units.length - 1) { val /= divisor; i++; }
-                const s = sig != null ? val.toPrecision(sig) : val.toFixed(1);
-                return s + sp + unitLabel(units, i, "");
-            }
-
-            function formatUptimeSimple(seconds) {
-                const d = Math.floor(seconds / 86400);
-                const h = Math.floor((seconds % 86400) / 3600);
-                const m = Math.floor((seconds % 3600) / 60);
-                const parts = [];
-                if (d > 0) parts.push(d + "d");
-                if (h > 0) parts.push(h + "h");
-                parts.push(m + "m");
-                return parts.join(" ");
-            }
-
-            const SCALE_HEADROOM = 1.0;
-
-            function isPercentId(id) {
-                return id === "cpu" || id === "memActive" || id === "memUsed" || id === "battery"
-                    || id === "gpu" || id === "gpuMem";
-            }
-
-            function isPowerId(id) {
-                return id === "batteryPower";
-            }
-
-            // Non-percentage metrics derive their scale from the collected data, so their
-            // current scale must be displayed (unlike the fixed 0-100% scale).
-            function isDynamicScaleId(id) {
-                return !isPercentId(id);
-            }
-
-            // Battery net power in battery mode is signed, so the chart is symmetric
-            // about zero; every other scale starts at zero.
-            function hasSymmetricScale(id) {
-                return isPowerId(id) && _powerMode === "battery";
-            }
-
-            // Single source of truth for a metric's scale maximum: drives the line chart
-            // y-axis, the bar fill width, and the scale label on both views.
-            function computeScaleMax(id, vals) {
-                if (isPercentId(id)) return 100;
-                const peak = hasSymmetricScale(id)
-                    ? Math.max(1, ...vals.map(Math.abs))
-                    : Math.max(1, ...vals);
-                return peak * SCALE_HEADROOM;
-            }
-
-            function formatChartValue(id, v) {
-                const sep = _fmtConfig.showSpace ? " " : "";
-                if (isPowerId(id)) {
-                    const sign = hasSymmetricScale(id) && v >= 0 ? "+" : "";
-                    return sign + v.toFixed(1) + sep + "W";
-                }
-                if (id === "cpuTemp" || id === "gpuTemp") return v.toFixed(1) + sep + "\u00B0C";
-                if (id === "cpuSpeed") return v.toFixed(2) + sep + "GHz";
-                if (isPercentId(id)) return v.toFixed(1) + sep + "%";
-                return formatRate(v);
-            }
-
-            // Marks scale labels on both views as the chart's current maximum scale,
-            // rather than the latest value.
-            const SCALE_LABEL_PREFIX = "\u2191 ";
-
-            // Draw a chart label with a background halo for contrast. Value and
-            // scale labels use identical formatting and share this path.
-            function drawChartLabel(ctx, text, x, y, opts) {
-                ctx.font = opts.font;
-                ctx.textAlign = opts.align;
-                ctx.textBaseline = "top";
-                ctx.strokeStyle = opts.halo;
-                ctx.lineWidth = 3;
-                ctx.lineJoin = "round";
-                ctx.strokeText(text, x, y);
-                ctx.fillStyle = opts.color;
-                ctx.fillText(text, x, y);
-            }
-
-            function colorFor(id) {
-                const c = opaque(resolveColorValue(_chartColors[id]));
-                if (c) return c;
-                return getCachedCSSVar("--vscode-editor-foreground");
-            }
-
-            // -------- config handler --------
-
-            function handleConfig(cfg) {
-                resetCSSCache();
-                _charts = cfg.charts || {};
-                _diskSpaceMounts = cfg.diskSpaceMounts || ["all"];
-                _powerMode = cfg.powerMode || "battery";
-
-                _chartColors = {};
-                for (const id of ALL_CHART_IDS) {
-                    const c = _charts[id];
-                    _chartColors[id] = (c && c.color) ? c.color : "";
-                }
-
-                _show = {
-                    uptime: (cfg.charts && cfg.charts.uptime && cfg.charts.uptime.enabled) !== false,
-                    osDistro: (cfg.charts && cfg.charts.osDistro && cfg.charts.osDistro.enabled) !== false,
-                    diskSpace: (cfg.charts && cfg.charts.diskSpace && cfg.charts.diskSpace.enabled) !== false,
-                };
-                _labels = cfg.labels || {};
-
-                for (const id of ALL_CHART_IDS) {
-                    const c = _charts[id];
-                    if (c && c.enabled) {
-                        state.viewMode[id] = c.view || "line";
-                        if (!state.history[id]) state.history[id] = [];
-                        state.barMax[id] = state.barMax[id] || 1;
-                    }
-                }
-
-                renderAll();
-            }
-
-            // -------- render --------
-
-            function renderAll() {
-                renderCharts();
-                renderInfo();
-            }
-
-            function renderCharts() {
-                const container = document.getElementById("chart-container");
-                if (!container) return;
-
-                const enabled = ALL_CHART_IDS.filter(id => {
-                    const c = _charts[id];
-                    return c && c.enabled;
-                });
-
-                let html = "";
-                for (const id of enabled) {
-                    const label = _labels[id] || id;
-                    const color = colorFor(id);
-                    const view = state.viewMode[id] || "line";
-                    const isArrayCapable = ARRAY_FIELDS[id] !== undefined;
-                    // GPU arrays only make sense with more than one card; a
-                    // single (e.g. Apple Silicon) GPU has no array dimension.
-                    const coreCount = state.coreData[id] ? state.coreData[id].length : 0;
-                    const hasCores =
-                        isArrayCapable && coreCount > (id.startsWith("gpu") ? 1 : 0);
-
-                    html +=
-                        '<div class="card" data-metric="' + id + '">' +
-                        '<div class="card-header">' +
-                        '<div class="card-left">' +
-                        '<span>' + label + '</span>' +
-                        '<span class="card-value" id="val-' + id + '">\u2014</span>' +
-                        '<div class="card-sub" id="sub-' + id + '"></div>' +
-                        '</div>' +
-                        '<div class="toggle-group">' +
-                        '<button class="toggle-btn' + (view === "line" ? " active" : "") + '" data-metric="' + id + '" data-view="line" title="__LINE_CHART_TITLE__">\u25E0</button>' +
-                        '<button class="toggle-btn' + (view === "bar" ? " active" : "") + '" data-metric="' + id + '" data-view="bar" title="__BAR_CHART_TITLE__">\u25A4</button>' +
-                        (isArrayCapable
-                            ? '<button class="toggle-btn' + (view === "array" ? " active" : "") + '" data-metric="' + id + '" data-view="array" title="__ARRAY_CHART_TITLE__" style="display:' + (hasCores ? "" : "none") + '">\u25A6</button>'
-                            : "") +
-                        '</div>' +
-                        '</div>' +
-                        '<div class="chart-wrap" id="chart-wrap-' + id + '"' + (view !== "line" ? ' style="display:none"' : '') + '>' +
-                        '<canvas id="canvas-' + id + '"></canvas>' +
-                        '</div>' +
-                        '<div class="bar-wrap" id="bar-wrap-' + id + '"' + (view !== "bar" ? ' style="display:none"' : '') + '>' +
-                        '<div class="bar-row">' +
-                        '<div class="bar-track"><div class="bar-fill" id="bar-fill-' + id + '" style="width:0%;background:' + color + '"></div></div>' +
-                        '<span class="bar-label" id="bar-label-' + id + '">\u2014</span>' +
-                        '</div>' +
-                        '</div>' +
-                        (isArrayCapable
-                            ? '<div class="array-wrap" id="array-wrap-' + id + '"' + (view !== "array" ? ' style="display:none"' : '') + '></div>'
-                            : "") +
-                        '</div>';
-                }
-                container.innerHTML = html;
-
-                for (const id of enabled) {
-                    const canvas = document.getElementById("canvas-" + id);
-                    const chartWrap = document.getElementById("chart-wrap-" + id);
-                    if (canvas) registerCanvas(id, canvas, chartWrap);
-                    const barFill = document.getElementById("bar-fill-" + id);
-                    const barLabel = document.getElementById("bar-label-" + id);
-                    const valEl = document.getElementById("val-" + id);
-                    if (barFill) registerBar(id, barFill, barLabel, valEl);
-                }
-            }
-
-            const _canvases = {};
-            const _chartWraps = {};
-            const _barFills = {};
-            const _barLabels = {};
-            const _valueEls = {};
-            const _resizeObserved = new Set();
-
-            function registerCanvas(id, canvas, wrap) {
-                _canvases[id] = canvas;
-                _chartWraps[id] = wrap;
-                if (!_resizeObserved.has(id)) {
-                    _resizeObserved.add(id);
-                    if (_resizeObserver) _resizeObserver.observe(canvas);
-                }
-            }
-
-            function registerBar(id, fill, label, valEl) {
-                _barFills[id] = fill;
-                _barLabels[id] = label;
-                _valueEls[id] = valEl;
-            }
-
-            // -------- info section --------
-
-            function renderInfo() {
-                const container = document.getElementById("info-container");
-                if (!container) return;
-
-                const rows = [];
-                if (_show.uptime) rows.push({ id: "uptime", label: _labels.uptime || "Uptime" });
-                if (_show.osDistro) rows.push({ id: "osDistro", label: _labels.osDistro || "OS Distribution" });
-
-                let html = "";
-                for (const r of rows) {
-                    html +=
-                        '<div class="info-card" id="info-' + r.id + '">' +
-                        '<div class="info-header">' + r.label + '</div>' +
-                        '<div class="info-value" id="info-val-' + r.id + '">\u2014</div>' +
-                        '</div>';
-                }
-
-                // Disk space mounts
-                if (_show.diskSpace) {
-                    html +=
-                        '<div class="info-card" id="info-diskSpace">' +
-                        '<div class="info-header">' + (_labels.diskSpace || "Disk Space") + '</div>' +
-                        '<div id="disk-mount-list"></div>' +
-                        '</div>';
-                }
-
-                container.innerHTML = html;
-            }
-
-            // -------- disk space bar helpers --------
-
-            // Shared traffic-light semantics for percentage bars: green below
-            // 60%, yellow from 60%, red from 80%. Used by disk mounts and the
-            // per-core CPU array view.
-            function usageColor(pct) {
-                const name = pct >= 80
-                    ? "--vscode-charts-red"
-                    : pct >= 60
-                        ? "--vscode-charts-yellow"
-                        : "--vscode-charts-green";
-                return opaque(resolveColorValue(name)) || colorFor("memActive");
-            }
-
-            // Temperature color bands (CPU and GPU): green below 65°C, yellow
-            // 65-85°C, red above 85°C. Kept distinct from usageColor because the
-            // threshold semantics differ (absolute thermal limits vs. usage).
-            function tempColor(temp) {
-                const name = temp >= 85
-                    ? "--vscode-charts-red"
-                    : temp >= 65
-                        ? "--vscode-charts-yellow"
-                        : "--vscode-charts-green";
-                return opaque(resolveColorValue(name)) || colorFor("memActive");
-            }
-
-            function renderDiskMountBars(mounts) {
-                const container = document.getElementById("disk-mount-list");
-                if (!container) return;
-                if (!mounts || mounts.length === 0) {
-                    container.innerHTML = '<div class="info-value" style="font-size:calc(var(--font-size)-1px)">\u2014</div>';
-                    return;
-                }
-
-                const isAll = _diskSpaceMounts.length === 1 && _diskSpaceMounts[0] === "all";
-                const filtered = isAll ? mounts : mounts.filter(m => _diskSpaceMounts.includes(m.mount));
-
-                let html = "";
-                for (const m of filtered) {
-                    const barColor = usageColor(m.use);
-                    html +=
-                        '<div class="info-mount-row">' +
-                        '<span class="info-mount-name" title="' + escHtml(m.mount) + '">' + escHtml(m.mount) + '</span>' +
-                        '<div class="info-bar-track"><div class="info-bar-fill" style="width:' + m.use + '%;background:' + barColor + '"></div></div>' +
-                        '<span class="info-bar-label">' + m.use + '%</span>' +
-                        '</div>';
-                }
-                const totalSize = filtered.reduce((s, m) => s + m.size, 0);
-                const totalUsed = filtered.reduce((s, m) => s + m.used, 0);
-                const totalPct = totalSize > 0 ? ((totalUsed / totalSize) * 100).toFixed(1) : "0";
-                const sp2 = _fmtConfig.showSpace ? " " : "";
-                html +=
-                    '<div class="info-mount-row" style="margin-top:6px;border-top:1px solid rgba(128,128,128,0.15);padding-top:4px">' +
-                    '<span class="info-mount-name" style="font-weight:600">' +
-                    (_labels.diskSpace || "Disk Space") + '</span>' +
-                    '<span class="info-bar-label" style="font-weight:600;color:var(--fg)">' +
-                    formatBytes(totalUsed, 3) + sp2 + '/' + sp2 + formatBytes(totalSize, 3) +
-                    sp2 + '(' + totalPct + '%)</span>' +
-                    '</div>';
-                container.innerHTML = html;
-            }
-
-            function escHtml(s) {
-                const d = document.createElement("div");
-                d.textContent = s;
-                return d.innerHTML;
-            }
-
-            // -------- view toggle --------
-
-            // Reflect a view mode in the toggle group's active states.
-            function setViewActive(id, view) {
-                const card = document.querySelector('.card[data-metric="' + id + '"]');
-                if (!card) return;
-                for (const btn of card.querySelectorAll(".toggle-btn")) {
-                    btn.classList.toggle("active", btn.dataset.view === view);
-                }
-            }
-
-            document.addEventListener("click", function (e) {
-                const btn = e.target.closest(".toggle-btn");
-                if (!btn) return;
-                const metric = btn.dataset.metric;
-                const view = btn.dataset.view;
-                if (!metric || !view) return;
-
-                state.viewMode[metric] = view;
-                setViewActive(metric, view);
-
-                const chartWrap = document.getElementById("chart-wrap-" + metric);
-                const barWrap = document.getElementById("bar-wrap-" + metric);
-                const arrayWrap = document.getElementById("array-wrap-" + metric);
-                if (chartWrap) chartWrap.style.display = view === "line" ? "" : "none";
-                if (barWrap) barWrap.style.display = view === "bar" ? "" : "none";
-                if (arrayWrap) arrayWrap.style.display = view === "array" ? "" : "none";
-
-                if (view === "bar") {
-                    updateBar(metric);
-                } else if (view === "array") {
-                    renderCoreArray(metric);
-                } else if (state.history[metric] && state.history[metric].length >= 2) {
-                    drawChart(metric, state.history[metric], colorFor(metric));
-                }
-            });
-
-            // -------- data helpers --------
-
-            // Current per-item values for the array view (e.g. per-core CPU
-            // usage), or [] when the metric has no per-item dimension or the
-            // active data source does not provide one. Platform support is
-            // therefore expressed by data presence, never by a platform check.
-            function extractArray(history, id) {
-                const cfg = ARRAY_FIELDS[id];
-                if (!cfg || !history || !history.length) return [];
-                const arr = history[history.length - 1][cfg.field];
-                return Array.isArray(arr) ? arr : [];
-            }
-
-            function extractHistory(history, id) {
-                const vals = [];
-                for (const dp of history) {
-                    let v;
-                    if (id === "cpu") v = dp.cpu;
-                    else if (id === "memActive") v = (dp.memoryActive / dp.memoryTotal) * 100;
-                    else if (id === "memUsed") v = (dp.memoryUsed / dp.memoryTotal) * 100;
-                    else if (id === "netRx") v = dp.networkRx;
-                    else if (id === "netTx") v = dp.networkTx;
-                    else if (id === "diskRx") v = dp.diskRx;
-                    else if (id === "diskWx") v = dp.diskWx;
-                    else if (id === "battery") v = dp.batteryPercent >= 0 ? dp.batteryPercent : 0;
-                    else if (id === "batteryPower") v = dp.batteryPower;
-                    else if (id === "cpuTemp") v = dp.cpuTemperature;
-                    else if (id === "cpuSpeed") v = dp.cpuSpeedAvg;
-                    else if (id === "gpu") v = dp.gpuUtilization;
-                    else if (id === "gpuTemp") v = dp.gpuTemperature;
-                    else if (id === "gpuMem") v = dp.gpuMemTotal > 0 ? (dp.gpuMemUsed / dp.gpuMemTotal) * 100 : 0;
-                    else v = 0;
-                    vals.push(v);
-                }
-                return vals;
-            }
-
-            // -------- line chart drawing --------
-
-            function drawChart(id, history, color) {
-                const canvas = _canvases[id];
-                if (!canvas) return;
-                const ctx = canvas.getContext("2d");
-                const rect = canvas.getBoundingClientRect();
-                const dpr = window.devicePixelRatio || 1;
-                const w = rect.width;
-                const h = rect.height;
-                if (w === 0 || h === 0) return;
-
-                canvas.width = w * dpr;
-                canvas.height = h * dpr;
-                ctx.scale(dpr, dpr);
-                ctx.clearRect(0, 0, w, h);
-
-                const padTop = 0, padBot = 0;
-                const drawH = h - padTop - padBot;
-
-                const dataMax = computeScaleMax(id, history);
-                const dataMin = hasSymmetricScale(id) ? -dataMax : 0;
-                const range = dataMax - dataMin;
-                const n = history.length;
-                if (n < 2) return;
-
-                function yPos(val) { return padTop + drawH - ((val - dataMin) / range) * drawH; }
-
-                const xStep = w / (n - 1);
-
-                const fg = getCachedCSSVar("--vscode-editor-foreground");
-                const bg = getCachedCSSVar("--vscode-editor-background");
-
-                // Area fill blends the line color toward the card background in
-                // oklab, so light colors keep their hue instead of going gray at
-                // low alpha. Falls back to plain alpha if the background var is
-                // unexpectedly missing.
-                const grad = ctx.createLinearGradient(0, padTop, 0, padTop + drawH);
-                grad.addColorStop(0, bg ? "color-mix(in oklab, " + color + " 30%, " + bg + ")" : rgba(color, 0.30));
-                grad.addColorStop(1, bg ? "color-mix(in oklab, " + color + " 10%, " + bg + ")" : rgba(color, 0.10));
-                ctx.beginPath();
-                curvePath(ctx, history, xStep, yPos);
-                ctx.lineTo((n - 1) * xStep, padTop + drawH);
-                ctx.lineTo(0, padTop + drawH);
-                ctx.closePath();
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                ctx.strokeStyle = rgba(fg, 0.10);
-                ctx.lineWidth = 1.5;
-                for (let i = 1; i <= 3; i++) {
-                    const y = padTop + (drawH / 4) * i;
-                    ctx.beginPath();
-                    ctx.moveTo(0, y);
-                    ctx.lineTo(w, y);
-                    ctx.stroke();
-                }
-
-                if (hasSymmetricScale(id)) {
-                    const yZero = yPos(0);
-                    ctx.strokeStyle = rgba(fg, 0.20);
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([3, 3]);
-                    ctx.beginPath();
-                    ctx.moveTo(0, yZero);
-                    ctx.lineTo(w, yZero);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                }
-
-                ctx.beginPath();
-                curvePath(ctx, history, xStep, yPos);
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1.8;
-                ctx.lineJoin = "round";
-                ctx.lineCap = "round";
-                ctx.stroke();
-
-                const last = history[n - 1];
-                const label = formatChartValue(id, last);
-
-                const font = "bold " + Math.round(h * 0.24) + "px var(--vscode-font-family, sans-serif)";
-
-                drawChartLabel(ctx, label, w - 2, padTop + 2, { font, align: "right", color, halo: bg });
-
-                if (isDynamicScaleId(id)) {
-                    const scaleLabel = SCALE_LABEL_PREFIX + formatChartValue(id, dataMax);
-                    drawChartLabel(ctx, scaleLabel, 2, padTop + 2, { font, align: "left", color, halo: bg });
-                }
-            }
-
-            function curvePath(ctx, data, xStep, yPos) {
-                const n = data.length;
-                ctx.moveTo(0, yPos(data[0]));
-                for (let i = 1; i < n - 1; i++) {
-                    const mx = (i * xStep + (i + 1) * xStep) / 2;
-                    const my = (yPos(data[i]) + yPos(data[i + 1])) / 2;
-                    ctx.quadraticCurveTo(i * xStep, yPos(data[i]), mx, my);
-                }
-                ctx.lineTo((n - 1) * xStep, yPos(data[n - 1]));
-            }
-
-            // -------- bar updates --------
-
-            function updateArrayButton(id, show) {
-                const btn = document.querySelector('.toggle-btn[data-metric="' + id + '"][data-view="array"]');
-                if (btn) btn.style.display = show ? "" : "none";
-            }
-
-            // Renders the array view: a responsive grid of per-item horizontal
-            // bars (CSS auto-fill grows the column count with the card width).
-            // Three cell types are supported via ARRAY_FIELDS[].type:
-            //   percent - value is 0-100; width = value, label = "%"
-            //   temp    - fixed 0-110 scale; width clamps, label always shows
-            //             the real °C value (never lies even above the bound)
-            //   mem     - per-card used/total percent; label = "%", tooltip =
-            //             model + byte-formatted used/total (from the extension)
-            function renderCoreArray(id, cores) {
-                cores = cores || state.coreData[id] || [];
-                const wrap = document.getElementById("array-wrap-" + id);
-                if (!wrap || cores.length === 0) return;
-
-                const cfg = ARRAY_FIELDS[id] || {};
-                const meta = state.cardMeta[id] || [];
-                const isObj = cfg.valueKey !== undefined;
-
-                const cell = (i, item) => {
-                    let value = isObj ? item[cfg.valueKey] : item;
-                    if (cfg.type === "mem" && isObj) {
-                        const total = item.memTotal || 0;
-                        value = total > 0 ? (item.memUsed / total) * 100 : 0;
-                    }
-                    value = Number.isFinite(value) ? value : 0;
-
-                    let pct, label, color, tooltip;
-                    if (cfg.type === "temp") {
-                        pct = Math.max(0, Math.min(100, (value / ARRAY_TEMP_MAX) * 100));
-                        label = Math.round(value) + "\u00B0C";
-                        color = tempColor(value);
-                        tooltip = isObj ? (meta[i]?.model || "") : "";
-                    } else {
-                        pct = Math.max(0, Math.min(100, value));
-                        label = Math.round(value) + "%";
-                        color = usageColor(value);
-                        tooltip = isObj
-                            ? (cfg.type === "mem"
-                                ? (meta[i]?.model || "") + (meta[i]?.memText ? " \u00B7 " + meta[i].memText : "")
-                                : (meta[i]?.model || ""))
-                            : "";
-                    }
-                    const name = cfg.prefix + (i + (cfg.offset || 0));
-                    return (
-                        '<div class="core-cell"' +
-                        (tooltip ? ' title="' + escHtml(tooltip) + '"' : "") + ">" +
-                        '<span class="core-name">' + name + "</span>" +
-                        '<div class="core-bar-track"><div class="core-bar-fill" style="width:' + pct + "%;background:" + color + '"></div></div>' +
-                        '<span class="core-label">' + label + "</span>" +
-                        "</div>"
-                    );
-                };
-
-                let html = '<div class="core-grid">';
-                for (let i = 0; i < cores.length; i++) {
-                    html += cell(i, cores[i]);
-                }
-                html += "</div>";
-                wrap.innerHTML = html;
-            }
-
-            function updateBar(id) {
-                const fill = _barFills[id];
-                if (fill) fill.style.width = getBarPercent(id) + "%";
-                const label = _barLabels[id];
-                if (!label) return;
-                label.textContent = isDynamicScaleId(id)
-                    ? SCALE_LABEL_PREFIX + formatChartValue(id, state.barMax[id] || 1)
-                    : "100%";
-            }
-
-            function getBarPercent(id) {
-                const hist = state.history[id];
-                const val = hist && hist.length > 0 ? hist[hist.length - 1] : 0;
-                const maxVal = state.barMax[id] || 1;
-                if (maxVal <= 0) return 0;
-                return Math.max(0, Math.min(100, (val / maxVal) * 100));
-            }
-
-            // -------- handle data --------
-
-            function handleUpdate(data, formattedText, unavailableMetrics) {
-                const h = data.history;
-                if (!h || h.length < 1) return;
-
-                const fmt = data.formatted;
-                if (data.formatConfig) _fmtConfig = data.formatConfig;
-
-                const tm = data.textMetrics;
-
-                const hidden = new Set(unavailableMetrics || []);
-                for (const metric of hidden) {
-                    const card = document.querySelector('.card[data-metric="' + metric + '"]');
-                    if (card) card.style.display = 'none';
-                }
-
-                // Per-card GPU metadata (model / byte-formatted memText) for
-                // array view tooltips; provided by the extension.
-                try {
-                    const gpuMeta = JSON.parse((formattedText || {}).gpuCards || "[]");
-                    for (const id of ["gpu", "gpuTemp", "gpuMem"]) {
-                        state.cardMeta[id] = gpuMeta;
-                    }
-                } catch { /* ignore malformed metadata */ }
-
-                for (const id of ALL_CHART_IDS) {
-                    const c = _charts[id];
-                    if (!c || !c.enabled) continue;
-                    if (hidden.has(id)) continue;
-
-                    state.history[id] = extractHistory(h, id);
-                    state.barMax[id] = computeScaleMax(id, state.history[id]);
-
-                    const cores = extractArray(h, id);
-                    state.coreData[id] = cores;
-                    // GPU arrays (gpu/gpuTemp/gpuMem) only make sense with more
-                    // than one card: a single (e.g. Apple Silicon) GPU would
-                    // otherwise surface a pointless G0 array row.
-                    updateArrayButton(
-                        id,
-                        cores.length > (id.startsWith("gpu") ? 1 : 0),
-                    );
-
-                    const valEl = document.getElementById("val-" + id);
-                    if (valEl) valEl.textContent = fmt[id] || "\u2014";
-
-                    // subtitles
-                    const subEl = document.getElementById("sub-" + id);
-                    if (subEl) {
-                        subEl.textContent = (formattedText || {})[id + "Sub"] || "";
-                    }
-
-                    if (state.viewMode[id] === "array") {
-                        if (cores.length > (id.startsWith("gpu") ? 1 : 0)) {
-                            renderCoreArray(id, cores);
-                        } else {
-                            // Per-item data became unavailable (e.g. data source
-                            // switch, or a single GPU without an array dimension);
-                            // fall back to the line view.
-                            state.viewMode[id] = "line";
-                            setViewActive(id, "line");
-                            const chartWrap = document.getElementById("chart-wrap-" + id);
-                            const arrayWrap = document.getElementById("array-wrap-" + id);
-                            if (chartWrap) chartWrap.style.display = "";
-                            if (arrayWrap) arrayWrap.style.display = "none";
-                            if (state.history[id].length >= 2) {
-                                drawChart(id, state.history[id], colorFor(id));
-                            }
-                        }
-                    } else if (state.viewMode[id] === "line") {
-                        drawChart(id, state.history[id], colorFor(id));
-                    } else {
-                        updateBar(id);
-                    }
-                }
-
-                if (tm) {
-                    state.textMetrics = tm;
-                    updateTextMetrics(tm, formattedText);
-                }
-            }
-
-            function updateTextMetrics(tm, formattedText) {
-                const ft = formattedText || {};
-
-                const uptimeVal = document.getElementById("info-val-uptime");
-                if (uptimeVal) uptimeVal.textContent = ft.uptime || formatUptimeSimple(tm.uptime);
-
-                const distroVal = document.getElementById("info-val-osDistro");
-                if (distroVal) distroVal.textContent = ft.osDistro || tm.osDistro || "N/A";
-
-                if (tm.diskSpace) {
-                    renderDiskMountBars(tm.diskSpace);
-                }
-            }
-
-            // -------- message handler --------
-
-            window.addEventListener("message", function (e) {
-                const msg = e.data;
-                if (msg.type === "config" && msg.data) {
-                    handleConfig(msg.data);
-                } else if (msg.type === "update" && msg.data) {
-                    handleUpdate(msg.data, msg.formattedText, msg.unavailableMetrics);
-                }
+          }
+
+          renderAll();
+        }
+
+        // -------- render --------
+
+        function renderAll() {
+          renderCharts();
+          renderInfo();
+        }
+
+        function renderCharts() {
+          const container = document.getElementById("chart-container");
+          if (!container) return;
+
+          const enabled = ALL_CHART_IDS.filter((id) => {
+            const c = _charts[id];
+            return c && c.enabled;
+          });
+
+          let html = "";
+          for (const id of enabled) {
+            const label = _labels[id] || id;
+            const color = colorFor(id);
+            const view = state.viewMode[id] || "line";
+            const isArrayCapable = ARRAY_FIELDS[id] !== undefined;
+            // GPU arrays only make sense with more than one card; a
+            // single (e.g. Apple Silicon) GPU has no array dimension.
+            const coreCount = state.coreData[id]
+              ? state.coreData[id].length
+              : 0;
+            const hasCores =
+              isArrayCapable && coreCount > (id.startsWith("gpu") ? 1 : 0);
+
+            html +=
+              '<div class="card" data-metric="' +
+              id +
+              '">' +
+              '<div class="card-header">' +
+              '<div class="card-left">' +
+              "<span>" +
+              label +
+              "</span>" +
+              '<span class="card-value" id="val-' +
+              id +
+              '">\u2014</span>' +
+              '<div class="card-sub" id="sub-' +
+              id +
+              '"></div>' +
+              "</div>" +
+              '<div class="toggle-group">' +
+              '<button class="toggle-btn' +
+              (view === "line" ? " active" : "") +
+              '" data-metric="' +
+              id +
+              '" data-view="line" title="__LINE_CHART_TITLE__">\u25E0</button>' +
+              '<button class="toggle-btn' +
+              (view === "bar" ? " active" : "") +
+              '" data-metric="' +
+              id +
+              '" data-view="bar" title="__BAR_CHART_TITLE__">\u25A4</button>' +
+              (isArrayCapable
+                ? '<button class="toggle-btn' +
+                  (view === "array" ? " active" : "") +
+                  '" data-metric="' +
+                  id +
+                  '" data-view="array" title="__ARRAY_CHART_TITLE__" style="display:' +
+                  (hasCores ? "" : "none") +
+                  '">\u25A6</button>'
+                : "") +
+              "</div>" +
+              "</div>" +
+              '<div class="chart-wrap" id="chart-wrap-' +
+              id +
+              '"' +
+              (view !== "line" ? ' style="display:none"' : "") +
+              ">" +
+              '<canvas id="canvas-' +
+              id +
+              '"></canvas>' +
+              "</div>" +
+              '<div class="bar-wrap" id="bar-wrap-' +
+              id +
+              '"' +
+              (view !== "bar" ? ' style="display:none"' : "") +
+              ">" +
+              '<div class="bar-row">' +
+              '<div class="bar-track"><div class="bar-fill" id="bar-fill-' +
+              id +
+              '" style="width:0%;background:' +
+              color +
+              '"></div></div>' +
+              '<span class="bar-label" id="bar-label-' +
+              id +
+              '">\u2014</span>' +
+              "</div>" +
+              "</div>" +
+              (isArrayCapable
+                ? '<div class="array-wrap" id="array-wrap-' +
+                  id +
+                  '"' +
+                  (view !== "array" ? ' style="display:none"' : "") +
+                  "></div>"
+                : "") +
+              "</div>";
+          }
+          container.innerHTML = html;
+
+          for (const id of enabled) {
+            const canvas = document.getElementById("canvas-" + id);
+            const chartWrap = document.getElementById("chart-wrap-" + id);
+            if (canvas) registerCanvas(id, canvas, chartWrap);
+            const barFill = document.getElementById("bar-fill-" + id);
+            const barLabel = document.getElementById("bar-label-" + id);
+            const valEl = document.getElementById("val-" + id);
+            if (barFill) registerBar(id, barFill, barLabel, valEl);
+          }
+        }
+
+        const _canvases = {};
+        const _chartWraps = {};
+        const _barFills = {};
+        const _barLabels = {};
+        const _valueEls = {};
+        const _resizeObserved = new Set();
+
+        function registerCanvas(id, canvas, wrap) {
+          _canvases[id] = canvas;
+          _chartWraps[id] = wrap;
+          if (!_resizeObserved.has(id)) {
+            _resizeObserved.add(id);
+            if (_resizeObserver) _resizeObserver.observe(canvas);
+          }
+        }
+
+        function registerBar(id, fill, label, valEl) {
+          _barFills[id] = fill;
+          _barLabels[id] = label;
+          _valueEls[id] = valEl;
+        }
+
+        // -------- info section --------
+
+        function renderInfo() {
+          const container = document.getElementById("info-container");
+          if (!container) return;
+
+          const rows = [];
+          if (_show.uptime)
+            rows.push({ id: "uptime", label: _labels.uptime || "Uptime" });
+          if (_show.osDistro)
+            rows.push({
+              id: "osDistro",
+              label: _labels.osDistro || "OS Distribution",
             });
 
-            // -------- resize observer --------
+          let html = "";
+          for (const r of rows) {
+            html +=
+              '<div class="info-card" id="info-' +
+              r.id +
+              '">' +
+              '<div class="info-header">' +
+              r.label +
+              "</div>" +
+              '<div class="info-value" id="info-val-' +
+              r.id +
+              '">\u2014</div>' +
+              "</div>";
+          }
 
-            // Throttle redraws with requestAnimationFrame so a burst of resize
-            // notifications (window resize / sidebar drag) collapses to at most
-            // one redraw per frame, preventing main-thread jank.
-            let _rafId = null;
-            const _resizeObserver = new ResizeObserver(function () {
-                if (_rafId !== null) {
-                    cancelAnimationFrame(_rafId);
-                }
-                _rafId = requestAnimationFrame(function () {
-                    _rafId = null;
-                    for (const id of ALL_CHART_IDS) {
-                        const c = _charts[id];
-                        if (!c || !c.enabled) continue;
-                        if (state.viewMode[id] === "line" && state.history[id] && state.history[id].length >= 2) {
-                            drawChart(id, state.history[id], colorFor(id));
-                        }
-                    }
-                });
+          // Disk space mounts
+          if (_show.diskSpace) {
+            html +=
+              '<div class="info-card" id="info-diskSpace">' +
+              '<div class="info-header">' +
+              (_labels.diskSpace || "Disk Space") +
+              "</div>" +
+              '<div id="disk-mount-list"></div>' +
+              "</div>";
+          }
+
+          container.innerHTML = html;
+        }
+
+        // -------- disk space bar helpers --------
+
+        // Shared traffic-light semantics for percentage bars: green below
+        // 60%, yellow from 60%, red from 80%. Used by disk mounts and the
+        // per-core CPU array view.
+        function usageColor(pct) {
+          const name =
+            pct >= 80
+              ? "--vscode-charts-red"
+              : pct >= 60
+                ? "--vscode-charts-yellow"
+                : "--vscode-charts-green";
+          return opaque(resolveColorValue(name)) || colorFor("memActive");
+        }
+
+        // Temperature color bands (CPU and GPU): green below 65°C, yellow
+        // 65-85°C, red above 85°C. Kept distinct from usageColor because the
+        // threshold semantics differ (absolute thermal limits vs. usage).
+        function tempColor(temp) {
+          const name =
+            temp >= 85
+              ? "--vscode-charts-red"
+              : temp >= 65
+                ? "--vscode-charts-yellow"
+                : "--vscode-charts-green";
+          return opaque(resolveColorValue(name)) || colorFor("memActive");
+        }
+
+        function renderDiskMountBars(mounts) {
+          const container = document.getElementById("disk-mount-list");
+          if (!container) return;
+          if (!mounts || mounts.length === 0) {
+            container.innerHTML =
+              '<div class="info-value" style="font-size:calc(var(--font-size)-1px)">\u2014</div>';
+            return;
+          }
+
+          const isAll =
+            _diskSpaceMounts.length === 1 && _diskSpaceMounts[0] === "all";
+          const filtered = isAll
+            ? mounts
+            : mounts.filter((m) => _diskSpaceMounts.includes(m.mount));
+
+          let html = "";
+          for (const m of filtered) {
+            const barColor = usageColor(m.use);
+            html +=
+              '<div class="info-mount-row">' +
+              '<span class="info-mount-name" title="' +
+              escHtml(m.mount) +
+              '">' +
+              escHtml(m.mount) +
+              "</span>" +
+              '<div class="info-bar-track"><div class="info-bar-fill" style="width:' +
+              m.use +
+              "%;background:" +
+              barColor +
+              '"></div></div>' +
+              '<span class="info-bar-label">' +
+              m.use +
+              "%</span>" +
+              "</div>";
+          }
+          const totalSize = filtered.reduce((s, m) => s + m.size, 0);
+          const totalUsed = filtered.reduce((s, m) => s + m.used, 0);
+          const totalPct =
+            totalSize > 0 ? ((totalUsed / totalSize) * 100).toFixed(1) : "0";
+          const sp2 = _fmtConfig.showSpace ? " " : "";
+          html +=
+            '<div class="info-mount-row" style="margin-top:6px;border-top:1px solid rgba(128,128,128,0.15);padding-top:4px">' +
+            '<span class="info-mount-name" style="font-weight:600">' +
+            (_labels.diskSpace || "Disk Space") +
+            "</span>" +
+            '<span class="info-bar-label" style="font-weight:600;color:var(--fg)">' +
+            formatBytes(totalUsed, 3) +
+            sp2 +
+            "/" +
+            sp2 +
+            formatBytes(totalSize, 3) +
+            sp2 +
+            "(" +
+            totalPct +
+            "%)</span>" +
+            "</div>";
+          container.innerHTML = html;
+        }
+
+        function escHtml(s) {
+          const d = document.createElement("div");
+          d.textContent = s;
+          return d.innerHTML;
+        }
+
+        // -------- view toggle --------
+
+        // Reflect a view mode in the toggle group's active states.
+        function setViewActive(id, view) {
+          const card = document.querySelector(
+            '.card[data-metric="' + id + '"]',
+          );
+          if (!card) return;
+          for (const btn of card.querySelectorAll(".toggle-btn")) {
+            btn.classList.toggle("active", btn.dataset.view === view);
+          }
+        }
+
+        document.addEventListener("click", function (e) {
+          const btn = e.target.closest(".toggle-btn");
+          if (!btn) return;
+          const metric = btn.dataset.metric;
+          const view = btn.dataset.view;
+          if (!metric || !view) return;
+
+          state.viewMode[metric] = view;
+          setViewActive(metric, view);
+
+          const chartWrap = document.getElementById("chart-wrap-" + metric);
+          const barWrap = document.getElementById("bar-wrap-" + metric);
+          const arrayWrap = document.getElementById("array-wrap-" + metric);
+          if (chartWrap)
+            chartWrap.style.display = view === "line" ? "" : "none";
+          if (barWrap) barWrap.style.display = view === "bar" ? "" : "none";
+          if (arrayWrap)
+            arrayWrap.style.display = view === "array" ? "" : "none";
+
+          if (view === "bar") {
+            updateBar(metric);
+          } else if (view === "array") {
+            renderCoreArray(metric);
+          } else if (
+            state.history[metric] &&
+            state.history[metric].length >= 2
+          ) {
+            drawChart(metric, state.history[metric], colorFor(metric));
+          }
+        });
+
+        // -------- data helpers --------
+
+        // Current per-item values for the array view (e.g. per-core CPU
+        // usage), or [] when the metric has no per-item dimension or the
+        // active data source does not provide one. Platform support is
+        // therefore expressed by data presence, never by a platform check.
+        function extractArray(history, id) {
+          const cfg = ARRAY_FIELDS[id];
+          if (!cfg || !history || !history.length) return [];
+          const arr = history[history.length - 1][cfg.field];
+          return Array.isArray(arr) ? arr : [];
+        }
+
+        function extractHistory(history, id) {
+          const vals = [];
+          for (const dp of history) {
+            let v;
+            if (id === "cpu") v = dp.cpu;
+            else if (id === "memActive")
+              v = (dp.memoryActive / dp.memoryTotal) * 100;
+            else if (id === "memUsed")
+              v = (dp.memoryUsed / dp.memoryTotal) * 100;
+            else if (id === "netRx") v = dp.networkRx;
+            else if (id === "netTx") v = dp.networkTx;
+            else if (id === "diskRx") v = dp.diskRx;
+            else if (id === "diskWx") v = dp.diskWx;
+            else if (id === "battery")
+              v = dp.batteryPercent >= 0 ? dp.batteryPercent : 0;
+            else if (id === "batteryPower") v = dp.batteryPower;
+            else if (id === "cpuTemp") v = dp.cpuTemperature;
+            else if (id === "cpuSpeed") v = dp.cpuSpeedAvg;
+            else if (id === "gpu") v = dp.gpuUtilization;
+            else if (id === "gpuTemp") v = dp.gpuTemperature;
+            else if (id === "gpuMem")
+              v =
+                dp.gpuMemTotal > 0 ? (dp.gpuMemUsed / dp.gpuMemTotal) * 100 : 0;
+            else v = 0;
+            vals.push(v);
+          }
+          return vals;
+        }
+
+        // -------- line chart drawing --------
+
+        function drawChart(id, history, color) {
+          const canvas = _canvases[id];
+          if (!canvas) return;
+          const ctx = canvas.getContext("2d");
+          const rect = canvas.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          const w = rect.width;
+          const h = rect.height;
+          if (w === 0 || h === 0) return;
+
+          canvas.width = w * dpr;
+          canvas.height = h * dpr;
+          ctx.scale(dpr, dpr);
+          ctx.clearRect(0, 0, w, h);
+
+          const padTop = 0,
+            padBot = 0;
+          const drawH = h - padTop - padBot;
+
+          const dataMax = computeScaleMax(id, history);
+          const dataMin = hasSymmetricScale(id) ? -dataMax : 0;
+          const range = dataMax - dataMin;
+          const n = history.length;
+          if (n < 2) return;
+
+          function yPos(val) {
+            return padTop + drawH - ((val - dataMin) / range) * drawH;
+          }
+
+          const xStep = w / (n - 1);
+
+          const fg = getCachedCSSVar("--vscode-editor-foreground");
+          const bg = getCachedCSSVar("--vscode-editor-background");
+
+          // Area fill blends the line color toward the card background in
+          // oklab, so light colors keep their hue instead of going gray at
+          // low alpha. Falls back to plain alpha if the background var is
+          // unexpectedly missing.
+          const grad = ctx.createLinearGradient(0, padTop, 0, padTop + drawH);
+          grad.addColorStop(
+            0,
+            bg
+              ? "color-mix(in oklab, " + color + " 30%, " + bg + ")"
+              : rgba(color, 0.3),
+          );
+          grad.addColorStop(
+            1,
+            bg
+              ? "color-mix(in oklab, " + color + " 10%, " + bg + ")"
+              : rgba(color, 0.1),
+          );
+          ctx.beginPath();
+          curvePath(ctx, history, xStep, yPos);
+          ctx.lineTo((n - 1) * xStep, padTop + drawH);
+          ctx.lineTo(0, padTop + drawH);
+          ctx.closePath();
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          ctx.strokeStyle = rgba(fg, 0.1);
+          ctx.lineWidth = 1.5;
+          for (let i = 1; i <= 3; i++) {
+            const y = padTop + (drawH / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+          }
+
+          if (hasSymmetricScale(id)) {
+            const yZero = yPos(0);
+            ctx.strokeStyle = rgba(fg, 0.2);
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(0, yZero);
+            ctx.lineTo(w, yZero);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+
+          ctx.beginPath();
+          curvePath(ctx, history, xStep, yPos);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.8;
+          ctx.lineJoin = "round";
+          ctx.lineCap = "round";
+          ctx.stroke();
+
+          const last = history[n - 1];
+          const label = formatChartValue(id, last);
+
+          const font =
+            "bold " +
+            Math.round(h * 0.24) +
+            "px var(--vscode-font-family, sans-serif)";
+
+          drawChartLabel(ctx, label, w - 2, padTop + 2, {
+            font,
+            align: "right",
+            color,
+            halo: bg,
+          });
+
+          if (isDynamicScaleId(id)) {
+            const scaleLabel =
+              SCALE_LABEL_PREFIX + formatChartValue(id, dataMax);
+            drawChartLabel(ctx, scaleLabel, 2, padTop + 2, {
+              font,
+              align: "left",
+              color,
+              halo: bg,
             });
+          }
+        }
 
-            // -------- initial render --------
+        function curvePath(ctx, data, xStep, yPos) {
+          const n = data.length;
+          ctx.moveTo(0, yPos(data[0]));
+          for (let i = 1; i < n - 1; i++) {
+            const mx = (i * xStep + (i + 1) * xStep) / 2;
+            const my = (yPos(data[i]) + yPos(data[i + 1])) / 2;
+            ctx.quadraticCurveTo(i * xStep, yPos(data[i]), mx, my);
+          }
+          ctx.lineTo((n - 1) * xStep, yPos(data[n - 1]));
+        }
 
-            const app = document.getElementById("app");
-            app.innerHTML =
-                '<div id="chart-container"></div>' +
-                '<div id="info-container"></div>';
+        // -------- bar updates --------
 
-            vscode.postMessage({ type: "ready" });
-        })();
+        function updateArrayButton(id, show) {
+          const btn = document.querySelector(
+            '.toggle-btn[data-metric="' + id + '"][data-view="array"]',
+          );
+          if (btn) btn.style.display = show ? "" : "none";
+        }
+
+        // Renders the array view: a responsive grid of per-item horizontal
+        // bars (CSS auto-fill grows the column count with the card width).
+        // Three cell types are supported via ARRAY_FIELDS[].type:
+        //   percent - value is 0-100; width = value, label = "%"
+        //   temp    - fixed 0-110 scale; width clamps, label always shows
+        //             the real °C value (never lies even above the bound)
+        //   mem     - per-card used/total percent; label = "%", tooltip =
+        //             model + byte-formatted used/total (from the extension)
+        function renderCoreArray(id, cores) {
+          cores = cores || state.coreData[id] || [];
+          const wrap = document.getElementById("array-wrap-" + id);
+          if (!wrap || cores.length === 0) return;
+
+          const cfg = ARRAY_FIELDS[id] || {};
+          const meta = state.cardMeta[id] || [];
+          const isObj = cfg.valueKey !== undefined;
+
+          const cell = (i, item) => {
+            let value = isObj ? item[cfg.valueKey] : item;
+            if (cfg.type === "mem" && isObj) {
+              const total = item.memTotal || 0;
+              value = total > 0 ? (item.memUsed / total) * 100 : 0;
+            }
+            value = Number.isFinite(value) ? value : 0;
+
+            let pct, label, color, tooltip;
+            if (cfg.type === "temp") {
+              pct = Math.max(0, Math.min(100, (value / ARRAY_TEMP_MAX) * 100));
+              label = Math.round(value) + "\u00B0C";
+              color = tempColor(value);
+              tooltip = isObj ? meta[i]?.model || "" : "";
+            } else {
+              pct = Math.max(0, Math.min(100, value));
+              label = Math.round(value) + "%";
+              color = usageColor(value);
+              tooltip = isObj
+                ? cfg.type === "mem"
+                  ? (meta[i]?.model || "") +
+                    (meta[i]?.memText ? " \u00B7 " + meta[i].memText : "")
+                  : meta[i]?.model || ""
+                : "";
+            }
+            const name = cfg.prefix + (i + (cfg.offset || 0));
+            return (
+              '<div class="core-cell"' +
+              (tooltip ? ' title="' + escHtml(tooltip) + '"' : "") +
+              ">" +
+              '<span class="core-name">' +
+              name +
+              "</span>" +
+              '<div class="core-bar-track"><div class="core-bar-fill" style="width:' +
+              pct +
+              "%;background:" +
+              color +
+              '"></div></div>' +
+              '<span class="core-label">' +
+              label +
+              "</span>" +
+              "</div>"
+            );
+          };
+
+          let html = '<div class="core-grid">';
+          for (let i = 0; i < cores.length; i++) {
+            html += cell(i, cores[i]);
+          }
+          html += "</div>";
+          wrap.innerHTML = html;
+        }
+
+        function updateBar(id) {
+          const fill = _barFills[id];
+          if (fill) fill.style.width = getBarPercent(id) + "%";
+          const label = _barLabels[id];
+          if (!label) return;
+          label.textContent = isDynamicScaleId(id)
+            ? SCALE_LABEL_PREFIX + formatChartValue(id, state.barMax[id] || 1)
+            : "100%";
+        }
+
+        function getBarPercent(id) {
+          const hist = state.history[id];
+          const val = hist && hist.length > 0 ? hist[hist.length - 1] : 0;
+          const maxVal = state.barMax[id] || 1;
+          if (maxVal <= 0) return 0;
+          return Math.max(0, Math.min(100, (val / maxVal) * 100));
+        }
+
+        // -------- handle data --------
+
+        function handleUpdate(data, formattedText, unavailableMetrics) {
+          const h = data.history;
+          if (!h || h.length < 1) return;
+
+          const fmt = data.formatted;
+          if (data.formatConfig) _fmtConfig = data.formatConfig;
+
+          const tm = data.textMetrics;
+
+          const hidden = new Set(unavailableMetrics || []);
+          for (const metric of hidden) {
+            const card = document.querySelector(
+              '.card[data-metric="' + metric + '"]',
+            );
+            if (card) card.style.display = "none";
+          }
+
+          // Per-card GPU metadata (model / byte-formatted memText) for
+          // array view tooltips; provided by the extension.
+          try {
+            const gpuMeta = JSON.parse((formattedText || {}).gpuCards || "[]");
+            for (const id of ["gpu", "gpuTemp", "gpuMem"]) {
+              state.cardMeta[id] = gpuMeta;
+            }
+          } catch {
+            /* ignore malformed metadata */
+          }
+
+          for (const id of ALL_CHART_IDS) {
+            const c = _charts[id];
+            if (!c || !c.enabled) continue;
+            if (hidden.has(id)) continue;
+
+            state.history[id] = extractHistory(h, id);
+            state.barMax[id] = computeScaleMax(id, state.history[id]);
+
+            const cores = extractArray(h, id);
+            state.coreData[id] = cores;
+            // GPU arrays (gpu/gpuTemp/gpuMem) only make sense with more
+            // than one card: a single (e.g. Apple Silicon) GPU would
+            // otherwise surface a pointless G0 array row.
+            updateArrayButton(
+              id,
+              cores.length > (id.startsWith("gpu") ? 1 : 0),
+            );
+
+            const valEl = document.getElementById("val-" + id);
+            if (valEl) valEl.textContent = fmt[id] || "\u2014";
+
+            // subtitles
+            const subEl = document.getElementById("sub-" + id);
+            if (subEl) {
+              subEl.textContent = (formattedText || {})[id + "Sub"] || "";
+            }
+
+            if (state.viewMode[id] === "array") {
+              if (cores.length > (id.startsWith("gpu") ? 1 : 0)) {
+                renderCoreArray(id, cores);
+              } else {
+                // Per-item data became unavailable (e.g. data source
+                // switch, or a single GPU without an array dimension);
+                // fall back to the line view.
+                state.viewMode[id] = "line";
+                setViewActive(id, "line");
+                const chartWrap = document.getElementById("chart-wrap-" + id);
+                const arrayWrap = document.getElementById("array-wrap-" + id);
+                if (chartWrap) chartWrap.style.display = "";
+                if (arrayWrap) arrayWrap.style.display = "none";
+                if (state.history[id].length >= 2) {
+                  drawChart(id, state.history[id], colorFor(id));
+                }
+              }
+            } else if (state.viewMode[id] === "line") {
+              drawChart(id, state.history[id], colorFor(id));
+            } else {
+              updateBar(id);
+            }
+          }
+
+          if (tm) {
+            state.textMetrics = tm;
+            updateTextMetrics(tm, formattedText);
+          }
+        }
+
+        function updateTextMetrics(tm, formattedText) {
+          const ft = formattedText || {};
+
+          const uptimeVal = document.getElementById("info-val-uptime");
+          if (uptimeVal)
+            uptimeVal.textContent = ft.uptime || formatUptimeSimple(tm.uptime);
+
+          const distroVal = document.getElementById("info-val-osDistro");
+          if (distroVal)
+            distroVal.textContent = ft.osDistro || tm.osDistro || "N/A";
+
+          if (tm.diskSpace) {
+            renderDiskMountBars(tm.diskSpace);
+          }
+        }
+
+        // -------- message handler --------
+
+        window.addEventListener("message", function (e) {
+          const msg = e.data;
+          if (msg.type === "config" && msg.data) {
+            handleConfig(msg.data);
+          } else if (msg.type === "update" && msg.data) {
+            handleUpdate(msg.data, msg.formattedText, msg.unavailableMetrics);
+          }
+        });
+
+        // -------- resize observer --------
+
+        // Throttle redraws with requestAnimationFrame so a burst of resize
+        // notifications (window resize / sidebar drag) collapses to at most
+        // one redraw per frame, preventing main-thread jank.
+        let _rafId = null;
+        const _resizeObserver = new ResizeObserver(function () {
+          if (_rafId !== null) {
+            cancelAnimationFrame(_rafId);
+          }
+          _rafId = requestAnimationFrame(function () {
+            _rafId = null;
+            for (const id of ALL_CHART_IDS) {
+              const c = _charts[id];
+              if (!c || !c.enabled) continue;
+              if (
+                state.viewMode[id] === "line" &&
+                state.history[id] &&
+                state.history[id].length >= 2
+              ) {
+                drawChart(id, state.history[id], colorFor(id));
+              }
+            }
+          });
+        });
+
+        // -------- initial render --------
+
+        const app = document.getElementById("app");
+        app.innerHTML =
+          '<div id="chart-container"></div>' +
+          '<div id="info-container"></div>';
+
+        vscode.postMessage({ type: "ready" });
+      })();
     </script>
-</body>
-
+  </body>
 </html>

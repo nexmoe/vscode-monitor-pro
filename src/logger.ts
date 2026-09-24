@@ -2,30 +2,33 @@ import { window } from "vscode";
 
 function callerLocation(skip = 2): string {
   const stack = new Error().stack;
-  if (!stack) return '';
-  const lines = stack.split('\n');
+  if (!stack) return "";
+  const lines = stack.split("\n");
   const frame = lines[skip + 1];
-  if (!frame) return '';
+  if (!frame) return "";
   const s = frame.trim();
 
   let content: string;
-  const parenOpen = s.lastIndexOf('(');
+  const parenOpen = s.lastIndexOf("(");
   if (parenOpen >= 0) {
-    content = s.slice(parenOpen + 1, s.endsWith(')') ? -1 : undefined);
+    content = s.slice(parenOpen + 1, s.endsWith(")") ? -1 : undefined);
   } else {
-    content = s.replace(/^at\s+/, '');
+    content = s.replace(/^at\s+/, "");
   }
 
-  const sep = content.lastIndexOf(':');
-  if (sep < 0) return '';
-  const sep2 = content.lastIndexOf(':', sep - 1);
-  if (sep2 < 0) return '';
+  const sep = content.lastIndexOf(":");
+  if (sep < 0) return "";
+  const sep2 = content.lastIndexOf(":", sep - 1);
+  if (sep2 < 0) return "";
 
   const filePart = content.slice(0, sep2);
   const line = content.slice(sep2 + 1, sep);
   const segments = filePart.split(/[/\\]/);
-  const srcIdx = segments.lastIndexOf('src');
-  const short = srcIdx >= 0 ? segments.slice(srcIdx).join('/') : segments.slice(-2).join('/');
+  const srcIdx = segments.lastIndexOf("src");
+  const short =
+    srcIdx >= 0
+      ? segments.slice(srcIdx).join("/")
+      : segments.slice(-2).join("/");
 
   return `${short}:${line}`;
 }
@@ -55,7 +58,9 @@ export function getLogger(): ILogger {
 }
 
 export function initLogger(name: string): void {
-  _channel = window.createOutputChannel(name, { log: true }) as unknown as ILogger;
+  _channel = window.createOutputChannel(name, {
+    log: true,
+  }) as unknown as ILogger;
 
   _logger.trace = (msg: string) => {
     const loc = callerLocation();

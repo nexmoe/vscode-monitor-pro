@@ -80,9 +80,9 @@ l10n-中文-电量、电池健康度与功率：
 | 网络       | 关   | `$(cloud-download) $(cloud-upload)` | `125 KiB/s 2.34 MiB/s`  |
 | CPU 温度   | 关   | `$(flame)`                          | `52.3°C`                |
 | CPU 频率   | 关   | `$(dashboard)`                      | `3.81 GHz`              |
-| GPU        | 关   | `$(circuit-board)`                   | `73.2%`                 |
-| GPU 温度   | 关   | `$(lightbulb-sparkle)`               | `52.3°C`                |
-| GPU 显存   | 关   | `$(layers)`                          | `11.2 / 24 GiB`         |
+| GPU        | 关   | `$(circuit-board)`                  | `73.2%`                 |
+| GPU 温度   | 关   | `$(lightbulb-sparkle)`              | `52.3°C`                |
+| GPU 显存   | 关   | `$(layers)`                         | `11.2 / 24 GiB`         |
 | 运行时间   | 关   | `$(clock)`                          | `2d 14h 32m`            |
 | 磁盘 I/O   | 关   | `$(log-in) $(log-out)`              | `50.2 MiB/s 12.1 MiB/s` |
 | 磁盘空间   | 关   | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
@@ -153,20 +153,20 @@ Monitor Pro 支持两种模式的实时功率监测：
 
 所有配置项以 `monitor-pro.*` 开头，修改后即时热重载。
 
-| 配置                                        | 默认值        | 说明                                     |
-| ------------------------------------------- | ------------- | ---------------------------------------- |
-| `monitor-pro.metrics.*`                     | 见上表        | 开关状态栏各项指标                       |
-| `monitor-pro.metricsOrder`                  | —             | 调整状态栏显示顺序                       |
-| `monitor-pro.refresh-interval`              | `2000` ms     | 轮询间隔（500~30000ms）                  |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）或 `decimal`（kB/MB） |
-| `monitor-pro.showSpace`                     | `false`       | 数字与单位间是否加空格                   |
-| `monitor-pro.singleUnit`                    | `false`       | 单位缩写为首字母（K, M, G）              |
-| `monitor-pro.significantDigits`             | 各指标不同    | 有效数字位数（1~6）                      |
-| `monitor-pro.uptimeFormat`                  | `auto`        | 自定义格式，支持 `{d}` `{h}` `{m}` `{s}` |
+| 配置                                        | 默认值        | 说明                                                              |
+| ------------------------------------------- | ------------- | ----------------------------------------------------------------- |
+| `monitor-pro.metrics.*`                     | 见上表        | 开关状态栏各项指标                                                |
+| `monitor-pro.metricsOrder`                  | —             | 调整状态栏显示顺序                                                |
+| `monitor-pro.refresh-interval`              | `2000` ms     | 轮询间隔（500~30000ms）                                           |
+| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）或 `decimal`（kB/MB）                          |
+| `monitor-pro.showSpace`                     | `false`       | 数字与单位间是否加空格                                            |
+| `monitor-pro.singleUnit`                    | `false`       | 单位缩写为首字母（K, M, G）                                       |
+| `monitor-pro.significantDigits`             | 各指标不同    | 有效数字位数（1~6）                                               |
+| `monitor-pro.uptimeFormat`                  | `auto`        | 自定义格式，支持 `{d}` `{h}` `{m}` `{s}`                          |
 | `monitor-pro.resourceUsage.charts`          | —             | 图表/卡片启用、视图、颜色（含 `osDistro`、`uptime`、`diskSpace`） |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 图表历史点数（10~500）                   |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁盘空间卡片挂载点过滤                   |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | 状态栏磁盘空间挂载点过滤                 |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 图表历史点数（10~500）                                            |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁盘空间卡片挂载点过滤                                            |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]` | 状态栏磁盘空间挂载点过滤                                          |
 
 ## 0.6.0 前屏幕截图（当前版本仍保持兼容）
 

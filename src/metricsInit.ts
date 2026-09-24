@@ -111,7 +111,9 @@ const newBarItem = ({
 export const getEnabledMetrics = () => {
   const enabled = getMetricsEnabled();
   const order = getMetricsOrder();
-  getLogger().debug(vscode.l10n.t("Enabled metrics: {0}", JSON.stringify(enabled)));
+  getLogger().debug(
+    vscode.l10n.t("Enabled metrics: {0}", JSON.stringify(enabled)),
+  );
   getLogger().debug(vscode.l10n.t("Metrics order: {0}", JSON.stringify(order)));
 
   return order.flatMap((section, index) => {

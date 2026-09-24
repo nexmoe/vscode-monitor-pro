@@ -56,21 +56,15 @@ async function collect() {
       need("networkStats")
         ? SI.networkStats().catch(() => null)
         : Promise.resolve(null),
-      need("fsStats")
-        ? SI.fsStats().catch(() => null)
-        : Promise.resolve(null),
-      need("fsSize")
-        ? SI.fsSize().catch(() => null)
-        : Promise.resolve(null),
+      need("fsStats") ? SI.fsStats().catch(() => null) : Promise.resolve(null),
+      need("fsSize") ? SI.fsSize().catch(() => null) : Promise.resolve(null),
       need("cpuCurrentSpeed")
         ? SI.cpuCurrentSpeed().catch(() => null)
         : Promise.resolve(null),
       need("cpuTemperature")
         ? SI.cpuTemperature().catch(() => null)
         : Promise.resolve(null),
-      need("battery")
-        ? SI.battery().catch(() => null)
-        : Promise.resolve(null),
+      need("battery") ? SI.battery().catch(() => null) : Promise.resolve(null),
     ]);
   let tm: SI.Systeminformation.TimeData | null = null;
   try {
@@ -204,7 +198,10 @@ async function tick() {
   const t0 = Date.now();
   try {
     const data = await collect();
-    parentPort?.postMessage({ type: "data", data: JSON.parse(JSON.stringify(data)) });
+    parentPort?.postMessage({
+      type: "data",
+      data: JSON.parse(JSON.stringify(data)),
+    });
   } catch (e) {
     parentPort?.postMessage({ type: "error", error: String(e) });
   }

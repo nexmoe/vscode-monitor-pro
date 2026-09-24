@@ -113,12 +113,18 @@ export class UsageRegistry {
 
   private read(file: string): { hostPid: number; pid: number } | null {
     try {
-      const parsed = JSON.parse(fs.readFileSync(file, "utf-8")) as Record<string, unknown>;
+      const parsed = JSON.parse(fs.readFileSync(file, "utf-8")) as Record<
+        string,
+        unknown
+      >;
       if (typeof parsed?.hostPid !== "number") {
         return null;
       }
       const pid = parsed[this.pidField];
-      return { hostPid: parsed.hostPid, pid: typeof pid === "number" ? pid : 0 };
+      return {
+        hostPid: parsed.hostPid,
+        pid: typeof pid === "number" ? pid : 0,
+      };
     } catch {
       return null;
     }

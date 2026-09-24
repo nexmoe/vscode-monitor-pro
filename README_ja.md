@@ -80,9 +80,9 @@ Codicon アイコンとフォーマットされた数値で表示される、14 
 | ネットワーク              | オフ       | `$(cloud-download) $(cloud-upload)` | `125 KiB/s 2.34 MiB/s`  |
 | CPU 温度                  | オフ       | `$(flame)`                          | `52.3°C`                |
 | CPU 速度                  | オフ       | `$(dashboard)`                      | `3.81 GHz`              |
-| GPU                       | オフ       | `$(circuit-board)`                   | `73.2%`                 |
-| GPU 温度                  | オフ       | `$(lightbulb-sparkle)`               | `52.3°C`                |
-| GPU メモリ                | オフ       | `$(layers)`                          | `11.2 / 24 GiB`         |
+| GPU                       | オフ       | `$(circuit-board)`                  | `73.2%`                 |
+| GPU 温度                  | オフ       | `$(lightbulb-sparkle)`              | `52.3°C`                |
+| GPU メモリ                | オフ       | `$(layers)`                         | `11.2 / 24 GiB`         |
 | 稼働時間                  | オフ       | `$(clock)`                          | `2d 14h 32m`            |
 | ディスク I/O              | オフ       | `$(log-in) $(log-out)`              | `50.2 MiB/s 12.1 MiB/s` |
 | ディスク容量              | オフ       | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
@@ -153,20 +153,20 @@ Monitor Pro は 2 つのモードでリアルタイムの電力消費を報告�
 
 すべての設定は `monitor-pro.*` の下にグループ化され、ホットリロードで即座に適用されます。
 
-| 設定                                        | デフォルト    | 説明                                                     |
-| ------------------------------------------- | ------------- | -------------------------------------------------------- |
-| `monitor-pro.metrics.*`                     | 上表参照      | 各ステータスバーメトリックのオン/オフ                    |
-| `monitor-pro.metricsOrder`                  | —             | ステータスバー項目の順序                                 |
-| `monitor-pro.refresh-interval`              | `2000` ms     | ポーリング間隔（500〜30000ms）                           |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）または `decimal`（kB/MB）             |
-| `monitor-pro.showSpace`                     | `false`       | 数値と単位の間にスペースを入れる                         |
-| `monitor-pro.singleUnit`                    | `false`       | 単位を最初の文字に省略（K、M、G）                        |
-| `monitor-pro.significantDigits`             | メトリック毎  | 有効桁数（1〜6）                                         |
-| `monitor-pro.uptimeFormat`                  | `auto`        | カスタムフォーマット、`{d}` `{h}` `{m}` `{s}` をサポート |
+| 設定                                        | デフォルト    | 説明                                                                         |
+| ------------------------------------------- | ------------- | ---------------------------------------------------------------------------- |
+| `monitor-pro.metrics.*`                     | 上表参照      | 各ステータスバーメトリックのオン/オフ                                        |
+| `monitor-pro.metricsOrder`                  | —             | ステータスバー項目の順序                                                     |
+| `monitor-pro.refresh-interval`              | `2000` ms     | ポーリング間隔（500〜30000ms）                                               |
+| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）または `decimal`（kB/MB）                                 |
+| `monitor-pro.showSpace`                     | `false`       | 数値と単位の間にスペースを入れる                                             |
+| `monitor-pro.singleUnit`                    | `false`       | 単位を最初の文字に省略（K、M、G）                                            |
+| `monitor-pro.significantDigits`             | メトリック毎  | 有効桁数（1〜6）                                                             |
+| `monitor-pro.uptimeFormat`                  | `auto`        | カスタムフォーマット、`{d}` `{h}` `{m}` `{s}` をサポート                     |
 | `monitor-pro.resourceUsage.charts`          | —             | グラフ/カードの有効化・表示・色設定（ `osDistro` `uptime` `diskSpace` 含む） |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | グラフ履歴ポイント数（10〜500）                          |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | ディスク容量カードのマウントフィルター                   |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | ステータスバーのディスク容量マウントフィルター           |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | グラフ履歴ポイント数（10〜500）                                              |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | ディスク容量カードのマウントフィルター                                       |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]` | ステータスバーのディスク容量マウントフィルター                               |
 
 ## スクリーンショット（0.6.0 以前、現在のバージョンでも互換性あり）
 

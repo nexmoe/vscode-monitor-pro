@@ -146,15 +146,15 @@ export class RawDataAdapter {
         (raw.disk.usage || [])
           .filter((u) => u.total > 0)
           .map((u) => ({
-          fs: u.path,
-          type: u.fstype,
-          size: u.total,
-          used: u.used,
-          available: u.free,
-          use: u.total > 0 ? Math.round(u.usedPercent * 100) / 100 : 0,
-          mount: u.path,
-          rw: null,
-        })),
+            fs: u.path,
+            type: u.fstype,
+            size: u.total,
+            used: u.used,
+            available: u.free,
+            use: u.total > 0 ? Math.round(u.usedPercent * 100) / 100 : 0,
+            mount: u.path,
+            rw: null,
+          })),
       ),
       cpuCurrentSpeed: cpuSpeed,
       cpuTemperature: cpuTemp,
@@ -178,8 +178,7 @@ export class RawDataAdapter {
               raw.battery.state === "Charging" ||
               raw.battery.state === "Discharging"
                 ? (raw.battery.state.toLowerCase() as
-                    | "charging"
-                    | "discharging")
+                    "charging" | "discharging")
                 : "idle",
             timeRemaining: 0,
             acConnected: raw.battery.state === "Charging",

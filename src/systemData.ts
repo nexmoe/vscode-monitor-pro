@@ -394,9 +394,7 @@ class SystemDataProvider {
             }
           }
         } else if (msg.type === "error") {
-          getLogger().warn(
-            l10n.t("Worker collection failed: {0}", msg.error),
-          );
+          getLogger().warn(l10n.t("Worker collection failed: {0}", msg.error));
         }
       });
       this._worker.on("error", (err) => {
@@ -462,13 +460,17 @@ class SystemDataProvider {
     );
     const failSafe = new Promise<never>((_, reject) => {
       setTimeout(() => {
-        reject(new Error("collect() timed out; promise cache cleared for retry"));
+        reject(
+          new Error("collect() timed out; promise cache cleared for retry"),
+        );
       }, 2000);
     });
 
-    this._collectPromise = Promise.race([sourcePromise, failSafe]).finally(() => {
-      this._collectPromise = null;
-    });
+    this._collectPromise = Promise.race([sourcePromise, failSafe]).finally(
+      () => {
+        this._collectPromise = null;
+      },
+    );
     return this._collectPromise;
   }
 }

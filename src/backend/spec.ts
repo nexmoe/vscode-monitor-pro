@@ -34,7 +34,10 @@ export const MACTOP_SPEC: NativeBackendSpec = {
   graceMs: 200,
   resolveBinary: () => {
     try {
-      const found = execSync("which mactop", { stdio: "pipe", encoding: "utf-8" }).trim();
+      const found = execSync("which mactop", {
+        stdio: "pipe",
+        encoding: "utf-8",
+      }).trim();
       if (found && fs.existsSync(found)) {
         return found;
       }
