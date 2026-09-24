@@ -1,0 +1,19 @@
+# Build output
+out/
+dist/
+node_modules/
+.vscode-test/
+
+# Caches
+.ruff_cache/
+docs/.next/
+
+# pnpm rewrites lockfiles; formatting them would be undone on the next install
+pnpm-lock.yaml
+docs/pnpm-lock.yaml
+
+# Packaged extension
+*.vsix
+
+# Stray directory left by the packaging tooling
+package/
