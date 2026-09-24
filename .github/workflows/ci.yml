@@ -21,7 +21,11 @@ jobs:
 
       - uses: ./.github/actions/setup
 
+      # Line endings are not guaranteed across runners: the Windows image checks
+      # code out with CRLF, while prettier expects LF. Run the formatting check
+      # only where the checkout is LF.
       - run: pnpm run format:check
+        if: runner.os == 'Linux'
 
       - run: pnpm run lint
 
