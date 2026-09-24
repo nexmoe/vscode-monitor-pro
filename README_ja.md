@@ -23,6 +23,14 @@ Monitor Pro は、VS Code のステータスバーと専用の Webview パネル
 >
 > 背景：リソース使用状況ビューの導入により、ほとんどのメトリクスは専用パネルでより適切に可視化されます。ステータスバーをコンパクトに保つことで、新しいユーザーにとってのわかりやすさが向上します。
 
+## 0.8 / 0.9 の新機能
+
+- **macOS Apple Silicon（mactop）**：オプションの [mactop](https://github.com/metaspartan/mactop) バックエンドにより、SoC レベルのメトリック（CPU/GPU/ANE 電力、温度、GPU 使用率）を追加。初回起動時にワンクリックの `brew install mactop` を提案します。
+- **GPU 監視**：`nvidia-smi` による NVIDIA GPU に加え、mactop 経由で Apple Silicon の統合 GPU にも対応。使用率・温度・VRAM（NVIDIA のみ）のグラフと、GPU ごとの配列ビューを備えます。
+- **ワット単位の電力**：Windows では符号付きのバッテリー正味電力、Apple Silicon では SoC 総電力を表示。0W の破線ガイドラインと 5 サンプルの移動平均で安定した値を保ちます。
+- **コアごとの CPU ビュー**：CPU 使用率と温度のカードをコアごとのグリッド表示に切り替えられます。
+- そのほか各種修正：テーマ対応のグラフ配色、macOS 27 のバッテリー健全性、最後の VS Code ウィンドウを閉じた際の mactop 終了など。
+
 ## 0.7.0 メジャーアップデート概要
 
 サイドパネル監視ビュー：
@@ -157,6 +165,7 @@ Monitor Pro は 2 つのモードでリアルタイムの電力消費を報告�
 | ------------------------------------------- | ------------- | ---------------------------------------------------------------------------- |
 | `monitor-pro.metrics.*`                     | 上表参照      | 各ステータスバーメトリックのオン/オフ                                        |
 | `monitor-pro.metricsOrder`                  | —             | ステータスバー項目の順序                                                     |
+| `monitor-pro.mactop.enabled`                | `true`        | macOS の mactop バックエンド（SoC メトリック）とインストール提案を有効化     |
 | `monitor-pro.refresh-interval`              | `2000` ms     | ポーリング間隔（500〜30000ms）                                               |
 | `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）または `decimal`（kB/MB）                                 |
 | `monitor-pro.showSpace`                     | `false`       | 数値と単位の間にスペースを入れる                                             |
@@ -204,6 +213,8 @@ pnpm run compile
 | `pnpm run package:vsix:win32-x64`   | Windows x64 VSIX をパッケージ化                 |
 | `pnpm run package:vsix:win32-arm64` | Windows ARM64 VSIX をパッケージ化               |
 | `pnpm run gen-l10n`                 | ソースからローカライゼーションファイルを再生成  |
+| `pnpm run l10n:check`               | l10n バンドルがソースと一致するか検証           |
+| `pnpm run l10n:parity`              | ロケール間の key 一致を検証                     |
 
 ## インスピレーションと謝辞
 

@@ -23,6 +23,14 @@ A **hybrid architecture** delivers the best of both worlds: a native Go binary o
 >
 > Rationale: with the new Resource Usage webview, most metrics are better visualized in their dedicated panel. Keeping the status bar lean avoids clutter for new users.
 
+## What's new in 0.8 / 0.9
+
+- **macOS Apple Silicon (mactop)**: an optional [mactop](https://github.com/metaspartan/mactop) backend adds SoC-level metrics — CPU/GPU/ANE power, temperature and GPU usage. On first run the extension offers a one-click `brew install mactop`.
+- **GPU monitoring**: NVIDIA GPUs via `nvidia-smi`, plus the integrated Apple Silicon GPU through mactop — usage, temperature and VRAM (NVIDIA only) charts, with a per-GPU array view.
+- **Power in watts**: Windows shows signed battery net power; Apple Silicon shows total SoC power. A dashed 0W reference line and a 5-sample moving average keep readings stable.
+- **Per-core CPU views**: switch the CPU usage and temperature cards to a per-core grid.
+- Plus a batch of fixes: theme-aware chart colors, macOS 27 battery health, and mactop shutting down when the last VS Code window closes.
+
 ## 0.7.0 Major Update Overview
 
 Side panel monitoring view:
@@ -157,6 +165,7 @@ Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 | ------------------------------------------- | ------------- | --------------------------------------------------------------------------------- |
 | `monitor-pro.metrics.*`                     | varies        | Toggle each status bar metric on/off                                              |
 | `monitor-pro.metricsOrder`                  | —             | Reorder status bar items                                                          |
+| `monitor-pro.mactop.enabled`                | `true`        | Enable the macOS mactop backend (SoC metrics) and its install prompt              |
 | `monitor-pro.refresh-interval`              | `2000` ms     | Polling interval (500–30000ms)                                                    |
 | `monitor-pro.unitSystem`                    | `binary`      | `binary` (KiB/MiB) or `decimal` (kB/MB)                                           |
 | `monitor-pro.showSpace`                     | `false`       | Space between number and unit                                                     |
@@ -204,6 +213,8 @@ pnpm run compile
 | `pnpm run package:vsix:win32-x64`   | Package Windows x64 VSIX                  |
 | `pnpm run package:vsix:win32-arm64` | Package Windows ARM64 VSIX                |
 | `pnpm run gen-l10n`                 | Regenerate l10n bundle from source        |
+| `pnpm run l10n:check`               | Verify l10n bundles match the source      |
+| `pnpm run l10n:parity`              | Verify locale key parity                  |
 
 ## Inspiration & Acknowledgments
 

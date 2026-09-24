@@ -23,6 +23,14 @@ Monitor Pro 是一款实时系统资源监控工具，直接在 VS Code 状态�
 >
 > 背景：资源占用视图上线后，大多数指标在专属面板中可视化效果更好。状态栏保留最核心的三项指标，避免新用户初次安装时状态栏过于拥挤。
 
+## 0.8 / 0.9 新增内容
+
+- **macOS Apple Silicon（mactop）**：可选的 [mactop](https://github.com/metaspartan/mactop) 后端带来 SoC 级指标——CPU/GPU/ANE 功率、温度与 GPU 使用率。首次运行会提示一键 `brew install mactop`。
+- **GPU 监控**：通过 `nvidia-smi` 支持 NVIDIA GPU，并借助 mactop 支持 Apple Silicon 集成 GPU——使用率、温度与显存（仅 NVIDIA）图表，并提供每 GPU 阵列视图。
+- **瓦特功率**：Windows 显示带符号的电池净功率，Apple Silicon 显示 SoC 总功率；0W 虚线基准与 5 点滑动平均让读数更稳定。
+- **每核 CPU 视图**：CPU 使用率与温度卡片可切换为每核网格视图。
+- 另有一批修复：主题自适应图表配色、macOS 27 电池健康度、最后一个 VS Code 窗口关闭时结束 mactop 等。
+
 ## 0.7.0 重大更新速览
 
 右边栏监控面板：
@@ -157,6 +165,7 @@ Monitor Pro 支持两种模式的实时功率监测：
 | ------------------------------------------- | ------------- | ----------------------------------------------------------------- |
 | `monitor-pro.metrics.*`                     | 见上表        | 开关状态栏各项指标                                                |
 | `monitor-pro.metricsOrder`                  | —             | 调整状态栏显示顺序                                                |
+| `monitor-pro.mactop.enabled`                | `true`        | 启用 macOS mactop 后端（SoC 指标）及其安装提示                    |
 | `monitor-pro.refresh-interval`              | `2000` ms     | 轮询间隔（500~30000ms）                                           |
 | `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）或 `decimal`（kB/MB）                          |
 | `monitor-pro.showSpace`                     | `false`       | 数字与单位间是否加空格                                            |
@@ -204,6 +213,8 @@ pnpm run compile
 | `pnpm run package:vsix:win32-x64`   | 打包 Windows x64 VSIX            |
 | `pnpm run package:vsix:win32-arm64` | 打包 Windows ARM64 VSIX          |
 | `pnpm run gen-l10n`                 | 从源码重新生成本地化文件         |
+| `pnpm run l10n:check`               | 校验 l10n bundle 与源码一致      |
+| `pnpm run l10n:parity`              | 校验各语言 key 一致              |
 
 ## 灵感来源以及致谢列表
 
