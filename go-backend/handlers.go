@@ -260,11 +260,11 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 	// Falls back to full collection when the parameter is absent (backward compatibility).
 	enabled := parseEnabledMetrics(r)
 
-	needCPU := enabled == nil || enabled["cpu"]
+	needCPU := enabled == nil || enabled["cpu"] || enabled["cpuSpeed"]
 	needMem := enabled == nil || enabled["memoryActive"] || enabled["memoryUsed"]
 	needDisk := enabled == nil || enabled["diskSpace"] || enabled["fileSystem"]
 	needNet := enabled == nil || enabled["network"]
-	needHost := enabled == nil || enabled["osDistro"] || enabled["cpuTemp"]
+	needHost := enabled == nil || enabled["osDistro"] || enabled["cpuTemp"] || enabled["uptime"]
 	needBattery := enabled == nil || enabled["battery"]
 
 	// CPU group

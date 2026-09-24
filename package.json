@@ -107,7 +107,10 @@
             "cpuSpeed",
             "osDistro",
             "diskSpace",
-            "uptime"
+            "uptime",
+            "gpu",
+            "gpuTemp",
+            "gpuMem"
           ],
           "description": "%config.metricsOrder%",
           "items": {

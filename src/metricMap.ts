@@ -31,8 +31,8 @@ export type CollectDimension =
  *   still borrows the currentLoad placeholder so it is included in the
  *   collection set
  *
- * The Go backend does not use this table: it decides Host group collection
- * directly from metric names (osDistro / cpuTemp).
+ * The Go backend does not use this table: it decides group collection directly
+ * from metric names (CPU: cpu / cpuSpeed, Host: osDistro / cpuTemp / uptime).
  */
 export const METRIC_TO_DIMENSION: Record<MetricsExist, CollectDimension> = {
   cpu: "currentLoad",
