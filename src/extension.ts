@@ -218,7 +218,11 @@ async function tryStartMactopBackend() {
             return;
           } catch (err) {
             getLogger().warn(
-              l10n.t("mactop backend unavailable: {0}, using fallback", String(err)),
+              l10n.t(
+                "{0} backend unavailable: {1}, using fallback",
+                newManager.displayName,
+                String(err),
+              ),
             );
             await newManager.stop();
           }
@@ -242,7 +246,11 @@ async function tryStartMactopBackend() {
     systemData.setSource(new MactopDataSource(manager));
   } catch (err) {
     getLogger().warn(
-      l10n.t("mactop backend unavailable: {0}, using fallback", String(err)),
+      l10n.t(
+        "{0} backend unavailable: {1}, using fallback",
+        manager.displayName,
+        String(err),
+      ),
     );
     await manager.stop();
     fallbackToSIDataSource();

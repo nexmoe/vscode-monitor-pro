@@ -23,6 +23,10 @@ const COOPERATIVE = 'console.log("ready"); setTimeout(() => {}, 30000);';
 const STUBBORN =
   'process.on("SIGTERM", () => {}); console.log("ready"); setTimeout(() => {}, 30000);';
 
+// Windows maps SIGTERM to TerminateProcess, so a process cannot ignore it and
+// there is nothing to escalate to.
+const SIGTERM_IS_CATCHABLE = process.platform !== "win32";
+
 describe("backendLifecycle port file", () => {
   let dir: string;
   let file: string;
@@ -146,7 +150,11 @@ describe("backendLifecycle process handling", () => {
     assert.equal(await waitUntilDead(pid), true);
   });
 
-  it("escalates to SIGKILL when the process ignores SIGTERM", async () => {
+  it("escalates to SIGKILL when the process ignores SIGTERM", async function () {
+    if (!SIGTERM_IS_CATCHABLE) {
+      this.skip();
+    }
+
     const pid = await spawnNode(STUBBORN);
     assert.equal(isProcessAlive(pid), true);
 

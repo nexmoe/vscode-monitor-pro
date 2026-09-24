@@ -23,6 +23,10 @@ jobs:
 
             - run: pnpm run lint
 
+            # The backend lifecycle tests spawn stand-in processes and talk to
+            # them over loopback HTTP, so they run on every supported platform.
+            - run: pnpm run test:unit
+
     go:
         runs-on: ubuntu-latest
         steps:
