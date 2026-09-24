@@ -15,6 +15,7 @@ import { getMetricsEnabled, getUptimeFormat } from "./configuration";
 import byteFormat from "./byteFormat";
 import { formatEstimatedBatteryTime } from "./battery";
 import { systemData } from "./systemData";
+import { formatUptime } from "./uptime";
 
 interface FormattedPayload {
   history: ResourceUsagePayload["history"];
@@ -22,34 +23,6 @@ interface FormattedPayload {
   formatConfig: ReturnType<typeof getFormatConfig>;
   textMetrics: TextMetrics;
   formattedText: Record<string, string>;
-}
-
-function formatUptime(seconds: number, format: string): string {
-  if (format !== "auto") {
-    const d = Math.floor(seconds / 86400);
-    const h = Math.floor((seconds % 86400) / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return format
-      .replace("{d}", String(d))
-      .replace("{h}", String(h))
-      .replace("{m}", String(m))
-      .replace("{s}", String(s));
-  }
-  const d = Math.floor(seconds / 86400);
-  const h = Math.floor((seconds % 86400) / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const parts: string[] = [];
-  if (d > 0) {
-    parts.push(`${d}d`);
-  }
-  if (h > 0) {
-    parts.push(`${h}h`);
-  }
-  if (m > 0 || parts.length === 0) {
-    parts.push(`${m}m`);
-  }
-  return parts.join(" ");
 }
 
 /**
@@ -240,16 +213,6 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
         single,
         minimumSignificantDigits: sigDigits.network ?? 4,
         maximumSignificantDigits: sigDigits.network ?? 4,
-        useGrouping: false,
-      });
-
-    const fmtSize = (bytes: number) =>
-      byteFormat(bytes, {
-        binary: isBinary,
-        space: fmtConfig.showSpace,
-        single,
-        minimumSignificantDigits: sigDigits.diskSpace ?? 3,
-        maximumSignificantDigits: sigDigits.diskSpace ?? 3,
         useGrouping: false,
       });
 

@@ -12,6 +12,7 @@ import { systemData } from "./systemData";
 import { dedupeFsSize } from "./diskSpace";
 import { getLogger } from "./logger";
 import { formatEstimatedBatteryTime } from "./battery";
+import { formatUptime } from "./uptime";
 
 function getSigDigits(section: string): number {
   return getSignificantDigits()[section] ?? 3;
@@ -310,18 +311,7 @@ const diskSpaceText = async () => {
 
 const uptimeText = async () => {
   const uptime = os.uptime();
-  const fmt = getUptimeFormat();
-  if (fmt && fmt !== "auto") {
-    const days = Math.floor(uptime / (24 * 3600));
-    const hours = Math.floor((uptime % (24 * 3600)) / 3600);
-    const minutes = Math.floor((uptime % 3600) / 60);
-    const seconds = Math.floor(uptime % 60);
-    return `$(clock) ${fmt.replace("{d}", String(days)).replace("{h}", String(hours)).replace("{m}", String(minutes)).replace("{s}", String(seconds))}`;
-  }
-  const days = Math.floor(uptime / (24 * 3600));
-  const hours = Math.floor((uptime % (24 * 3600)) / 3600);
-  const minutes = Math.floor((uptime % 3600) / 60);
-  return `$(clock) ${days}d ${hours}h ${minutes}m`;
+  return `$(clock) ${formatUptime(uptime, getUptimeFormat())}`;
 };
 
 const metrics: MetricCtrProps[] = [
