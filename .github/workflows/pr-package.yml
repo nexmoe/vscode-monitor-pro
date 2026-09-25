@@ -10,11 +10,11 @@ on:
 permissions:
   contents: read
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 concurrency:
-  group: pr-vsix-${{ github.event.pull_request.number || github.event.issue.number }}
+  # Scoped by event as well as PR: the Cloudflare Pages bot comments on every
+  # PR update, and an issue_comment run sharing this group would cancel the
+  # in-flight pull_request build (and the other way round).
+  group: pr-vsix-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: true
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Check /build command and permission
         id: check
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const body = (context.payload.comment?.body || '').trim();
@@ -76,13 +76,13 @@ jobs:
       actions: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
-          ref: github.event.pull_request.head.sha
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - uses: ./.github/actions/setup
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26"
           cache-dependency-path: go-backend/go.sum
@@ -111,14 +111,14 @@ jobs:
           ls -lh monitor-pro-*.vsix
           echo "files=$(ls monitor-pro-*.vsix | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vsix-pr-${{ steps.info.outputs.pr_number }}-${{ steps.info.outputs.short_sha }}
           path: "monitor-pro-*.vsix"
           retention-days: 14
 
       - name: Comment build result on PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const marker = '<!-- pr-vsix-build -->';
@@ -170,14 +170,14 @@ jobs:
       actions: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: ${{ needs.gate.outputs.head_repo }}
           ref: ${{ needs.gate.outputs.head_sha }}
 
       - uses: ./.github/actions/setup
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26"
           cache-dependency-path: go-backend/go.sum
@@ -205,14 +205,14 @@ jobs:
           ls -lh monitor-pro-*.vsix
           echo "files=$(ls monitor-pro-*.vsix | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vsix-pr-${{ needs.gate.outputs.pr_number }}-${{ steps.info.outputs.short_sha }}
           path: "monitor-pro-*.vsix"
           retention-days: 14
 
       - name: Comment build result on PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const marker = '<!-- pr-vsix-build -->';
