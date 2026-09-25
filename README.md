@@ -13,7 +13,7 @@ English | [简体中文](./README_zh-cn.md) | [繁體中文](./README_zh-tw.md) 
 
 Monitor Pro is a real-time system resource monitoring tool that works directly in the VS Code status bar and a dedicated Webview panel. From the very beginning, the plugin was designed with cross-platform and remote development machine performance monitoring in mind, with full implementations on local systems, Remote SSH, and WSL.
 
-A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for over 10x faster data collection compared to `systeminformation`; macOS Apple Silicon machines use [mactop](https://github.com/metaspartan/mactop) (when installed) for SoC-level metrics (CPU/GPU/ANE power, temperature) via a Prometheus HTTP endpoint; Linux and macOS without mactop fall back to the Node.js (`systeminformation`) data source, ensuring full platform compatibility.
+A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for over 10x faster data collection compared to `systeminformation`; macOS Apple Silicon machines use [mactop](https://github.com/metaspartan/mactop) (when enabled) for SoC-level metrics (CPU/GPU/ANE power, temperature) via a Prometheus HTTP endpoint; Linux and macOS without mactop use the Node.js (`systeminformation`) data source. Data sources are never switched silently: while mactop is enabled, a failed start stops collection, and switching to the built-in source is an explicit choice offered in the failure notification.
 
 > [!WARNING]
 >
@@ -154,28 +154,28 @@ These settings apply to the status bar and webview alike.
 ### Cross-Platform
 
 - Works in local, Remote SSH, and WSL environments
-- Go binary for Windows (native performance); mactop for macOS Apple Silicon (SoC metrics); transparent fallback to Node.js on all platforms
+- Go binary for Windows (native performance); mactop for macOS Apple Silicon (SoC metrics); Node.js on Linux and macOS without mactop — switching to it is always an explicit user choice, never an automatic fallback
 - Multi-language: English, 简体中文, 繁體中文, 日本語
 
 ## Configuration
 
 Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 
-| Setting                                     | Default       | Description                                                                       |
-| ------------------------------------------- | ------------- | --------------------------------------------------------------------------------- |
-| `monitor-pro.metrics.*`                     | varies        | Toggle each status bar metric on/off                                              |
-| `monitor-pro.metricsOrder`                  | —             | Reorder status bar items                                                          |
-| `monitor-pro.mactop.enabled`                | `true`        | Enable the macOS mactop backend (SoC metrics) and its install prompt              |
-| `monitor-pro.refresh-interval`              | `2000` ms     | Polling interval (500–30000ms)                                                    |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary` (KiB/MiB) or `decimal` (kB/MB)                                           |
-| `monitor-pro.showSpace`                     | `false`       | Space between number and unit                                                     |
-| `monitor-pro.singleUnit`                    | `false`       | Abbreviate unit to first letter (K, M, G)                                         |
-| `monitor-pro.significantDigits`             | per-metric    | Significant digits (1–6) per metric                                               |
-| `monitor-pro.uptimeFormat`                  | `auto`        | Custom format with `{d}`, `{h}`, `{m}`, `{s}`                                     |
-| `monitor-pro.resourceUsage.charts`          | —             | Chart/card enable/view/color per metric (incl. `osDistro`, `uptime`, `diskSpace`) |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | Chart history length (10–500)                                                     |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space card                                                  |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | Mount filter for status bar                                                       |
+| Setting                                     | Default       | Description                                                                                                                                   |
+| ------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `monitor-pro.metrics.*`                     | varies        | Toggle each status bar metric on/off                                                                                                          |
+| `monitor-pro.metricsOrder`                  | —             | Reorder status bar items                                                                                                                      |
+| `monitor-pro.mactop.enabled`                | `true`        | Enable the macOS mactop backend (SoC metrics) and its install prompt; while enabled, a failed start stops collection rather than falling back |
+| `monitor-pro.refresh-interval`              | `2000` ms     | Polling interval (500–30000ms)                                                                                                                |
+| `monitor-pro.unitSystem`                    | `binary`      | `binary` (KiB/MiB) or `decimal` (kB/MB)                                                                                                       |
+| `monitor-pro.showSpace`                     | `false`       | Space between number and unit                                                                                                                 |
+| `monitor-pro.singleUnit`                    | `false`       | Abbreviate unit to first letter (K, M, G)                                                                                                     |
+| `monitor-pro.significantDigits`             | per-metric    | Significant digits (1–6) per metric                                                                                                           |
+| `monitor-pro.uptimeFormat`                  | `auto`        | Custom format with `{d}`, `{h}`, `{m}`, `{s}`                                                                                                 |
+| `monitor-pro.resourceUsage.charts`          | —             | Chart/card enable/view/color per metric (incl. `osDistro`, `uptime`, `diskSpace`)                                                             |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | Chart history length (10–500)                                                                                                                 |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space card                                                                                                              |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]` | Mount filter for status bar                                                                                                                   |
 
 ## Screenshots (pre-0.6.0, still compatible with the current version)
 
@@ -186,8 +186,8 @@ Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 ## Requirements
 
 - VS Code 1.104+
-- Windows 10/11 (for native Go backend; Linux/macOS use built-in fallback)
-- macOS 12+ Apple Silicon (optional): [mactop](https://github.com/metaspartan/mactop) via Homebrew (v2.1.4+) for SoC metrics (`brew install mactop`). When missing, the extension prompts once on first run offering to auto-install it (suppressible via the `monitor-pro.mactop.enabled` setting)
+- Windows 10/11 (for the native Go backend; other platforms use the built-in data source)
+- macOS 12+ Apple Silicon (optional): [mactop](https://github.com/metaspartan/mactop) via Homebrew (v2.1.4+) for SoC metrics (`brew install mactop`). When missing, the extension prompts once on first run offering to auto-install it (suppressible via the `monitor-pro.mactop.enabled` setting). While mactop is enabled, a failed start stops collection rather than falling back; the failure notification offers a one-click switch to the built-in source, and dismissing the install prompt leaves metrics off until mactop is installed or the setting is turned off
 
 ## Developing
 

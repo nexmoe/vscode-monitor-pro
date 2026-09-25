@@ -13,7 +13,7 @@
 
 Monitor Pro は、VS Code のステータスバーと専用の Webview パネルで動作するリアルタイムシステムリソース監視ツールです。設計当初からクロスプラットフォームとリモート開発環境のパフォーマンス監視を考慮しており、ローカル環境、Remote SSH、WSL で完全に動作します。
 
-**ハイブリッドアーキテクチャ**を採用：Windows ではネイティブ Go バイナリが PowerShell/WMI のオーバーヘッドを回避し、`systeminformation` と比較して **10 倍以上のデータ収集速度**を実現。macOS Apple Silicon マシンでは [mactop](https://github.com/metaspartan/mactop)（インストールされている場合）を介して Prometheus HTTP エンドポイントから SoC レベルのメトリクス（CPU/GPU/ANE 電力、温度）を取得。Linux および mactop なしの macOS は Node.js（`systeminformation`）データソースに自動フォールバックし、全プラットフォームでの互換性を確保します。
+**ハイブリッドアーキテクチャ**を採用：Windows ではネイティブ Go バイナリが PowerShell/WMI のオーバーヘッドを回避し、`systeminformation` と比較して **10 倍以上のデータ収集速度**を実現。macOS Apple Silicon マシンでは [mactop](https://github.com/metaspartan/mactop)（有効な場合）を介して Prometheus HTTP エンドポイントから SoC レベルのメトリクス（CPU/GPU/ANE 電力、温度）を取得。Linux および mactop を使わない macOS は Node.js（`systeminformation`）データソースを使用します。データソースが黙って切り替わることはありません：mactop が有効な間は起動失敗で収集を停止し、内蔵データソースへの切り替えは失敗通知で明示的に選択します。
 
 > [!WARNING]
 >
@@ -154,28 +154,28 @@ Monitor Pro は 2 つのモードでリアルタイムの電力消費を報告�
 ### クロスプラットフォーム
 
 - ローカル、Remote SSH、WSL 環境で動作
-- Go バイナリは Windows（ネイティブパフォーマンス）、mactop は macOS Apple Silicon（SoC メトリクス）、その他のプラットフォームでは Node.js に透過的にフォールバック
+- Go バイナリは Windows（ネイティブパフォーマンス）、mactop は macOS Apple Silicon（SoC メトリクス）、その他のプラットフォームは Node.js——内蔵データソースへの切り替えは常にユーザーの明示的な選択であり、自動フォールバックではありません
 - 多言語：English, 简体中文, 繁體中文, 日本語
 
 ## 設定
 
 すべての設定は `monitor-pro.*` の下にグループ化され、ホットリロードで即座に適用されます。
 
-| 設定                                        | デフォルト    | 説明                                                                         |
-| ------------------------------------------- | ------------- | ---------------------------------------------------------------------------- |
-| `monitor-pro.metrics.*`                     | 上表参照      | 各ステータスバーメトリックのオン/オフ                                        |
-| `monitor-pro.metricsOrder`                  | —             | ステータスバー項目の順序                                                     |
-| `monitor-pro.mactop.enabled`                | `true`        | macOS の mactop バックエンド（SoC メトリック）とインストール提案を有効化     |
-| `monitor-pro.refresh-interval`              | `2000` ms     | ポーリング間隔（500〜30000ms）                                               |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）または `decimal`（kB/MB）                                 |
-| `monitor-pro.showSpace`                     | `false`       | 数値と単位の間にスペースを入れる                                             |
-| `monitor-pro.singleUnit`                    | `false`       | 単位を最初の文字に省略（K、M、G）                                            |
-| `monitor-pro.significantDigits`             | メトリック毎  | 有効桁数（1〜6）                                                             |
-| `monitor-pro.uptimeFormat`                  | `auto`        | カスタムフォーマット、`{d}` `{h}` `{m}` `{s}` をサポート                     |
-| `monitor-pro.resourceUsage.charts`          | —             | グラフ/カードの有効化・表示・色設定（ `osDistro` `uptime` `diskSpace` 含む） |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | グラフ履歴ポイント数（10〜500）                                              |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | ディスク容量カードのマウントフィルター                                       |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | ステータスバーのディスク容量マウントフィルター                               |
+| 設定                                        | デフォルト    | 説明                                                                                                                     |
+| ------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `monitor-pro.metrics.*`                     | 上表参照      | 各ステータスバーメトリックのオン/オフ                                                                                    |
+| `monitor-pro.metricsOrder`                  | —             | ステータスバー項目の順序                                                                                                 |
+| `monitor-pro.mactop.enabled`                | `true`        | macOS の mactop バックエンド（SoC メトリック）とインストール提案を有効化。有効中の起動失敗はフォールバックせず収集を停止 |
+| `monitor-pro.refresh-interval`              | `2000` ms     | ポーリング間隔（500〜30000ms）                                                                                           |
+| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）または `decimal`（kB/MB）                                                                             |
+| `monitor-pro.showSpace`                     | `false`       | 数値と単位の間にスペースを入れる                                                                                         |
+| `monitor-pro.singleUnit`                    | `false`       | 単位を最初の文字に省略（K、M、G）                                                                                        |
+| `monitor-pro.significantDigits`             | メトリック毎  | 有効桁数（1〜6）                                                                                                         |
+| `monitor-pro.uptimeFormat`                  | `auto`        | カスタムフォーマット、`{d}` `{h}` `{m}` `{s}` をサポート                                                                 |
+| `monitor-pro.resourceUsage.charts`          | —             | グラフ/カードの有効化・表示・色設定（ `osDistro` `uptime` `diskSpace` 含む）                                             |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | グラフ履歴ポイント数（10〜500）                                                                                          |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | ディスク容量カードのマウントフィルター                                                                                   |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]` | ステータスバーのディスク容量マウントフィルター                                                                           |
 
 ## スクリーンショット（0.6.0 以前、現在のバージョンでも互換性あり）
 
@@ -186,8 +186,8 @@ Monitor Pro は 2 つのモードでリアルタイムの電力消費を報告�
 ## システム要件
 
 - VS Code 1.104+
-- Windows 10/11（ネイティブ Go バックエンド用；Linux/macOS はビルトインフォールバックを使用）
-- macOS 12+ Apple Silicon（オプション）：SoC メトリクス用に [mactop](https://github.com/metaspartan/mactop)（v2.1.4+）を Homebrew でインストール（`brew install mactop`）。未インストールの場合、初回起動時に自動インストールするか確認するプロンプトが表示されます（`monitor-pro.mactop.enabled` で無効化可能）
+- Windows 10/11（ネイティブ Go バックエンド用。その他のプラットフォームは内蔵データソースを使用）
+- macOS 12+ Apple Silicon（オプション）：SoC メトリクス用に [mactop](https://github.com/metaspartan/mactop)（v2.1.4+）を Homebrew でインストール（`brew install mactop`）。未インストールの場合、初回起動時に自動インストールするか確認するプロンプトが表示されます（`monitor-pro.mactop.enabled` で無効化可能）。mactop が有効な間は起動失敗で収集を停止します。失敗通知には内蔵データソースへの切り替えボタンがあり、インストール提案を閉じると mactop のインストールまたは設定変更までメトリクスは無効のままです
 
 ## 開発
 

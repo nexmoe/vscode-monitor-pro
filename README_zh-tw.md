@@ -13,7 +13,7 @@
 
 Monitor Pro 是一款即時系統資源監控工具，直接在 VS Code 狀態列和專屬 Webview 面板中呈現。本擴充套件在設計之初就充分考慮到了跨平台與遠端開發機效能監控的能力，在原始系統、Remote SSH、WSL 上均有完善的實作。
 
-採用**混合架構**：Windows 上使用原生 Go 二進位繞過 PowerShell/WMI 開銷，相較於 `systeminformation` 實現 **10 倍以上的資料收集速度提升**；macOS Apple Silicon 機器使用 [mactop](https://github.com/metaspartan/mactop)（若已安裝）透過 Prometheus HTTP 端點獲取 SoC 層級指標（CPU/GPU/ANE 功率、溫度）；Linux 和未安裝 mactop 的 macOS 自動回退到 Node.js (`systeminformation`) 資料來源，確保全平台相容。
+採用**混合架構**：Windows 上使用原生 Go 二進位繞過 PowerShell/WMI 開銷，相較於 `systeminformation` 實現 **10 倍以上的資料收集速度提升**；macOS Apple Silicon 機器使用 [mactop](https://github.com/metaspartan/mactop)（若已啟用）透過 Prometheus HTTP 端點獲取 SoC 層級指標（CPU/GPU/ANE 功率、溫度）；Linux 和未啟用 mactop 的 macOS 使用 Node.js (`systeminformation`) 資料來源。資料來源絕不靜默切換：mactop 啟用期間啟動失敗即停止收集，切換到內建資料來源是失敗通知中提供的顯式選擇。
 
 > [!WARNING]
 >
@@ -154,28 +154,28 @@ Monitor Pro 支援兩種模式的即時功率監測：
 ### 跨平台
 
 - 支援本地、Remote SSH、WSL
-- Windows 使用原生 Go 二進位（原生效能）；macOS Apple Silicon 使用 mactop（SoC 指標）；其餘平台自動回退 Node.js
+- Windows 使用原生 Go 二進位（原生效能）；macOS Apple Silicon 使用 mactop（SoC 指標）；其餘平台使用 Node.js——切換到內建資料來源始終是使用者的顯式選擇，絕非自動回退
 - 多語言：English, 简体中文, 繁體中文, 日本語
 
 ## 配置
 
 所有設定項以 `monitor-pro.*` 開頭，修改後即時熱重載。
 
-| 設定                                        | 預設值        | 說明                                                              |
-| ------------------------------------------- | ------------- | ----------------------------------------------------------------- |
-| `monitor-pro.metrics.*`                     | 見上表        | 開關狀態列各項指標                                                |
-| `monitor-pro.metricsOrder`                  | —             | 調整狀態列顯示順序                                                |
-| `monitor-pro.mactop.enabled`                | `true`        | 啟用 macOS mactop 後端（SoC 指標）及其安裝提示                    |
-| `monitor-pro.refresh-interval`              | `2000` ms     | 輪詢間隔（500~30000ms）                                           |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）或 `decimal`（kB/MB）                          |
-| `monitor-pro.showSpace`                     | `false`       | 數字與單位間是否加空格                                            |
-| `monitor-pro.singleUnit`                    | `false`       | 單位縮寫為首字母（K, M, G）                                       |
-| `monitor-pro.significantDigits`             | 各指標不同    | 有效數字位數（1~6）                                               |
-| `monitor-pro.uptimeFormat`                  | `auto`        | 自訂格式，支援 `{d}` `{h}` `{m}` `{s}`                            |
-| `monitor-pro.resourceUsage.charts`          | —             | 圖表/卡片啟用、檢視、顏色（含 `osDistro`、`uptime`、`diskSpace`） |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 圖表歷史點數（10~500）                                            |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁碟空間卡片掛載點過濾                                            |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | 狀態列磁碟空間掛載點過濾                                          |
+| 設定                                        | 預設值        | 說明                                                                               |
+| ------------------------------------------- | ------------- | ---------------------------------------------------------------------------------- |
+| `monitor-pro.metrics.*`                     | 見上表        | 開關狀態列各項指標                                                                 |
+| `monitor-pro.metricsOrder`                  | —             | 調整狀態列顯示順序                                                                 |
+| `monitor-pro.mactop.enabled`                | `true`        | 啟用 macOS mactop 後端（SoC 指標）及其安裝提示；啟用期間啟動失敗將停止收集而不回退 |
+| `monitor-pro.refresh-interval`              | `2000` ms     | 輪詢間隔（500~30000ms）                                                            |
+| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）或 `decimal`（kB/MB）                                           |
+| `monitor-pro.showSpace`                     | `false`       | 數字與單位間是否加空格                                                             |
+| `monitor-pro.singleUnit`                    | `false`       | 單位縮寫為首字母（K, M, G）                                                        |
+| `monitor-pro.significantDigits`             | 各指標不同    | 有效數字位數（1~6）                                                                |
+| `monitor-pro.uptimeFormat`                  | `auto`        | 自訂格式，支援 `{d}` `{h}` `{m}` `{s}`                                             |
+| `monitor-pro.resourceUsage.charts`          | —             | 圖表/卡片啟用、檢視、顏色（含 `osDistro`、`uptime`、`diskSpace`）                  |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 圖表歷史點數（10~500）                                                             |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁碟空間卡片掛載點過濾                                                             |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]` | 狀態列磁碟空間掛載點過濾                                                           |
 
 ## 0.6.0 前螢幕截圖（目前版本仍保持相容）
 
@@ -186,8 +186,8 @@ Monitor Pro 支援兩種模式的即時功率監測：
 ## 系統需求
 
 - VS Code 1.104+
-- Windows 10/11（Go 後端需要；Linux/macOS 使用內建回退）
-- macOS 12+ Apple Silicon（可選）：安裝 [mactop](https://github.com/metaspartan/mactop)（v2.1.4+）獲取 SoC 指標（`brew install mactop`）。首次執行時若缺失會彈窗詢問是否自動安裝（可透過 `monitor-pro.mactop.enabled` 關閉該提示）
+- Windows 10/11（Go 後端需要；其他平台使用內建資料來源）
+- macOS 12+ Apple Silicon（可選）：安裝 [mactop](https://github.com/metaspartan/mactop)（v2.1.4+）獲取 SoC 指標（`brew install mactop`）。首次執行時若缺失會彈窗詢問是否自動安裝（可透過 `monitor-pro.mactop.enabled` 關閉該提示）。mactop 啟用期間啟動失敗即停止收集；失敗通知提供一鍵切換內建資料來源，忽略安裝提示則指標保持停用，直至安裝 mactop 或關閉該設定
 
 ## 開發
 

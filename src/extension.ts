@@ -14,7 +14,7 @@ import { Metric, getEnabledMetrics } from "./metricsInit";
 import { systemData } from "./systemData";
 import { NativeBackendManager } from "./backend/nativeBackendManager";
 import { MACTOP_SPEC, createGoSpec } from "./backend/spec";
-import { GoDataSource, SIDataSource } from "./dataSource";
+import { GoDataSource, SIDataSource, type DataSource } from "./dataSource";
 import { MactopDataSource } from "./mactop-backend/mactopDataSource";
 import { getMetricsEnabled, getResourceUsageConfig } from "./configuration";
 import { getLogger, initLogger } from "./logger";
@@ -23,8 +23,12 @@ import type { MetricsExist } from "./constants";
 
 let metrics: Metric[] = [];
 let unsubscribeData: (() => void) | null = null;
-let goBackend: NativeBackendManager | null = null;
-let mactopBackend: NativeBackendManager | null = null;
+/**
+ * The one native backend this window runs, if any: the Go binary on Windows,
+ * mactop on Apple Silicon, null while the built-in data source is active.
+ * The platform branches are mutually exclusive, so one slot covers both.
+ */
+let activeBackend: NativeBackendManager | null = null;
 
 const execAsync = promisify(exec);
 
@@ -106,21 +110,27 @@ function rebuildMetrics() {
 }
 
 /**
- * Start the Windows Go backend, which is shared by every VS Code window.
+ * Start a native backend and wire its data source — the one start path shared
+ * by the Go and the mactop backend (both are shared, refcounted HTTP servers;
+ * see NativeBackendManager for the process lifecycle).
  *
- * A failure is reported and returns false without falling back to the in-process
- * data source: the Go binary is the only backend on Windows, and collecting
- * nothing is preferable to silently collecting with different semantics.
+ * A failed start is reported and returns false without falling back to the
+ * in-process data source: the user opted into this backend (by platform on
+ * Windows, by the mactop setting on Apple Silicon), and collecting nothing is
+ * preferable to silently collecting with different semantics. On mactop, the
+ * only way onward is the manual switch in offerBuiltinDataSource().
  */
-async function tryStartGoBackend(ctx: ExtensionContext): Promise<boolean> {
-  const manager = new NativeBackendManager(createGoSpec(ctx.extensionPath));
-  goBackend = manager;
+async function startBackend(
+  manager: NativeBackendManager,
+  makeSource: (manager: NativeBackendManager) => DataSource,
+): Promise<boolean> {
+  activeBackend = manager;
   try {
     await manager.start();
-    systemData.setSource(new GoDataSource(manager));
+    systemData.setSource(makeSource(manager));
     return true;
   } catch (err) {
-    goBackend = null;
+    activeBackend = null;
     await manager.stop();
     getLogger().error(
       l10n.t(
@@ -134,48 +144,86 @@ async function tryStartGoBackend(ctx: ExtensionContext): Promise<boolean> {
 }
 
 /**
- * Switch the data source back to the built-in systeminformation worker.
+ * Wire the built-in systeminformation data source and start polling.
+ *
+ * This is a choice, never an automatic fallback: it only runs after the user
+ * explicitly opted out of mactop (the setting, "Don't show again", or the
+ * switch button in the failure notification), or on a platform where mactop
+ * does not apply at all. Callers guarantee no native backend is running by
+ * the time they get here.
+ *
  * Order matters: useWorker() must be called before start() so the worker is
  * actually launched; setSource() must come first so the worker collects from
- * the right source.
+ * the right source. The interval is set here (not only in activate) because
+ * the failure-notification button can switch long after activation, when
+ * nothing else would start the loop.
  */
-function fallbackToSIDataSource() {
-  mactopBackend = null;
+function useBuiltInDataSource() {
+  activeBackend = null;
   systemData.stop();
   systemData.setSource(new SIDataSource());
   systemData.useWorker();
+  systemData.setInterval(getRefreshInterval());
   systemData.start();
+}
+
+/**
+ * Tell the user mactop failed and offer the one manual path to the built-in
+ * data source. Deliberately not awaited by its callers: activation must not
+ * block on the answer, and the switch (when clicked) runs after activation
+ * has already finished.
+ *
+ * Clicking the button persists the opt-out, so later activations go straight
+ * to the built-in source instead of hitting the same failure again.
+ */
+async function offerBuiltinDataSource(message: string): Promise<void> {
+  const useBuiltinAction = l10n.t("Use built-in data source");
+  const selection = await window.showErrorMessage(message, useBuiltinAction);
+  if (selection !== useBuiltinAction) {
+    return;
+  }
+  await workspace
+    .getConfiguration("monitor-pro")
+    .update("mactop.enabled", false, true);
+  getLogger().info(
+    l10n.t("mactop is disabled via settings, using the built-in data source"),
+  );
+  useBuiltInDataSource();
 }
 
 /**
  * Try to start the mactop backend.
  *
- * Flow: detect installation -> start() (reuse or create) ->
- * setSource(MactopDataSource). Falls back to SIDataSource + worker on failure.
+ * While the setting is on (the default), mactop is the one and only data
+ * source: a missing or failing mactop leaves metrics off rather than
+ * silently switching to systeminformation. The built-in source requires an
+ * explicit choice — the setting itself, "Don't show again", or the switch
+ * button in the failure notification (see offerBuiltinDataSource).
+ *
  * On first run without mactop installed, prompt the user via a VS Code
  * notification offering auto-install (brew install mactop), "Don't show
  * again", and Dismiss. "Don't show again" persists via the
  * monitor-pro.mactop.enabled setting so users can re-enable it in settings.
  */
-async function tryStartMactopBackend() {
+async function tryStartMactopBackend(): Promise<boolean> {
   // Respect the monitor-pro.mactop.enabled setting first: when the user
-  // disabled mactop (e.g. via "Don't show again"), skip the backend entirely
-  // and use the built-in data source, even if mactop is already installed.
+  // disabled mactop (e.g. via "Don't show again"), the built-in data source
+  // is their explicit choice, even if mactop is already installed.
   const config = workspace.getConfiguration("monitor-pro");
   if (!config.get<boolean>("mactop.enabled", true)) {
     getLogger().info(
-      l10n.t("mactop is disabled via settings, using fallback data source"),
+      l10n.t("mactop is disabled via settings, using the built-in data source"),
     );
-    fallbackToSIDataSource();
-    return;
+    useBuiltInDataSource();
+    return true;
   }
 
   const manager = new NativeBackendManager(MACTOP_SPEC);
-
+  // Set when this activation just installed mactop, so the success toast is
+  // not shown to users whose mactop was already present.
+  let freshlyInstalled = false;
   if (!manager.isInstalled()) {
-    getLogger().warn(
-      l10n.t("mactop is not installed, using fallback data source"),
-    );
+    getLogger().warn(l10n.t("mactop is not installed"));
 
     const autoInstallAction = l10n.t("Auto install");
     const neverAction = l10n.t("Don't show again");
@@ -187,94 +235,88 @@ async function tryStartMactopBackend() {
       dismissAction,
     );
 
-    if (selection === autoInstallAction) {
-      const succeeded = await window.withProgress(
-        {
-          location: ProgressLocation.Notification,
-          title: l10n.t("Installing mactop…"),
-        },
-        async () => {
-          try {
-            // brew install streams a lot of output (often > 1MB);
-            // raise maxBuffer so a successful install is not misreported as
-            // a failure due to buffer overflow.
-            await execAsync("brew install mactop", {
-              maxBuffer: 10 * 1024 * 1024,
-            });
-            return true;
-          } catch {
-            return false;
-          }
-        },
-      );
-
-      if (succeeded) {
-        const newManager = new NativeBackendManager(MACTOP_SPEC);
-        if (newManager.isInstalled()) {
-          try {
-            await newManager.start();
-            mactopBackend = newManager;
-            systemData.setSource(new MactopDataSource(newManager));
-            window.showInformationMessage(
-              l10n.t("mactop installed successfully!"),
-            );
-            return;
-          } catch (err) {
-            getLogger().warn(
-              l10n.t(
-                "{0} backend unavailable: {1}, using fallback",
-                newManager.displayName,
-                String(err),
-              ),
-            );
-            await newManager.stop();
-          }
-        }
-      } else {
-        window.showErrorMessage(
-          l10n.t(
-            "Failed to install mactop. Please try manually: brew install mactop",
-          ),
-        );
-      }
-    } else if (selection === neverAction) {
+    if (selection === neverAction) {
+      // Persisting the opt-out is one of the explicit switches to the
+      // built-in data source.
       await config.update("mactop.enabled", false, true);
+      useBuiltInDataSource();
+      return true;
     }
 
-    fallbackToSIDataSource();
-    return;
+    if (selection !== autoInstallAction) {
+      // Dismissed: metrics stay off for this session; the prompt returns on
+      // the next activation.
+      return false;
+    }
+
+    const installed = await window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: l10n.t("Installing mactop…"),
+      },
+      async () => {
+        try {
+          // brew install streams a lot of output (often > 1MB);
+          // raise maxBuffer so a successful install is not misreported as
+          // a failure due to buffer overflow.
+          await execAsync("brew install mactop", {
+            maxBuffer: 10 * 1024 * 1024,
+          });
+          return true;
+        } catch {
+          return false;
+        }
+      },
+    );
+
+    // isInstalled() re-resolves the binary, so the same manager picks up the
+    // freshly installed executable.
+    if (!installed || !manager.isInstalled()) {
+      // Not awaited: activation must not block on the notification, and the
+      // switch (if clicked) runs after activation has finished.
+      void offerBuiltinDataSource(
+        l10n.t(
+          "Failed to install mactop. Please try manually: brew install mactop",
+        ),
+      );
+      return false;
+    }
+    freshlyInstalled = true;
   }
 
-  mactopBackend = manager;
-  try {
-    await manager.start();
-    systemData.setSource(new MactopDataSource(manager));
-  } catch (err) {
-    getLogger().warn(
-      l10n.t(
-        "{0} backend unavailable: {1}, using fallback",
-        manager.displayName,
-        String(err),
-      ),
-    );
-    await manager.stop();
-    fallbackToSIDataSource();
+  const started = await startBackend(manager, (m) => new MactopDataSource(m));
+  if (started) {
+    if (freshlyInstalled) {
+      window.showInformationMessage(l10n.t("mactop installed successfully!"));
+    }
+    return true;
   }
+
+  // Same reason as above: fire-and-forget, the answer cannot block activation.
+  void offerBuiltinDataSource(
+    l10n.t(
+      "mactop failed to start, metrics are disabled. Fix mactop, or switch to the built-in data source",
+    ),
+  );
+  return false;
 }
 
 async function initDataSource(ctx: ExtensionContext): Promise<boolean> {
   if (shouldUseGoBackend()) {
-    return tryStartGoBackend(ctx);
-  } else if (shouldUseMactopBackend()) {
+    return startBackend(
+      new NativeBackendManager(createGoSpec(ctx.extensionPath)),
+      (m) => new GoDataSource(m),
+    );
+  }
+  if (shouldUseMactopBackend()) {
     // Awaited, so activation does not continue against a data source that is
     // about to be replaced by mactop (see the view registration in activate).
-    await tryStartMactopBackend();
-  } else {
-    getLogger().info(
-      l10n.t("Using built-in data source: {0}", "systeminformation"),
-    );
-    systemData.useWorker();
+    return tryStartMactopBackend();
   }
+  getLogger().info(
+    l10n.t("Using built-in data source: {0}", "systeminformation"),
+  );
+  useBuiltInDataSource();
   return true;
 }
 
@@ -369,17 +411,14 @@ export const activate = async (ctx: ExtensionContext) => {
 
 export const deactivate = async () => {
   getLogger().info(l10n.t("Extension deactivating"));
-  const go = goBackend;
-  goBackend = null;
-  const mactop = mactopBackend;
-  mactopBackend = null;
+  const backend = activeBackend;
+  activeBackend = null;
   unsubscribeData?.();
   systemData.stop();
   metrics.forEach((x) => x.dispose());
   getLogger().info(l10n.t("Disposed {0} metrics", metrics.length));
-  // Awaited last: both backends are shared and refcounted, so stopping one may
+  // Awaited last: the backend is shared and refcounted, so stopping it may
   // need to wait out the SIGTERM grace period before its process is killed, and
   // the polling loop must already be stopped so no collection races it.
-  await go?.stop();
-  await mactop?.stop();
+  await backend?.stop();
 };
