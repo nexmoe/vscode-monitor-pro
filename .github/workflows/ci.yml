@@ -3,9 +3,19 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    # Every branch push runs CI: branch validation should not wait for a PR.
+    # Renovate's automation branches are excluded — they push on their own
+    # schedule and already get CI through their pull requests.
+    branches-ignore:
+      - "renovate/**"
   pull_request:
     branches: [main]
+
+# A superseded run on the same branch (or PR) is cancelled instead of piling
+# up while a newer push is already being validated.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:
