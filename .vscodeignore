@@ -5,6 +5,12 @@
 # test build output
 out/**
 
+# dist/ ships in the package on purpose (it holds the compiled main entry),
+# including its .js.map files: the extension installs source-map-support at
+# runtime and logger.ts prefixes each log line with the caller's remapped
+# src/*.ts position, so the maps must be present. Do not add dist/*.map or
+# *.map exclusions here. See esbuild.js for the full rationale.
+
 # source code
 src/**
 scripts/**
@@ -14,7 +20,6 @@ scripts/**
 
 .eslintrc.json
 .prettierignore
-.prettierrc.json
 .gitignore
 pnpm-lock.yaml
 pnpm-workspace.yaml

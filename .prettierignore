@@ -1,11 +1,9 @@
 # Build output
 out/
 dist/
-node_modules/
 .vscode-test/
 
-# Caches
-.ruff_cache/
+# docs/ is a standalone Next.js site with its own build output and lockfile
 docs/.next/
 
 # pnpm rewrites lockfiles; formatting them would be undone on the next install
