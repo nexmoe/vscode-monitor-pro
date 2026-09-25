@@ -11,7 +11,7 @@ const esbuildProblemMatcherPlugin = {
     });
     build.onEnd((result) => {
       result.errors.forEach(({ text, location }) => {
-        console.error(`✘ [ERROR] ${text}`);
+        console.error(`[ERROR] ${text}`);
         if (location) {
           console.error(
             `    ${location.file}:${location.line}:${location.column}:`,
@@ -21,7 +21,7 @@ const esbuildProblemMatcherPlugin = {
       // logLevel is "silent" below, so warnings would vanish entirely
       // unless the plugin prints them.
       result.warnings.forEach(({ text, location }) => {
-        console.warn(`⚠ [WARN] ${text}`);
+        console.warn(`[WARN] ${text}`);
         if (location) {
           console.warn(
             `    ${location.file}:${location.line}:${location.column}:`,
