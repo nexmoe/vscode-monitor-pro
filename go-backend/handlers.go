@@ -121,6 +121,44 @@ func ioCountersWithTimeout(timeout time.Duration) map[string]disk.IOCountersStat
 	}
 }
 
+// collectDiskData gathers partition list, per-partition usage and per-device IO counters
+// as one atomic unit. Both /disk and /all need exactly the same three-part disk payload,
+// and they must agree on the edge cases below, so the collection lives in a single place:
+// a scattered re-implementation would silently drift and make the aggregate endpoint
+// disagree with the dedicated one.
+func collectDiskData() ([]disk.PartitionStat, []*disk.UsageStat, map[string]disk.IOCountersStat) {
+	partitions := partitionsWithTimeout(10 * time.Second)
+
+	// Usage errors and zero-capacity filesystems (e.g. squashfs) are dropped, and the
+	// partition is dropped along with them, so `partitions` and `usage` stay index-aligned
+	// for clients that zip the two arrays together.
+	usage := make([]*disk.UsageStat, 0)
+	validParts := make([]disk.PartitionStat, 0, len(partitions))
+	hasRoot := false
+	for _, p := range partitions {
+		u := usageWithTimeout(p.Mountpoint)
+		if u != nil {
+			usage = append(usage, u)
+			validParts = append(validParts, p)
+			if p.Mountpoint == "/" {
+				hasRoot = true
+			}
+		}
+	}
+	// On unix-like systems disk.Partitions can omit "/" (overlay/container filesystems,
+	// bind-mounted roots), which would leave the UI without a system-disk figure; Windows
+	// has no "/" mountpoint at all, so the fallback must not run there.
+	if runtime.GOOS != "windows" && !hasRoot {
+		if u := usageWithTimeout("/"); u != nil {
+			usage = append(usage, u)
+		}
+	}
+
+	ioCounters := ioCountersWithTimeout(2 * time.Second)
+
+	return validParts, usage, ioCounters
+}
+
 func getBattery(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, Response{Success: true, Data: getBatteryData()})
 }
@@ -180,28 +218,7 @@ func getMemory(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDisk(w http.ResponseWriter, r *http.Request) {
-	partitions := partitionsWithTimeout(10 * time.Second)
-
-	usage := make([]*disk.UsageStat, 0)
-	validParts := make([]disk.PartitionStat, 0, len(partitions))
-	hasRoot := false
-	for _, p := range partitions {
-		u := usageWithTimeout(p.Mountpoint)
-		if u != nil {
-			usage = append(usage, u)
-			validParts = append(validParts, p)
-			if p.Mountpoint == "/" {
-				hasRoot = true
-			}
-		}
-	}
-	if runtime.GOOS != "windows" && !hasRoot {
-		if u := usageWithTimeout("/"); u != nil {
-			usage = append(usage, u)
-		}
-	}
-
-	ioCounters := ioCountersWithTimeout(2 * time.Second)
+	validParts, usage, ioCounters := collectDiskData()
 
 	writeJSON(w, Response{Success: true, Data: struct {
 		Partitions []disk.PartitionStat           `json:"partitions"`
@@ -312,33 +329,12 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 		go func() {
 			defer wg.Done()
 
-			partitions := partitionsWithTimeout(10 * time.Second)
-
-			diskUsage := make([]*disk.UsageStat, 0)
-			validParts := make([]disk.PartitionStat, 0, len(partitions))
-			hasRoot := false
-			for _, p := range partitions {
-				u := usageWithTimeout(p.Mountpoint)
-				if u != nil {
-					diskUsage = append(diskUsage, u)
-					validParts = append(validParts, p)
-					if p.Mountpoint == "/" {
-						hasRoot = true
-					}
-				}
-			}
-			if runtime.GOOS != "windows" && !hasRoot {
-				if u := usageWithTimeout("/"); u != nil {
-					diskUsage = append(diskUsage, u)
-				}
-			}
-
-			ioMap := ioCountersWithTimeout(2 * time.Second)
+			diskParts, diskUsage, diskIO := collectDiskData()
 
 			mu.Lock()
-			parts = validParts
+			parts = diskParts
 			usage = diskUsage
-			ioCounters = ioMap
+			ioCounters = diskIO
 			mu.Unlock()
 		}()
 	}
