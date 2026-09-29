@@ -1,0 +1,89 @@
+name: Feature request
+description: Suggest a new metric, a new view, or an improvement to an existing one
+title: "[✨ Feat] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please write in **English** or **Chinese** — either is fine.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have searched the existing issues for a duplicate request
+          required: true
+        - label: I have checked the README's feature list, in case it already exists
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your request related to a problem?
+      description: >
+        Describe the problem this would solve, rather than only the solution.
+        For example: I monitor several machines and cannot tell which one a
+        status bar item belongs to.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you would like
+      description: What should the extension do?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: What does this touch?
+      options:
+        - A new metric
+        - An existing metric (data or accuracy)
+        - Status bar behaviour
+        - Resource Usage webview (charts, layout)
+        - Settings / configuration
+        - Localization
+        - Documentation
+        - Something else
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which platform is this for?
+      description: >
+        Useful to know, because metric availability differs per platform: the
+        Windows Go backend, macOS mactop, and the Node.js `systeminformation`
+        source do not expose the same data.
+      options:
+        - All platforms
+        - Windows only
+        - macOS only
+        - Linux only
+        - Not platform-specific
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you have considered
+      description: >
+        Including whether another tool already does this, or whether an
+        existing setting could be extended instead of adding a new one.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Mockups, screenshots of how another tool presents it, or related links.
+    validations:
+      required: false

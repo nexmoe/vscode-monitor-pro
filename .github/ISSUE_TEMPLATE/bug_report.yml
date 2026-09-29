@@ -1,0 +1,145 @@
+name: Bug report
+description: Report a problem with a metric, the status bar, or the Resource Usage view
+title: "[🐛 Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please write in **English** or **Chinese** — either is fine.
+
+        Before filing, please check the extension's own log output: run
+        **Output: Focus on Output View** from the Command Palette
+        (`Ctrl+Shift+P` / `Cmd+Shift+P`) and pick the **Monitor Pro** channel.
+        It records which data source was selected, the platform, and every
+        collection failure, which usually pinpoints the cause immediately.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have checked the **Monitor Pro** output channel for errors
+          required: true
+        - label: I have searched the existing issues for a duplicate
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: metric
+    attributes:
+      label: Which metric or view is affected?
+      description: Pick the closest match.
+      options:
+        - CPU (usage / speed / temperature)
+        - Memory (active / used)
+        - Network
+        - Disk I/O (file system)
+        - Disk space / storage
+        - Battery (level / health / power)
+        - GPU
+        - Uptime
+        - OS distribution
+        - Resource Usage webview (chart rendering, layout)
+        - Not metric-specific (startup, settings, packaging)
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Enable setting ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Monitor Pro version
+      description: Shown on the extension's page in the Extensions view.
+      placeholder: "e.g. 0.9.4"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      description: >
+        This matters because each platform uses a different data source:
+        Windows uses the bundled Go backend, macOS on Apple Silicon uses mactop
+        (when enabled), and everything else uses the Node.js
+        `systeminformation` source.
+      options:
+        - Windows (x64)
+        - Windows (ARM64)
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Linux (x64)
+        - Linux (ARM64)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Where does VS Code run?
+      options:
+        - Local machine
+        - Remote SSH
+        - WSL
+        - Dev Container
+        - Codespaces
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: vscode-version
+    attributes:
+      label: VS Code version
+      description: "**Help** > **About** (or **Code** > **About Visual Studio Code** on macOS)."
+      placeholder: "e.g. 1.104.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: >
+        Paste anything useful from the **Monitor Pro** output channel.
+        This is automatically formatted as code, so no backticks are needed.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Especially helpful for chart rendering or layout issues.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: >
+        Anything else that might matter — enabled metrics, `monitor-pro.*`
+        settings you have changed, or whether the issue started after an update.
+    validations:
+      required: false

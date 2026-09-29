@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/nexmoe/vscode-monitor-pro/issues
+    about: Ask in an existing issue, or check the README's feature list first.
