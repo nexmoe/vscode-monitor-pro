@@ -7,75 +7,129 @@ title: 贡献指南
 1. 克隆该代码仓库。
 2. 运行命令 `pnpm install` 安装依赖项。
 
+### 常用命令
+
+| 命令                   | 作用                                                       |
+| ---------------------- | ---------------------------------------------------------- |
+| `pnpm run compile`     | 类型检查，然后打包 `extension.ts` 与 `collector.worker.ts` |
+| `pnpm run watch`       | 改动后自动重建（esbuild 与 tsc 并行）                      |
+| `pnpm run check-types` | 仅执行 `tsc --noEmit`                                      |
+| `pnpm run lint`        | 对 `src` 执行 ESLint                                       |
+| `pnpm run test:unit`   | 编译到 `out/` 并运行 mocha 单元测试                        |
+| `pnpm run gen-l10n`    | 从 `src` 重新导出运行时字符串到 `l10n/`（见「本地化」）    |
+| `pnpm run l10n:check`  | `gen-l10n` + 若已提交的 bundle 与源码不一致则失败          |
+| `pnpm run l10n:parity` | 若任一语言缺键、或 `package.nls.json` 漂移则失败           |
+| `pnpm run go:test`     | Go 后端：`go test ./...`                                   |
+| `pnpm run go:vet`      | Go 后端：`go vet ./...`                                    |
+| `pnpm run format`      | 对整个仓库执行 Prettier                                    |
+
 ## 添加度量指标
 
-要往项目添加度量指标，请按以下步骤操作：
+一个状态栏指标会牵涉若干文件。下面的顺序是有意安排的：`MetricsExist` 类型由
+`metrics` 数组**自动推导**（见 `src/constants.ts`），因此 `section` 名字写错会是
+**编译错误**，而不是一个静默消失的状态栏条目。
 
-### 1. 编辑 `metrics.ts`
+### 1. 在 `src/metrics.ts` 中实现该指标
 
-在 `metrics.ts` 文件中，定位至 `metrics` 数组，并往其中追加以下对象：
+新增一个格式化函数，并在文件底部的 `metrics` 数组中注册它：
 
 ```ts
-{
-  func: cpuSpeedText,
-  section: "cpuSpeed",
-},
-{
-  func: osDistroText,
-  section: "osDistro",
-},
-// 在此追加更多度量指标对象
+const cpuSpeedText = async () => {
+  // ...
+};
+
+const metrics: MetricCtrProps[] = [
+  { func: cpuText, section: "cpu" },
+  { func: cpuSpeedText, section: "cpuSpeed" },
+  // 在此追加更多度量指标对象
+];
 ```
 
-### 2. 编辑本地化文件
+`section` 必须是唯一标识符。在这里加一条记录就会自动扩展 `MetricsExist`
+联合类型，于是所有以它为键的 `switch` 与 record 都会编译失败，直到你补齐新成员为止。
 
-打开 `locales/zh-CN.json` 文件（以及任何其他相关的本地化文件），并追加以下条目：
+### 2. 在 `src/configuration.ts` 中注册该指标
+
+把新的 section 追加到 `allMetrics` 数组。该数组同时定义了默认启用集合与默认状态栏顺序，
+因为 `getMetricsEnabled()` 和 `getMetricsOrder()` 都遍历它。
+
+### 3. 在 `src/metricMap.ts` 中映射采集维度
+
+每个 UI 指标都映射到一个 `CollectDimension`（一次 `systeminformation` 调用，或本地计算）。
+数据来源相同的指标共用同一维度——例如 `memoryActive` 与 `memoryUsed` 都映射到 `mem`。
+若你的指标能复用已有维度，直接指向它即可；只有当它需要一次尚无人执行的查询时，
+才新增维度，并确保 `SIDataSource` 与 `collector.worker.ts` 中的
+`need("<dimension>")` 判断覆盖到它。
+
+本地计算的指标（如 `uptime`，走 `os.uptime()`）同样需要一条记录，
+并借用一个占位维度以便进入采集集合。
+
+### 4. 在 `src/metricsInit.ts` 中补充状态栏标题
+
+在 `getMetricTitle()` 的 `switch` 中为新 section 增加一个分支。
+该函数的兜底逻辑会直接返回原始 section 名，因此漏写分支的表现是状态栏上出现一个未翻译的标识符，
+而不会报错。
+
+### 5. 在 `package.json` 中暴露配置项
+
+在 `contributes.configuration.properties` 下新增一个布尔项，并把新 section
+同时加入 `monitor-pro.metricsOrder` 的 `default` 与 `enum` 数组：
 
 ```json5
-"metric.cpuTemp.name": "CPU 温度",
-"metric.cpuSpeed.name": "CPU 速度",
-"metric.osDistro.name": "操作系统发行版本",
-// 在此追加更多度量指标条目
-```
-
-### 3. 更新 `package.json`
-
-在 `package.json` 文件中，定位至 `"monitor-pro.metrics"` 部分，将新添加的度量指标加入到 `"default"` 数组和 `"enum"` 数组中：
-
-```json5
-"monitor-pro.metrics": {
-  "type": "array",
-  "items": {
-    "type": "string",
-    "enum": [
-      "cpu",
-      "memoryActive",
-      "memoryUsed",
-      "network",
-      "fileSystem",
-      "battery",
-      "cpuTemp",
-      "cpuSpeed",
-      "osDistro",
-      // 在此追加更多度量指标
-    ]
-  },
-  "default": [
-    "cpu",
-    "memoryActive",
-    "memoryUsed",
-    "network",
-    "fileSystem",
-    "battery",
-    "cpuTemp",
-    "cpuSpeed",
-    "osDistro",
-    // 在此追加更多度量指标
-  ],
-  "description": "%config.metrics%"
+"monitor-pro.metrics.cpuSpeed": {
+  "default": false,
+  "description": "%config.metrics.cpuSpeed%",
+  "type": "boolean"
 },
-//...
 ```
+
+注意每个指标都有各自的 `monitor-pro.metrics.<name>` 布尔开关；
+已经不存在数组形式的 `monitor-pro.metrics` 配置项了。
+
+### 6. 在 `package.nls.json` 中补充清单字符串
+
+新增一个 `config.metrics.<name>` 键，值为人类可读的配置描述，
+然后把**同一个键**镜像到 `package.nls.ja.json`、`package.nls.zh-cn.json`
+与 `package.nls.zh-tw.json`，并填入译文。
+
+清单字符串（`package.nls*.json`）是手工维护的，**不会**被生成——
+`l10n:parity` 会强制四个语言暴露完全一致的键集合，并要求 `package.nls.json`
+恰好等于 `package.json` 引用到的那些 `%key%` 占位符。
+缺翻译与残留的死键都会导致校验失败。
+
+### 7. 本地化
+
+运行时字符串在源码中用 `vscode.l10n.t(...)`，并且是**自动生成**的，
+绝不要手工编辑英文 bundle：
+
+```bash
+pnpm run gen-l10n    # 从 src/ 中的字符串重写 l10n/bundle.l10n.json
+```
+
+随后手工把新键的译文补进 `l10n/bundle.l10n.ja.json`、
+`l10n/bundle.l10n.zh-cn.json` 与 `l10n/bundle.l10n.zh-tw.json`。用以下命令验证：
+
+```bash
+pnpm run l10n:check    # gen-l10n 必须对已提交内容不产生任何 diff
+pnpm run l10n:parity   # 所有语言必须暴露一致的键集合
+```
+
+`l10n:check` 正是让"生成的 bundle"在评审中可信的机制：如果你忘了跑 `gen-l10n`，
+CI 会在 diff 上失败。
+
+### 8. 图表与信息卡指标（可选）
+
+若该指标还要在 Resource Usage 面板中渲染，需要额外三处注册。
+这三处目前是三份平行维护的清单，且**没有**任何一致性校验，请手工保持一致：
+
+| 位置                                               | 需要添加的内容                            |
+| -------------------------------------------------- | ----------------------------------------- |
+| `src/configuration.ts` 的 `DEFAULT_CHARTS`         | 该卡片的默认 `enabled` / `view` / `color` |
+| `src/extension.ts` 的 `CHART_TO_METRIC`            | 图表 id 到 `MetricsExist` section 的映射  |
+| `assets/resourceUsageView.html` 的 `ALL_CHART_IDS` | 该图表 id，前端才会渲染它                 |
+
+Webview 是一个自带内联 CSS 与 JS 的单一 HTML 文件；
+只加其中一两处而不加全三处，表现是该卡片静默地永不出现。
 
 ## 调试
 
