@@ -45,9 +45,6 @@ jobs:
       - name: Build Windows x64 package
         run: pnpm run package:vsix:win32-x64
 
-      - name: Restore .vscodeignore after Windows x64
-        run: git checkout .vscodeignore
-
       - name: Build Windows arm64 package
         run: pnpm run package:vsix:win32-arm64
 
