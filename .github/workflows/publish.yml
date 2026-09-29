@@ -61,6 +61,9 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
+      - name: Verify universal package has no Windows binaries
+        run: pnpm run check:universal-vsix -- monitor-pro-${{ steps.get_version.outputs.version }}.vsix
+
       - name: Publish to VSCode Marketplace (universal)
         run: pnpm run deploy
         env:

@@ -42,6 +42,9 @@ jobs:
       - name: Build universal package
         run: pnpm run package:vsix:universal
 
+      - name: Verify universal package has no Windows binaries
+        run: pnpm run check:universal-vsix -- monitor-pro-$(node -p "require('./package.json').version")-universal.vsix
+
       - name: Build Windows x64 package
         run: pnpm run package:vsix:win32-x64
 
