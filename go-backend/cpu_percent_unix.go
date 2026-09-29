@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	prevCPUTimes      cpu.TimesStat
-	prevCPUMutex      sync.Mutex
+	prevCPUTimes       cpu.TimesStat
+	prevCPUMutex       sync.Mutex
 	prevCPUInitialized bool
 )
 

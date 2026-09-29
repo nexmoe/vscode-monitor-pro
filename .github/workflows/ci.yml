@@ -78,6 +78,20 @@ jobs:
       - run: pnpm run go:vet
         name: Go vet
 
+      # gofmt is platform-independent, so a single Linux runner is enough to
+      # keep every Go file canonical. Platform-specific files (e.g. the
+      # _windows.go build variants) are checked here too, which is what keeps
+      # them from silently drifting out of format.
+      - name: Verify Go formatting
+        run: |
+          cd go-backend
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "::error::These Go files are not gofmt-formatted:"
+            echo "$unformatted"
+            exit 1
+          fi
+
       - name: Cross-compile Windows amd64
         run: pnpm run go:build:win32-x64
 
