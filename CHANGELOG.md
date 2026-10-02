@@ -4,11 +4,16 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## [0.10.0] - 2026-10-02
 
 ### Changed
 
 - **mactop failures no longer fall back silently**: On macOS Apple Silicon, a mactop that is enabled but missing or fails to start now stops collection instead of silently switching to the `systeminformation` data source, matching the Go backend's policy of never swapping data semantics mid-flight (SoC power vs battery power, GPU availability). The built-in source is reachable only through an explicit choice: the `monitor-pro.mactop.enabled` setting, "Don't show again", or the new "Use built-in data source" button on the failure notification, which persists the opt-out. Dismissing the install prompt leaves metrics off until mactop is installed or the setting is turned off. Along the way the Go and mactop start paths now share one start helper and a single module-level backend slot, and the mactop-only failure log message was folded into the shared one.
+- **GPU status bar metrics get a fixed slot in the default order**: `monitor-pro.metricsOrder` now ends with `gpu`, `gpuTemp`, `gpuMem`. The entries themselves stay disabled by default; only their position in the default order changed.
+
+### Fixed
+
+- **CPU speed and uptime are no longer missing on the Go backend (Windows)**: The `/api/v1/all` metric gate did not recognize the `cpuSpeed` and `uptime` keys, so enabling those status bar entries on the Go backend returned no value. They are now gathered with the CPU and host groups like the other metrics.
 
 ## [0.9.4] - 2026-09-22
 

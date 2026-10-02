@@ -108,7 +108,7 @@ jobs:
 
           if [ -f CHANGELOG.md ]; then
             echo "## What's Changed" >> release_notes.md
-            awk -v v="$CUR" '/^##/{if(f)exit; if($0~v)f=1;next} f&&/^##/{exit} f{print}' CHANGELOG.md >> release_notes.md
+            awk -v v="$CUR" '/^##[[:space:]]/{if(f)exit; if(index($0,v))f=1; next} f{print}' CHANGELOG.md >> release_notes.md
           fi
 
           echo "" >> release_notes.md
