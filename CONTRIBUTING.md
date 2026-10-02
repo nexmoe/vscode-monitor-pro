@@ -7,19 +7,40 @@
 
 ### Common commands
 
-| Command                | What it does                                                            |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `pnpm run compile`     | Type-check, then bundle `extension.ts` and `collector.worker.ts`        |
-| `pnpm run watch`       | Rebuild on change (esbuild + tsc in parallel)                           |
-| `pnpm run check-types` | `tsc --noEmit` only                                                     |
-| `pnpm run lint`        | ESLint over `src`                                                       |
-| `pnpm run test:unit`   | Compile to `out/` and run the mocha unit tests                          |
-| `pnpm run gen-l10n`    | Re-export runtime strings from `src` into `l10n/` (see Localization)    |
-| `pnpm run l10n:check`  | `gen-l10n` + fail if the committed bundles differ from what source says |
-| `pnpm run l10n:parity` | Fail if any locale is missing keys, or `package.nls.json` drifts        |
-| `pnpm run go:test`     | Go backend: `go test ./...`                                             |
-| `pnpm run go:vet`      | Go backend: `go vet ./...`                                              |
-| `pnpm run format`      | Prettier over the repo                                                  |
+| Command                                        | What it does                                                              |
+| ---------------------------------------------- | ------------------------------------------------------------------------- |
+| `pnpm run compile`                             | Type-check, then bundle `extension.ts` and `collector.worker.ts`          |
+| `pnpm run watch`                               | Rebuild on change (esbuild + tsc in parallel)                             |
+| `pnpm run check-types`                         | `tsc --noEmit` only                                                       |
+| `pnpm run lint`                                | ESLint over `src`                                                         |
+| `pnpm run test:unit`                           | Compile to `out/` and run the mocha unit tests                            |
+| `pnpm run gen-l10n`                            | Re-export runtime strings from `src` into `l10n/` (see Localization)      |
+| `pnpm run l10n:check`                          | `gen-l10n` + fail if the committed bundles differ from what source says   |
+| `pnpm run l10n:parity`                         | Fail if any locale is missing keys, or `package.nls.json` drifts          |
+| `pnpm run go:test`                             | Go backend: `go test ./...`                                               |
+| `pnpm run go:vet`                              | Go backend: `go vet ./...`                                                |
+| `pnpm run check:universal-vsix -- <file.vsix>` | Fail if a built universal `.vsix` ships `go-backend/bin` or `monitor.exe` |
+| `pnpm run format`                              | Prettier over the repo                                                    |
+
+### CI gates
+
+`ci.yml` runs on every branch push and pull request, and fails on:
+
+- `lint` and `test:unit` on Linux, macOS and Windows.
+- `format:check`, `l10n:check` and `l10n:parity` on Linux only — the Windows
+  runner checks out CRLF, which prettier and the generated-bundle diff would
+  reject.
+- Go: `go test`, `go vet` and `gofmt -l .` over `go-backend/`, plus
+  cross-compiling and `file`-verifying both Windows targets. A single runner
+  checks every Go file, so the platform-specific `_windows.go` variants cannot
+  drift out of format unnoticed.
+
+The packaging workflows add one more guard:
+
+- `check:universal-vsix` — the universal `.vsix` must not contain
+  `go-backend/bin` or `monitor.exe`. `package:vsix:universal` clears
+  `go-backend/bin` first, so the check exists to catch a stale binary left
+  behind by an earlier Windows build.
 
 ## Adding Metrics
 

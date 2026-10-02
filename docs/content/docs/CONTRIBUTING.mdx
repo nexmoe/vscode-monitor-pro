@@ -9,19 +9,37 @@ title: 贡献指南
 
 ### 常用命令
 
-| 命令                   | 作用                                                       |
-| ---------------------- | ---------------------------------------------------------- |
-| `pnpm run compile`     | 类型检查，然后打包 `extension.ts` 与 `collector.worker.ts` |
-| `pnpm run watch`       | 改动后自动重建（esbuild 与 tsc 并行）                      |
-| `pnpm run check-types` | 仅执行 `tsc --noEmit`                                      |
-| `pnpm run lint`        | 对 `src` 执行 ESLint                                       |
-| `pnpm run test:unit`   | 编译到 `out/` 并运行 mocha 单元测试                        |
-| `pnpm run gen-l10n`    | 从 `src` 重新导出运行时字符串到 `l10n/`（见「本地化」）    |
-| `pnpm run l10n:check`  | `gen-l10n` + 若已提交的 bundle 与源码不一致则失败          |
-| `pnpm run l10n:parity` | 若任一语言缺键、或 `package.nls.json` 漂移则失败           |
-| `pnpm run go:test`     | Go 后端：`go test ./...`                                   |
-| `pnpm run go:vet`      | Go 后端：`go vet ./...`                                    |
-| `pnpm run format`      | 对整个仓库执行 Prettier                                    |
+| 命令                                           | 作用                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------- |
+| `pnpm run compile`                             | 类型检查，然后打包 `extension.ts` 与 `collector.worker.ts`          |
+| `pnpm run watch`                               | 改动后自动重建（esbuild 与 tsc 并行）                               |
+| `pnpm run check-types`                         | 仅执行 `tsc --noEmit`                                               |
+| `pnpm run lint`                                | 对 `src` 执行 ESLint                                                |
+| `pnpm run test:unit`                           | 编译到 `out/` 并运行 mocha 单元测试                                 |
+| `pnpm run gen-l10n`                            | 从 `src` 重新导出运行时字符串到 `l10n/`（见「本地化」）             |
+| `pnpm run l10n:check`                          | `gen-l10n` + 若已提交的 bundle 与源码不一致则失败                   |
+| `pnpm run l10n:parity`                         | 若任一语言缺键、或 `package.nls.json` 漂移则失败                    |
+| `pnpm run go:test`                             | Go 后端：`go test ./...`                                            |
+| `pnpm run go:vet`                              | Go 后端：`go vet ./...`                                             |
+| `pnpm run check:universal-vsix -- <file.vsix>` | 若打包出的通用版 vsix 含有 `go-backend/bin` 或 `monitor.exe` 则失败 |
+| `pnpm run format`                              | 对整个仓库执行 Prettier                                             |
+
+### CI 门禁
+
+`ci.yml` 在每次分支推送与 PR 上运行，以下情况会失败：
+
+- `lint` 与 `test:unit` 在 Linux、macOS、Windows 三平台执行。
+- `format:check`、`l10n:check`、`l10n:parity` 仅在 Linux 执行——Windows runner
+  检出的是 CRLF，prettier 与生成的 bundle diff 都会因此误报。
+- Go：`go test`、`go vet`、对 `go-backend/` 执行 `gofmt -l .`，以及交叉编译并用
+  `file` 校验两个 Windows 目标。全部 Go 文件由单个 runner 检查，平台专属的
+  `_windows.go` 变体不会悄悄跑偏格式。
+
+打包流程另有一道：
+
+- `check:universal-vsix`——通用版 `.vsix` 不得包含 `go-backend/bin` 或
+  `monitor.exe`。`package:vsix:universal` 会先清空 `go-backend/bin`，这道校验
+  用于兜住「上一次 Windows 构建残留的旧二进制」。
 
 ## 添加度量指标
 
