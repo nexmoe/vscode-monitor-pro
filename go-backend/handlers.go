@@ -174,7 +174,14 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 
 func getBasicMetrics(w http.ResponseWriter, r *http.Request) {
 	cpuPct := currentCPUPercent()
-	vm, _ := mem.VirtualMemory()
+	// mem.VirtualMemory returns nil together with its error, so the failure has
+	// to be handled before any field below is read. The sibling handlers keep
+	// the pointer and let it serialise to null, which is safe; this one derefs.
+	vm, err := mem.VirtualMemory()
+	if err != nil || vm == nil {
+		writeJSON(w, Response{Success: false})
+		return
+	}
 
 	writeJSON(w, Response{Success: true, Data: map[string]interface{}{
 		"cpuPercent":   cpuPct,
