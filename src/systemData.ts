@@ -444,7 +444,9 @@ class SystemDataProvider {
   private computeUnavailableMetrics(snap: SystemSnapshot): string[] {
     const result: string[] = [];
     for (const [key, check] of Object.entries(UNAVAILABLE_CHECKERS)) {
-      if (check(snap)) result.push(key);
+      if (check(snap)) {
+        result.push(key);
+      }
     }
     return result;
   }

@@ -35,7 +35,9 @@ class RingBuffer<T> {
 
   set capacity(n: number) {
     const newCap = Math.max(10, n);
-    if (newCap === this.cap) return;
+    if (newCap === this.cap) {
+      return;
+    }
     const current = this.toArray();
     this.cap = newCap;
     this.buffer = new Array<T>(this.cap);

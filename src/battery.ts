@@ -11,13 +11,17 @@ export function formatEstimatedBatteryTime(
   }
 
   const powerMw = Math.abs(powerRate) * 1000;
-  if (powerMw < 1) return "";
+  if (powerMw < 1) {
+    return "";
+  }
 
   const remainingHours = isCharging
     ? (maxCapacity - currentCapacity) / powerMw
     : currentCapacity / powerMw;
 
-  if (remainingHours <= 0 || remainingHours > 48) return "";
+  if (remainingHours <= 0 || remainingHours > 48) {
+    return "";
+  }
 
   const totalMinutes = Math.round(remainingHours * 60);
   const h = Math.floor(totalMinutes / 60);

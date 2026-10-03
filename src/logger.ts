@@ -2,10 +2,14 @@ import { window } from "vscode";
 
 function callerLocation(skip = 2): string {
   const stack = new Error().stack;
-  if (!stack) return "";
+  if (!stack) {
+    return "";
+  }
   const lines = stack.split("\n");
   const frame = lines[skip + 1];
-  if (!frame) return "";
+  if (!frame) {
+    return "";
+  }
   const s = frame.trim();
 
   let content: string;
@@ -17,9 +21,13 @@ function callerLocation(skip = 2): string {
   }
 
   const sep = content.lastIndexOf(":");
-  if (sep < 0) return "";
+  if (sep < 0) {
+    return "";
+  }
   const sep2 = content.lastIndexOf(":", sep - 1);
-  if (sep2 < 0) return "";
+  if (sep2 < 0) {
+    return "";
+  }
 
   const filePart = content.slice(0, sep2);
   const line = content.slice(sep2 + 1, sep);

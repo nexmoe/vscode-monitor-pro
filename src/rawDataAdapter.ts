@@ -227,12 +227,18 @@ export class RawDataAdapter {
     now: number,
   ): { rxSec: number; txSec: number } {
     const net = pickNonLoopback(current);
-    if (!net || !prev) return { rxSec: 0, txSec: 0 };
+    if (!net || !prev) {
+      return { rxSec: 0, txSec: 0 };
+    }
     const elapsed = (now - prev.ts) / 1000;
-    if (elapsed <= 0) return { rxSec: 0, txSec: 0 };
+    if (elapsed <= 0) {
+      return { rxSec: 0, txSec: 0 };
+    }
 
     const p = prev.net.get(net.name);
-    if (!p) return { rxSec: 0, txSec: 0 };
+    if (!p) {
+      return { rxSec: 0, txSec: 0 };
+    }
 
     return {
       rxSec: Math.max(0, (net.bytesRecv - p.bytesRecv) / elapsed),
@@ -246,12 +252,18 @@ export class RawDataAdapter {
     now: number,
   ): { readSec: number; writeSec: number } {
     const physical = pickPhysicalDisk(current);
-    if (!physical || !prev) return { readSec: 0, writeSec: 0 };
+    if (!physical || !prev) {
+      return { readSec: 0, writeSec: 0 };
+    }
     const elapsed = (now - prev.ts) / 1000;
-    if (elapsed <= 0) return { readSec: 0, writeSec: 0 };
+    if (elapsed <= 0) {
+      return { readSec: 0, writeSec: 0 };
+    }
 
     const p = prev.disk.get(physical.name);
-    if (!p) return { readSec: 0, writeSec: 0 };
+    if (!p) {
+      return { readSec: 0, writeSec: 0 };
+    }
 
     return {
       readSec: Math.max(0, (physical.readBytes - p.readBytes) / elapsed),

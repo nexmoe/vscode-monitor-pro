@@ -28,7 +28,9 @@ export function parsePrometheusText(text: string): PrometheusMetric[] {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
 
     let name: string;
     let labels: Record<string, string> = {};
@@ -46,7 +48,9 @@ export function parsePrometheusText(text: string): PrometheusMetric[] {
     } else {
       // metric_name value
       const spaceIdx = trimmed.lastIndexOf(" ");
-      if (spaceIdx < 0) continue;
+      if (spaceIdx < 0) {
+        continue;
+      }
       name = trimmed.substring(0, spaceIdx);
       valueStr = trimmed.substring(spaceIdx + 1).trim();
     }
@@ -83,8 +87,12 @@ export function findMetricValue(
   labelFilter?: Record<string, string>,
 ): number | undefined {
   for (const m of metrics) {
-    if (m.name !== name) continue;
-    if (labelFilter && !matchesLabels(m.labels, labelFilter)) continue;
+    if (m.name !== name) {
+      continue;
+    }
+    if (labelFilter && !matchesLabels(m.labels, labelFilter)) {
+      continue;
+    }
     return m.value;
   }
   return undefined;
@@ -98,7 +106,9 @@ function matchesLabels(
   filter: Record<string, string>,
 ): boolean {
   for (const [key, val] of Object.entries(filter)) {
-    if (labels[key] !== val) return false;
+    if (labels[key] !== val) {
+      return false;
+    }
   }
   return true;
 }

@@ -7,11 +7,37 @@
   },
   "plugins": ["@typescript-eslint"],
   "rules": {
-    "@typescript-eslint/naming-convention": "warn",
-    "@typescript-eslint/semi": "warn",
-    "curly": "warn",
-    "eqeqeq": "warn",
-    "no-throw-literal": "warn",
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        "selector": "default",
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow",
+        "trailingUnderscore": "allow"
+      },
+      {
+        "selector": "variable",
+        "format": ["camelCase", "UPPER_CASE", "PascalCase"],
+        "leadingUnderscore": "allow"
+      },
+      {
+        "selector": "classProperty",
+        "format": ["camelCase", "UPPER_CASE"],
+        "leadingUnderscore": "allow"
+      },
+      { "selector": "typeLike", "format": ["PascalCase"] },
+      { "selector": "typeParameter", "format": ["PascalCase"] },
+      { "selector": "import", "format": ["camelCase", "PascalCase"] },
+      {
+        "selector": "objectLiteralProperty",
+        "format": ["camelCase", "snake_case"]
+      },
+      { "selector": "typeProperty", "format": ["camelCase", "snake_case"] }
+    ],
+    "@typescript-eslint/semi": "error",
+    "curly": "error",
+    "eqeqeq": "error",
+    "no-throw-literal": "error",
     "semi": "off"
   },
   "ignorePatterns": ["out", "dist", "**/*.d.ts"]

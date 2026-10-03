@@ -381,7 +381,7 @@
     "go:build:win32-x64": "cd go-backend && GOOS=windows GOARCH=amd64 go build -ldflags=\"-s -w\" -o bin/monitor.exe .",
     "go:test": "cd go-backend && go test ./...",
     "go:vet": "cd go-backend && go vet ./...",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint src --ext ts --max-warnings 0",
     "package": "pnpm run check-types && node esbuild.js --production",
     "package:vsix": "vsce package --no-dependencies",
     "package:vsix:all": "pnpm run package:vsix:universal && pnpm run package:vsix:win32-x64 && pnpm run package:vsix:win32-arm64",

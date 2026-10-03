@@ -33,13 +33,17 @@ async function tick() {
 
 parentPort?.on("message", (msg: any) => {
   if (msg.type === "start") {
-    if (msg.interval) interval = msg.interval;
+    if (msg.interval) {
+      interval = msg.interval;
+    }
     if (Array.isArray(msg.enabled)) {
       enabledMetrics = new Set(msg.enabled as MetricsExist[]);
     }
     tick();
   } else if (msg.type === "stop") {
-    if (timer) clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+    }
     timer = null;
   } else if (msg.type === "setInterval") {
     interval = msg.interval;
