@@ -1252,12 +1252,13 @@
 
           const tm = data.textMetrics;
 
+          // Every card is toggled each frame, not just hidden: a metric that is
+          // briefly unavailable (a first sample of 0, a transient nvidia-smi
+          // timeout) must come back once it reports a value, or the card stays
+          // hidden for the rest of the view's lifetime.
           const hidden = new Set(unavailableMetrics || []);
-          for (const metric of hidden) {
-            const card = document.querySelector(
-              '.card[data-metric="' + metric + '"]',
-            );
-            if (card) card.style.display = "none";
+          for (const card of document.querySelectorAll(".card[data-metric]")) {
+            card.style.display = hidden.has(card.dataset.metric) ? "none" : "";
           }
 
           // Per-card GPU metadata (model / byte-formatted memText) for
