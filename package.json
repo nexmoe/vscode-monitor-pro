@@ -371,7 +371,6 @@
     "clean:go-bin": "node -e \"require('fs').rmSync('go-backend/bin', { recursive: true, force: true })\"",
     "compile": "pnpm run check-types && node esbuild.js",
     "compile-tests": "pnpm tsc -p . --outDir out",
-    "deploy": "pnpm run clean:go-bin && vsce publish --no-dependencies",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gen-l10n": "pnpm exec vscode-l10n-dev export -o ./l10n ./src && node scripts/sort-l10n.mjs",
