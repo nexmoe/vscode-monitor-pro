@@ -95,11 +95,14 @@ jobs:
       - name: Cross-compile Windows amd64
         run: pnpm run go:build:win32-x64
 
+      # PE32 is shared by every Windows PE file, so matching it here would let
+      # either architecture satisfy both checks; the machine type is the only
+      # field that actually tells them apart.
       - name: Verify Windows amd64 binary
-        run: file go-backend/bin/monitor.exe | grep -i "x86-64\|PE32"
+        run: file go-backend/bin/monitor.exe | grep -i "x86-64"
 
       - name: Cross-compile Windows arm64
         run: pnpm run go:build:win32-arm64
 
       - name: Verify Windows arm64 binary
-        run: file go-backend/bin/monitor.exe | grep -i "aarch64\|ARM64\|PE32"
+        run: file go-backend/bin/monitor.exe | grep -i "aarch64"
