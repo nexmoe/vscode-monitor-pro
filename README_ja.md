@@ -11,22 +11,22 @@
 
 [English](./README.md) | [简体中文](./README_zh-cn.md) | [繁體中文](./README_zh-tw.md) | 日本語
 
-Monitor Pro は、VS Code のステータスバーと専用の Webview パネルで動作するリアルタイムシステムリソース監視ツールです。設計当初からクロスプラットフォームとリモート開発環境のパフォーマンス監視を考慮しており、ローカル環境、Remote SSH、WSL で完全に動作します。
+Monitor Pro は、VS Code のステータスバーと専用の Webview パネルで動作するリアルタイムシステムリソース監視ツールです。設計当初から、クロスプラットフォームと、ローカルおよびリモート開発マシンのパフォーマンス監視を考慮しており、ローカル環境、Remote SSH、WSL に完全対応しています。
 
-**ハイブリッドアーキテクチャ**を採用：Windows ではネイティブ Go バイナリが PowerShell/WMI のオーバーヘッドを回避し、`systeminformation` と比較して **10 倍以上のデータ収集速度**を実現。macOS Apple Silicon マシンでは [mactop](https://github.com/metaspartan/mactop)（有効な場合）を介して Prometheus HTTP エンドポイントから SoC レベルのメトリクス（CPU/GPU/ANE 電力、温度）を取得。Linux および mactop を使わない macOS は Node.js（`systeminformation`）データソースを使用します。データソースが黙って切り替わることはありません：mactop が有効な間は起動失敗で収集を停止し、内蔵データソースへの切り替えは失敗通知で明示的に選択します。
+**ハイブリッドアーキテクチャ**を採用し、各プラットフォームに最適なデータソースを使い分けています：Windows ではネイティブ Go バイナリが PowerShell/WMI のオーバーヘッドを回避し、`systeminformation` と比較して **10 倍以上のデータ収集速度**を実現。macOS Apple Silicon マシンでは [mactop](https://github.com/metaspartan/mactop)（有効な場合）を介して Prometheus HTTP エンドポイントから SoC レベルのメトリクス（CPU/GPU/ANE 電力、温度）を取得。Linux および mactop を使わない macOS は Node.js（`systeminformation`）データソースを使用します。データソースが暗黙に切り替わることはありません：mactop が有効な間は、起動に失敗すると収集を停止し、内蔵データソースへの切り替えは失敗通知から明示的に選べます。
 
 > [!WARNING]
 >
 > **破壊的変更 0.7.0**
 >
-> ステータスバーのデフォルト表示は CPU、アクティブメモリ、バッテリーのみになりました。その他のメトリクス（ネットワーク、CPU 温度、CPU 速度、稼働時間、ディスク I/O、ディスク容量、OS ディストリビューション）は、VSCode 設定の `monitor-pro.metrics.*` で手動で有効にする必要があります。
+> ステータスバーのデフォルト表示は CPU、アクティブメモリ、バッテリーのみになりました。その他のメトリクス（ネットワーク、CPU 温度、CPU 速度、稼働時間、ディスク I/O、ディスク容量、OS ディストリビューション）は、VS Code 設定の `monitor-pro.metrics.*` で手動で有効にする必要があります。
 >
-> 背景：リソース使用状況ビューの導入により、ほとんどのメトリクスは専用パネルでより適切に可視化されます。ステータスバーをコンパクトに保つことで、新しいユーザーにとってのわかりやすさが向上します。
+> 背景：リソース使用状況ビューの導入により、ほとんどのメトリクスは専用パネルでより適切に表示されます。ステータスバーを最小限に保つことで、新規ユーザーにとっての煩雑さを避けられます。
 
 ## 0.8 / 0.9 の新機能
 
-- **macOS Apple Silicon（mactop）**：オプションの [mactop](https://github.com/metaspartan/mactop) バックエンドにより、SoC レベルのメトリック（CPU/GPU/ANE 電力、温度、GPU 使用率）を追加。初回起動時にワンクリックの `brew install mactop` を提案します。
-- **GPU 監視**：`nvidia-smi` による NVIDIA GPU に加え、mactop 経由で Apple Silicon の統合 GPU にも対応。使用率・温度・VRAM（NVIDIA のみ）のグラフと、GPU ごとの配列ビューを備えます。
+- **macOS Apple Silicon（mactop）**：オプションの [mactop](https://github.com/metaspartan/mactop) バックエンドが、SoC レベルのメトリクス（CPU/GPU/ANE 電力、温度、GPU 使用率）を提供します。初回起動時にワンクリックの `brew install mactop` を提案します。
+- **GPU 監視**：`nvidia-smi` による NVIDIA GPU に加え、mactop 経由で Apple Silicon の統合 GPU にも対応。使用率・温度・VRAM（NVIDIA のみ）のグラフに加え、GPU ごとのカード別ビューを備えます。
 - **ワット単位の電力**：Windows では符号付きのバッテリー正味電力、Apple Silicon では SoC 総電力を表示。0W の破線ガイドラインと 5 サンプルの移動平均で安定した値を保ちます。
 - **コアごとの CPU ビュー**：CPU 使用率と温度のカードをコアごとのグリッド表示に切り替えられます。
 - そのほか各種修正：テーマ対応のグラフ配色、macOS 27 のバッテリー健全性、最後の VS Code ウィンドウを閉じた際の mactop 終了など。
@@ -53,21 +53,21 @@ CPU 速度、ディスクなどの情報：
 
 ![ボトムパネルサイドバー表示](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-4.png)
 
-テーマ適応 — ダーク：
+テーマ適応——ダーク：
 
-![テーマ適応 — ダーク](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-5.png)
+![テーマ適応——ダーク](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-5.png)
 
 棒グラフ表示デモ：
 
 ![棒グラフ表示デモ](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-6.png)
 
-l10n — 日本語ソース：
+l10n——日本語ソース：
 
-![l10n — 日本語ソース](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-7.png)
+![l10n——日本語ソース](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-7.png)
 
-l10n — 中国語、バッテリー残量、健全度、電力：
+l10n——中国語：バッテリー残量、健全度、電力：
 
-![l10n — 中国語、バッテリー残量、健全度、電力](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-8.png)
+![l10n——中国語：バッテリー残量、健全度、電力](https://raw.githubusercontent.com/nexmoe/vscode-monitor-pro/refs/heads/main/assets/image-8.png)
 
 放電と充電のグラフ切り替え：
 
@@ -77,9 +77,9 @@ l10n — 中国語、バッテリー残量、健全度、電力：
 
 ### ステータスバー
 
-Codicon アイコンとフォーマットされた数値で表示される、14 の個別に切り替え可能なメトリクス：
+個別に切り替え可能な 14 個のメトリクスを、Codicon アイコンとフォーマットされた数値で表示します：
 
-| メトリック                | デフォルト | アイコン                            | 例                      |
+| メトリクス                | デフォルト | アイコン                            | 例                      |
 | ------------------------- | ---------- | ----------------------------------- | ----------------------- |
 | CPU                       | オン       | `$(chip)`                           | `73.2%`                 |
 | アクティブメモリ          | オン       | `$(pie-chart)`                      | `4.21 / 15.6 GiB`       |
@@ -96,86 +96,86 @@ Codicon アイコンとフォーマットされた数値で表示される、14 
 | ディスク容量              | オフ       | `$(database)`                       | `/ 45.2% 120/256 GiB`   |
 | OS ディストリビューション | オフ       | —                                   | `Ubuntu 22.04`          |
 
-> GPU メトリクスには NVIDIA ハードウェア（`nvidia-smi`）、または mactop バックエンドを使う Apple Silicon が必要です。どちらもない場合は自動的に非表示になります。GPU メモリにはさらに VRAM が必要ですが、mactop の統合 GPU バックエンドでは公開されません。
+> GPU メトリクスには `nvidia-smi` を備えた NVIDIA ハードウェア、または mactop バックエンドを使う Apple Silicon が必要です。どちらもない場合は自動的に非表示になります。GPU メモリは VRAM を読み取れる必要があり、mactop の統合 GPU バックエンドでは公開されません。
 
 ### リソース使用状況ビュー
 
-サイドバーの専用パネル。14 のリアルタイム折れ線/棒グラフを提供：CPU、メモリ（アクティブ/使用済み）、ネットワーク（ダウンロード/アップロード）、ディスク（読み取り/書き込み）、バッテリー、バッテリー電力 / SoC 電力、CPU 温度、CPU 速度、GPU、GPU 温度、GPU メモリ。macOS Apple Silicon で mactop バックエンドを使用する場合、電力グラフは SoC 電力モードに切り替わり、チップの総消費電力（CPU + GPU + ANE）を表示します。
+サイドバーの専用パネルです。14 個のメトリクスについて、リアルタイムの折れ線/棒グラフを表示します：CPU、メモリ（アクティブ/使用済み）、ネットワーク（ダウンロード/アップロード）、ディスク（読み取り/書き込み）、バッテリー、バッテリー電力 / SoC 電力、CPU 温度、CPU 速度、GPU、GPU 温度、GPU メモリ。macOS Apple Silicon で mactop バックエンドを使用する場合、電力グラフは SoC 電力モードに切り替わり、チップの総消費電力（CPU + GPU + ANE）を表示します。
 
 各グラフの特徴：
 
-- Canvas 2D リアルタイムレンダリング、グラデーション塗りつぶしとベジェ曲線
+- Canvas 2D によるリアルタイム描画（グラデーション塗りつぶしとベジェ曲線）
 - 自動スケーリング Y 軸；現在の最大目盛りを `↑` 接頭辞で表示
 - 折れ線グラフ/棒グラフをワンクリックで切り替え
-- **コア/カード別アレイビュー**：CPU 使用率、CPU 温度、GPU、GPU 温度、GPU メモリのカードは、色付きバーのグリッドに切り替え可能——各 CPU コア（`C0`、`C1`、…）または各 GPU（`G0`、`G1`、…）に 1 本のバーを対応させ、それぞれの使用率 / 温度 / メモリを表示します。GPU セルにホバーするとカードモデル（GPU メモリビューでは使用量/合計）が表示されます。
+- **コア別/カード別ビュー**：CPU 使用率、CPU 温度、GPU、GPU 温度、GPU メモリのカードは、色付きバーのグリッドに切り替えられます。各 CPU コア（`C0`、`C1`、…）または各 GPU（`G0`、`G1`、…）に 1 本のバーが対応し、それぞれの使用率 / 温度 / メモリを表示します。GPU セルにホバーするとカードモデル（GPU メモリビューでは使用量/合計）が表示されます。
 - サブタイトル：バッテリー健全度、充放電状態、温度最小値、速度範囲
-- 調整可能な履歴ポイント数（10〜500）
+- 履歴ポイント数を設定可能（10〜500）
 
-GPU グラフはデフォルトで有効で、GPU データソース（NVIDIA の `nvidia-smi`、または Apple Silicon の mactop バックエンド）がないマシンでは自動的に非表示になります。カード単位の配列ビューは GPU が複数ある場合のみ表示されます。
+GPU グラフはデフォルトで有効で、GPU データソース（NVIDIA の `nvidia-smi`、または Apple Silicon の mactop バックエンド）がないマシンでは自動的に非表示になります。カード別ビューは GPU が複数ある場合のみ表示されます。
 
-下部の**情報セクション**には、稼働時間、OS ディストリビューション、カラー付きディスク容量プログレスバーが表示されます。これらのカードは `resourceUsage.charts` 設定の一部であり、`charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` でオン/オフできます（デフォルトで有効）。
+下部の**情報セクション**には、稼働時間、OS ディストリビューション、ディスク容量が表示され、ディスク容量には色付きのプログレスバーが付きます。これらのカードは `resourceUsage.charts` 設定の一部であり、`charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` でオン/オフを切り替えられます（デフォルトで有効）。
 
 ### オンデマンドクエリ
 
-無効化されたメトリクスは**一切クエリされません**——収集は有効な項目のみによって駆動されます。実際のデータソース呼び出し（macOS/Linux の `systeminformation`、Windows の Go バックエンド）は、現在利用中の次元だけを取得します：
+無効化されたメトリクスは**一切クエリされません**——収集は有効になっている項目だけで決まります。実際のデータソース呼び出し（macOS/Linux の `systeminformation`、Windows の Go バックエンド）は、現在使われている収集項目だけを取得します：
 
-- ステータスバーの `monitor-pro.metrics.*` トグルと webview の `resourceUsage.charts.*.enabled` は 1 つの有効セットに統合されます。
+- ステータスバーの `monitor-pro.metrics.*` トグルと Webview の `resourceUsage.charts.*.enabled` は 1 つの有効セットに統合されます。
 - 未使用の `SI.*` 呼び出しや未使用の Go 収集グループ（CPU / メモリ / ディスク / ネットワーク / ホスト / バッテリー）は、「取得してからフィルタ」するのではなく完全にスキップされます。
-- 少数のメトリクスだけを表示する場合、更新サイクルのオーバーヘッドを最小限に抑えられます。いずれかのトグルを変更すると、次の更新（ホットリロード）ですぐに収集が切り替わります。
+- 少数のメトリクスだけを表示する場合、更新サイクルのオーバーヘッドを最小限に抑えられます。いずれかのトグルを変更すると、次の更新時にホットリロードで収集が切り替わります。
 
 ### バッテリー / SoC 電力監視
 
-Monitor Pro は 2 つのモードでリアルタイムの電力消費を報告します：
+Monitor Pro は、ワット単位で 2 つのモードのリアルタイム電力消費を報告します：
 
 - **Windows**：バッテリー正味電力（充電時は正、放電時は負）をネイティブ Go バックエンド経由で取得。
 - **macOS Apple Silicon**：mactop バックエンド経由で総 SoC 電力（CPU + GPU + ANE）を非負の値で表示。`pmset` からのバッテリー健全度と残り時間も表示。
 
 - **符号付き表示**：正の値は充電中、負の値は放電中
-- **ゼロ線参照**：点線のガイドラインで常に 0W の位置を表示
+- **0W 基準線**：点線で常に 0W の位置を示します
 - **5 サンプル移動平均**で安定した測定値を確保
 - **健全度パーセンテージ**：現在の満充電容量と設計容量の比率
 - **状態検出**：充電中 / 放電中 / アイドル
 
 ### フォーマットの一貫性
 
-すべてのフォーマットされた値（%、W、°C、GHz、バイトレート）は、3 つの設定オプションに統一的に従います：
+すべてのフォーマットされた値（%、W、°C、GHz、バイトレート）は、3 つの設定項目に共通して従います：
 
 - `showSpace`：数値と単位の間にスペースを入れるかどうか
 - `singleUnit`：単位を最初の文字に省略（K、M、G）
-- `significantDigits`：メトリックごとの有効桁数
+- `significantDigits`：メトリクスごとの有効桁数
 
 これらの設定はステータスバーと Webview の両方に適用されます。
 
 ### CPU パフォーマンス
 
-- **Windows**：タスクマネージャーと同じ PDH カウンター（`% Processor Utility`）を使用して正確な CPU 使用率を取得。CPU 周波数は `% Processor Performance` を介して動的に読み取られ、ターボブーストや省電力状態の変化をリアルタイムで反映。
-- **Linux**：`/proc/stat` に基づく非ブロッキング差分計算とキャッシュされた初期値 — 従来のブロッキング方式と比較して約 30 倍高速。
+- **Windows**：タスクマネージャーと同じ PDH カウンター（`% Processor Utility`）を使用して、正確な CPU 使用率を取得。CPU 周波数は `% Processor Performance` から動的に読み取り、ターボブーストや省電力状態の変化をリアルタイムで反映します。
+- **Linux**：`/proc/stat` に基づく非ブロッキングの差分計算で、初回のサンプルはキャッシュされます——従来のブロッキング方式と比較して約 30 倍高速。
 
 ### クロスプラットフォーム
 
 - ローカル、Remote SSH、WSL 環境で動作
-- Go バイナリは Windows（ネイティブパフォーマンス）、mactop は macOS Apple Silicon（SoC メトリクス）、その他のプラットフォームは Node.js——内蔵データソースへの切り替えは常にユーザーの明示的な選択であり、自動フォールバックではありません
-- 多言語：English, 简体中文, 繁體中文, 日本語
+- Go バイナリは Windows（ネイティブパフォーマンス）、mactop は macOS Apple Silicon（SoC メトリクス）、Linux と mactop を使わない macOS は Node.js——内蔵データソースへの切り替えは常にユーザーの明示的な選択であり、自動フォールバックではありません
+- 多言語：英語、簡体字中国語、繁体字中国語、日本語
 
 ## 設定
 
 すべての設定は `monitor-pro.*` の下にグループ化され、ホットリロードで即座に適用されます。
 
-| 設定                                        | デフォルト    | 説明                                                                                                                     |
-| ------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `monitor-pro.metrics.*`                     | 上表参照      | 各ステータスバーメトリックのオン/オフ                                                                                    |
-| `monitor-pro.metricsOrder`                  | —             | ステータスバー項目の順序                                                                                                 |
-| `monitor-pro.mactop.enabled`                | `true`        | macOS の mactop バックエンド（SoC メトリック）とインストール提案を有効化。有効中の起動失敗はフォールバックせず収集を停止 |
-| `monitor-pro.refresh-interval`              | `2000` ms     | ポーリング間隔（500〜30000ms）                                                                                           |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）または `decimal`（kB/MB）                                                                             |
-| `monitor-pro.showSpace`                     | `false`       | 数値と単位の間にスペースを入れる                                                                                         |
-| `monitor-pro.singleUnit`                    | `false`       | 単位を最初の文字に省略（K、M、G）                                                                                        |
-| `monitor-pro.significantDigits`             | メトリック毎  | 有効桁数（1〜6）                                                                                                         |
-| `monitor-pro.uptimeFormat`                  | `auto`        | カスタムフォーマット、`{d}` `{h}` `{m}` `{s}` をサポート                                                                 |
-| `monitor-pro.resourceUsage.charts`          | —             | グラフ/カードの有効化・表示・色設定（ `osDistro` `uptime` `diskSpace` 含む）                                             |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | グラフ履歴ポイント数（10〜500）                                                                                          |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | ディスク容量カードのマウントフィルター                                                                                   |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | ステータスバーのディスク容量マウントフィルター                                                                           |
+| 設定                                        | デフォルト     | 説明                                                                                                                           |
+| ------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `monitor-pro.metrics.*`                     | 上表参照       | 各ステータスバーメトリクスのオン/オフ                                                                                          |
+| `monitor-pro.metricsOrder`                  | —              | ステータスバー項目の順序                                                                                                       |
+| `monitor-pro.mactop.enabled`                | `true`         | macOS の mactop バックエンド（SoC メトリクス）とインストール提案を有効化。有効中は起動に失敗してもフォールバックせず収集を停止 |
+| `monitor-pro.refresh-interval`              | `2000` ms      | ポーリング間隔（500〜30000ms）                                                                                                 |
+| `monitor-pro.unitSystem`                    | `binary`       | `binary`（KiB/MiB）または `decimal`（kB/MB）                                                                                   |
+| `monitor-pro.showSpace`                     | `false`        | 数値と単位の間にスペースを入れる                                                                                               |
+| `monitor-pro.singleUnit`                    | `false`        | 単位を最初の文字に省略（K、M、G）                                                                                              |
+| `monitor-pro.significantDigits`             | メトリクスごと | 有効桁数（1〜6）                                                                                                               |
+| `monitor-pro.uptimeFormat`                  | `auto`         | カスタムフォーマット、`{d}` `{h}` `{m}` `{s}` をサポート                                                                       |
+| `monitor-pro.resourceUsage.charts`          | —              | グラフ/カードの有効化・表示・色設定（`osDistro` `uptime` `diskSpace` を含む）                                                  |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`           | グラフ履歴ポイント数（10〜500）                                                                                                |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`      | ディスク容量カードのマウントフィルター                                                                                         |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]`  | ステータスバーのディスク容量マウントフィルター                                                                                 |
 
 ## スクリーンショット（0.6.0 以前、現在のバージョンでも互換性あり）
 
@@ -186,8 +186,8 @@ Monitor Pro は 2 つのモードでリアルタイムの電力消費を報告�
 ## システム要件
 
 - VS Code 1.104+
-- Windows 10/11（ネイティブ Go バックエンド用。その他のプラットフォームは内蔵データソースを使用）
-- macOS 12+ Apple Silicon（オプション）：SoC メトリクス用に [mactop](https://github.com/metaspartan/mactop)（v2.1.4+）を Homebrew でインストール（`brew install mactop`）。未インストールの場合、初回起動時に自動インストールするか確認するプロンプトが表示されます（`monitor-pro.mactop.enabled` で無効化可能）。mactop が有効な間は起動失敗で収集を停止します。失敗通知には内蔵データソースへの切り替えボタンがあり、インストール提案を閉じると mactop のインストールまたは設定変更までメトリクスは無効のままです
+- Windows 10/11（ネイティブ Go バックエンドが必要。その他のプラットフォームは内蔵データソースを使用）
+- macOS 12+ Apple Silicon（オプション）：SoC メトリクス用に [mactop](https://github.com/metaspartan/mactop)（v2.1.4+）を Homebrew でインストール（`brew install mactop`）。未インストールの場合、初回起動時に自動インストールするか確認するプロンプトが表示されます（`monitor-pro.mactop.enabled` で無効化可能）。mactop が有効な間は、起動に失敗すると収集を停止します。失敗通知には内蔵データソースへの切り替えボタンがあり、インストールの提案を閉じた場合は、mactop をインストールするか設定を変更するまでメトリクスは無効のままです
 
 ## 開発
 
@@ -214,7 +214,7 @@ pnpm run compile
 | `pnpm run package:vsix:win32-arm64` | Windows ARM64 VSIX をパッケージ化               |
 | `pnpm run gen-l10n`                 | ソースからローカライゼーションファイルを再生成  |
 | `pnpm run l10n:check`               | l10n バンドルがソースと一致するか検証           |
-| `pnpm run l10n:parity`              | ロケール間の key 一致を検証                     |
+| `pnpm run l10n:parity`              | ロケール間のキー一致を検証                      |
 
 ## インスピレーションと謝辞
 
@@ -225,11 +225,11 @@ pnpm run compile
 
 ### 謝辞
 
-- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor)：その PDH クエリライフサイクル（常駐ハンドル + 初期ベースライン収集 + 毎回の単一収集）を採用し、Windows Go バックエンドの CPU 使用率監視を再構築。読み取り値がタスクマネージャーと完全に一致するようになりました。
+- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor)：その PDH クエリライフサイクル（常駐ハンドル、ベースライン収集、更新ごとに 1 回の収集）を採用し、Windows Go バックエンドの CPU 使用率監視に用いることで、読み取り値がタスクマネージャーと完全に一致するようにしています。
 
 ## フィードバック
 
-問題や機能リクエスト：[issue を報告](https://github.com/nexmoe/vscode-monitor-pro/issues)
+問題や機能リクエスト：[Issue を作成](https://github.com/nexmoe/vscode-monitor-pro/issues)
 
 ## サポート
 

@@ -11,24 +11,24 @@
 
 English | [简体中文](./README_zh-cn.md) | [繁體中文](./README_zh-tw.md) | [日本語](./README_ja.md)
 
-Monitor Pro is a real-time system resource monitoring tool that works directly in the VS Code status bar and a dedicated Webview panel. From the very beginning, the plugin was designed with cross-platform and remote development machine performance monitoring in mind, with full implementations on local systems, Remote SSH, and WSL.
+Monitor Pro is a real-time system resource monitoring tool that works directly in the VS Code status bar and a dedicated Webview panel. The extension was designed from the start for cross-platform monitoring of both local and remote development machines, with complete implementations on local systems, Remote SSH, and WSL.
 
-A **hybrid architecture** delivers the best of both worlds: a native Go binary on Windows bypasses PowerShell/WMI overhead for over 10x faster data collection compared to `systeminformation`; macOS Apple Silicon machines use [mactop](https://github.com/metaspartan/mactop) (when enabled) for SoC-level metrics (CPU/GPU/ANE power, temperature) via a Prometheus HTTP endpoint; Linux and macOS without mactop use the Node.js (`systeminformation`) data source. Data sources are never switched silently: while mactop is enabled, a failed start stops collection, and switching to the built-in source is an explicit choice offered in the failure notification.
+A **hybrid architecture** gives each platform the most suitable data source: a native Go binary on Windows bypasses PowerShell/WMI overhead, collecting data over 10x faster than `systeminformation`; macOS Apple Silicon machines use [mactop](https://github.com/metaspartan/mactop) (when enabled) for SoC-level metrics (CPU/GPU/ANE power, temperature) via a Prometheus HTTP endpoint; Linux and macOS without mactop use the Node.js (`systeminformation`) data source. Data sources are never switched silently: while mactop is enabled, a failed start stops collection, and switching to the built-in source is an explicit choice offered in the failure notification.
 
 > [!WARNING]
 >
 > **Breaking Change 0.7.0**
 >
-> The status bar now defaults to only CPU, Memory Active, and Battery. Other metrics (Network, CPU Temperature, CPU Speed, Uptime, Disk I/O, Disk Space, OS Distro) must be manually enabled in VSCode settings under `monitor-pro.metrics.*`.
+> The status bar now defaults to CPU, Memory Active, and Battery only. Other metrics (Network, CPU Temperature, CPU Speed, Uptime, Disk I/O, Disk Space, OS Distro) must be enabled manually in VS Code settings under `monitor-pro.metrics.*`.
 >
-> Rationale: with the new Resource Usage webview, most metrics are better visualized in their dedicated panel. Keeping the status bar lean avoids clutter for new users.
+> Rationale: with the new Resource Usage Webview, most metrics display better in their dedicated panel. Keeping the status bar lean avoids clutter for new users.
 
 ## What's new in 0.8 / 0.9
 
-- **macOS Apple Silicon (mactop)**: an optional [mactop](https://github.com/metaspartan/mactop) backend adds SoC-level metrics — CPU/GPU/ANE power, temperature and GPU usage. On first run the extension offers a one-click `brew install mactop`.
+- **macOS Apple Silicon (mactop)**: an optional [mactop](https://github.com/metaspartan/mactop) backend provides SoC-level metrics — CPU/GPU/ANE power, temperature and GPU usage. On first run the extension offers a one-click `brew install mactop`.
 - **GPU monitoring**: NVIDIA GPUs via `nvidia-smi`, plus the integrated Apple Silicon GPU through mactop — usage, temperature and VRAM (NVIDIA only) charts, with a per-GPU array view.
 - **Power in watts**: Windows shows signed battery net power; Apple Silicon shows total SoC power. A dashed 0W reference line and a 5-sample moving average keep readings stable.
-- **Per-core CPU views**: switch the CPU usage and temperature cards to a per-core grid.
+- **Per-core CPU views**: the CPU usage and temperature cards can switch to a per-core grid.
 - Plus a batch of fixes: theme-aware chart colors, macOS 27 battery health, and mactop shutting down when the last VS Code window closes.
 
 ## 0.7.0 Major Update Overview
@@ -104,14 +104,14 @@ A dedicated side panel with live line/bar charts for 14 metrics: CPU, Memory (Ac
 
 Each chart features:
 
-- Live 2D canvas rendering with gradient fill and Bezier curves
+- Live 2D canvas rendering with gradient fill and Bézier curves
 - Auto-scaling Y-axis; the current scale maximum is labeled with an `↑` prefix
 - Toggle between line and bar view
 - **Per-core / per-card array view**: CPU Usage, CPU Temperature, GPU, GPU Temperature, and GPU Memory cards can switch to a grid of colored bars — one per CPU core (`C0`, `C1`, …) or per GPU (`G0`, `G1`, …) — showing each item's utilization / temperature / memory. Hovering a GPU cell reveals the card model (and used/total memory for the GPU Memory view).
 - Subtitle: battery health, charge/discharge state, temperature min, speed range
 - 10–500 configurable history points
 
-GPU charts are enabled by default and automatically hidden when no GPU data source is available (NVIDIA `nvidia-smi` or the mactop backend on Apple Silicon). The per-card GPU array view only appears with more than one GPU.
+GPU charts are enabled by default and automatically hidden when no GPU data source is available (NVIDIA `nvidia-smi` or the mactop backend on Apple Silicon). The per-GPU array view only appears with more than one GPU.
 
 A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. These cards are part of the `resourceUsage.charts` configuration and can be toggled via `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` (enabled by default).
 
@@ -119,9 +119,9 @@ A lower **Info** section displays uptime, OS distro, and disk space with colored
 
 Disabled metrics are **never queried** — collection is driven entirely by what is enabled. The actual data source call (`systeminformation` on macOS/Linux, the Go backend on Windows) only fetches the dimensions currently in use:
 
-- Status bar `monitor-pro.metrics.*` toggles and webview `resourceUsage.charts.*.enabled` are merged into a single enabled set.
+- Status bar `monitor-pro.metrics.*` toggles and Webview `resourceUsage.charts.*.enabled` are merged into a single enabled set.
 - Unused `SI.*` calls and unused Go collection groups (CPU / Memory / Disk / Network / Host / Battery) are skipped entirely, not fetched-and-filtered.
-- This keeps the refresh cycle lightweight when only a few metrics are shown. Change any toggle and collection adapts on the next tick via hot-reload.
+- This keeps the refresh cycle lightweight when only a few metrics are shown. Changing any toggle makes collection adapt on the next tick via hot-reload.
 
 ### Battery / SoC Power Monitoring
 
@@ -144,18 +144,18 @@ All formatted values (%, W, °C, GHz, byte rates) uniformly respect three config
 - `singleUnit`: abbreviate units to first letter (K, M, G)
 - `significantDigits`: per-metric significant digits
 
-These settings apply to the status bar and webview alike.
+These settings apply to the status bar and Webview alike.
 
 ### CPU Performance
 
-- **Windows**: Uses the same PDH counters as Task Manager (`% Processor Utility`) for accurate CPU readings. CPU frequency is read dynamically via `% Processor Performance` — reflects actual turbo boost and power-saving states in real time.
+- **Windows**: Uses the same PDH counters as Task Manager (`% Processor Utility`) for accurate CPU readings. CPU frequency is read dynamically via `% Processor Performance`, reflecting actual turbo boost and power-saving states in real time.
 - **Linux**: Non-blocking delta-based calculation from `/proc/stat` with cached initial values — 30x faster than traditional blocking approaches.
 
 ### Cross-Platform
 
 - Works in local, Remote SSH, and WSL environments
 - Go binary for Windows (native performance); mactop for macOS Apple Silicon (SoC metrics); Node.js on Linux and macOS without mactop — switching to it is always an explicit user choice, never an automatic fallback
-- Multi-language: English, 简体中文, 繁體中文, 日本語
+- Multi-language: English, Simplified Chinese, Traditional Chinese, Japanese
 
 ## Configuration
 
@@ -186,8 +186,8 @@ Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 ## Requirements
 
 - VS Code 1.104+
-- Windows 10/11 (for the native Go backend; other platforms use the built-in data source)
-- macOS 12+ Apple Silicon (optional): [mactop](https://github.com/metaspartan/mactop) via Homebrew (v2.1.4+) for SoC metrics (`brew install mactop`). When missing, the extension prompts once on first run offering to auto-install it (suppressible via the `monitor-pro.mactop.enabled` setting). While mactop is enabled, a failed start stops collection rather than falling back; the failure notification offers a one-click switch to the built-in source, and dismissing the install prompt leaves metrics off until mactop is installed or the setting is turned off
+- Windows 10/11 (required for the native Go backend; other platforms use the built-in data source)
+- macOS 12+ Apple Silicon (optional): [mactop](https://github.com/metaspartan/mactop) via Homebrew (v2.1.4+) for SoC metrics (`brew install mactop`). When mactop is missing, the extension prompts once on first run to auto-install it (suppressible via the `monitor-pro.mactop.enabled` setting). While mactop is enabled, a failed start stops collection rather than falling back; the failure notification offers a one-click switch to the built-in source, and dismissing the install prompt leaves metrics off until mactop is installed or the setting is turned off
 
 ## Developing
 
