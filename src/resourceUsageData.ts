@@ -105,6 +105,12 @@ export interface DiskSpaceMount {
   mount: string;
   size: number;
   used: number;
+  // Free space as the filesystem itself reports it (df's Avail), forwarded
+  // verbatim from the snapshot. It is deliberately not derived from size-used:
+  // ext4 reserves blocks for root, and btrfs/zfs/APFS pools report an available
+  // figure that differs from the plain remainder. The disk card shows this
+  // value so what the user reads agrees with df.
+  available: number;
   use: number;
 }
 
@@ -233,6 +239,7 @@ export class ResourceUsageDataCollector {
           mount: d.mount,
           size: d.size,
           used: d.used,
+          available: d.available,
           use: d.use,
         })),
       },

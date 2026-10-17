@@ -923,10 +923,14 @@
           container.innerHTML = html;
         }
 
+        // Escapes a value for an HTML attribute. The DOM round-trip only covers
+        // & < >, so the double quote is appended here: every caller today
+        // interpolates into a title attribute, and an unescaped quote would
+        // close the attribute early (mount points may legitimately contain one).
         function escHtml(s) {
           const d = document.createElement("div");
           d.textContent = s;
-          return d.innerHTML;
+          return d.innerHTML.replace(/"/g, "&quot;");
         }
 
         // -------- view toggle --------
