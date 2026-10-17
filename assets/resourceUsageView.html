@@ -864,6 +864,49 @@
           return opaque(resolveColorValue(name)) || colorFor("memActive");
         }
 
+        // The disk card is the only place rendering byte capacities, so its
+        // precision rule lives here instead of being repeated per caller.
+        // Falls back to 3 like the sibling formatters (fmtPct / the network
+        // rate formatter) when the user's configuration omits diskSpace.
+        function diskByte(v) {
+          const sig = _fmtConfig.significantDigits?.diskSpace ?? 3;
+          return formatBytes(v, sig);
+        }
+
+        // Hover text for one mount row. The name cell truncates long paths
+        // (max-width 30%), so the full mount point is repeated here. The
+        // extension supplies the localized Used / Total / Free words; the
+        // fallbacks match how _labels.diskSpace is guarded above.
+        function diskMountTip(m) {
+          // Literal spaces, not _fmtConfig.showSpace: that setting controls the
+          // gap between a number and its unit (inside formatBytes), not how the
+          // localized words are separated from the figures they label.
+          // Prefer the filesystem's own available figure (df's Avail): with
+          // ext4 reserved blocks and on btrfs/zfs/APFS pools it differs from
+          // size - used. The subtraction remains only as a fallback.
+          const free = Math.max(
+            0,
+            Number.isFinite(m.available) ? m.available : m.size - m.used,
+          );
+          return (
+            m.mount +
+            " \u00B7 " +
+            (_labels.used || "Used") +
+            " " +
+            diskByte(m.used) +
+            " / " +
+            (_labels.total || "Total") +
+            " " +
+            diskByte(m.size) +
+            " (" +
+            m.use +
+            "%) \u00B7 " +
+            (_labels.free || "Free") +
+            " " +
+            diskByte(free)
+          );
+        }
+
         function renderDiskMountBars(mounts) {
           const container = document.getElementById("disk-mount-list");
           if (!container) return;
@@ -882,11 +925,15 @@
           let html = "";
           for (const m of filtered) {
             const barColor = usageColor(m.use);
+            const tip = diskMountTip(m);
+            // The tooltip sits on the whole row (name, bar, percentage) so the
+            // narrow bar stays easy to hover; the name cell intentionally has
+            // no title of its own, otherwise it would shadow the row's.
             html +=
-              '<div class="info-mount-row">' +
-              '<span class="info-mount-name" title="' +
-              escHtml(m.mount) +
+              '<div class="info-mount-row" title="' +
+              escHtml(tip) +
               '">' +
+              '<span class="info-mount-name">' +
               escHtml(m.mount) +
               "</span>" +
               '<div class="info-bar-track"><div class="info-bar-fill" style="width:' +
@@ -910,11 +957,11 @@
             (_labels.diskSpace || "Disk Space") +
             "</span>" +
             '<span class="info-bar-label" style="font-weight:600;color:var(--fg)">' +
-            formatBytes(totalUsed, 3) +
+            diskByte(totalUsed) +
             sp2 +
             "/" +
             sp2 +
-            formatBytes(totalSize, 3) +
+            diskByte(totalSize) +
             sp2 +
             "(" +
             totalPct +

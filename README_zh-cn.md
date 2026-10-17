@@ -113,7 +113,7 @@ l10n——中文：电量、电池健康度与功率：
 
 GPU 图表默认启用，在无 GPU 数据源（NVIDIA `nvidia-smi` 或 Apple Silicon 上的 mactop 后端）时自动隐藏。单卡阵列视图仅在两块及以上 GPU 时显示。
 
-底部**信息区**显示运行时间、系统发行版和磁盘空间，并配有彩色进度条。这些信息卡属于 `resourceUsage.charts` 配置的一部分，可通过 `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` 开关控制（默认启用）。
+底部**信息区**显示运行时间、系统发行版和磁盘空间，并配有彩色进度条。这些信息卡属于 `resourceUsage.charts` 配置的一部分，可通过 `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` 开关控制（默认启用）。将鼠标悬停在某一磁盘行上，可查看该挂载点的已用、总量与可用容量。
 
 ### 按需查询
 

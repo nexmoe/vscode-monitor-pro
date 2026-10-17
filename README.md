@@ -113,7 +113,7 @@ Each chart features:
 
 GPU charts are enabled by default and automatically hidden when no GPU data source is available (NVIDIA `nvidia-smi` or the mactop backend on Apple Silicon). The per-GPU array view only appears with more than one GPU.
 
-A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. These cards are part of the `resourceUsage.charts` configuration and can be toggled via `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` (enabled by default).
+A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. These cards are part of the `resourceUsage.charts` configuration and can be toggled via `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` (enabled by default). Hovering a disk row shows that mount point with its used, total, and free capacity.
 
 ### On-Demand Querying
 

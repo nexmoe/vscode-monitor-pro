@@ -113,7 +113,7 @@ l10n——中国語：バッテリー残量、健全度、電力：
 
 GPU グラフはデフォルトで有効で、GPU データソース（NVIDIA の `nvidia-smi`、または Apple Silicon の mactop バックエンド）がないマシンでは自動的に非表示になります。カード別ビューは GPU が複数ある場合のみ表示されます。
 
-下部の**情報セクション**には、稼働時間、OS ディストリビューション、ディスク容量が表示され、ディスク容量には色付きのプログレスバーが付きます。これらのカードは `resourceUsage.charts` 設定の一部であり、`charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` でオン/オフを切り替えられます（デフォルトで有効）。
+下部の**情報セクション**には、稼働時間、OS ディストリビューション、ディスク容量が表示され、ディスク容量には色付きのプログレスバーが付きます。これらのカードは `resourceUsage.charts` 設定の一部であり、`charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` でオン/オフを切り替えられます（デフォルトで有効）。ディスク行にマウスを合わせると、そのマウントポイントの使用済み・合計・空き容量を確認できます。
 
 ### オンデマンドクエリ
 

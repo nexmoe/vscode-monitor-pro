@@ -158,6 +158,12 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
       gpuTemp: vscode.l10n.t("GPU Temp"),
       gpuMem: vscode.l10n.t("GPU Memory"),
       diskSpace: vscode.l10n.t("Disk Space"),
+      // Capacity words for the disk card's per-mount hover text. Kept apart
+      // from the metric labels above because they describe one row's numbers,
+      // not a switchable metric.
+      used: vscode.l10n.t("Used"),
+      total: vscode.l10n.t("Total"),
+      free: vscode.l10n.t("Free"),
       uptime: vscode.l10n.t("Uptime"),
       osDistro: vscode.l10n.t("OS Distro"),
     };
