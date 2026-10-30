@@ -25,8 +25,8 @@
   "viewContainer.monitor-pro.title": "Monitor Pro",
   "views.resourceUsage": "Resource Usage View",
   "command.focusResourceUsage": "Focus Resource Usage View",
-  "config.resourceUsage.charts": "Per-chart settings: enabled state and default view mode (line/bar). Keys: cpu, memActive, memUsed, netRx, netTx, diskRx, diskWx, diskSpace, gpu, gpuTemp, gpuMem",
+  "config.resourceUsage.charts": "Per-card settings for the Resource Usage view: enabled state, default view mode (line/bar) and line color. Keys are the card ids of that view; cards that are not charts ignore the view and color fields",
   "config.resourceUsage.diskSpaceMounts": "Mount points to display for the Disk Space chart. Use [\"all\"] to show every mounted filesystem, or add specific mount paths to filter",
   "config.resourceUsage.samplingPoints": "Number of sampling points to display on the chart. Increase for a longer history view, decrease for better performance",
-  "config.resourceUsage.chartsOrder": "Card ids in the order the Resource Usage view renders them. Leave empty for the default order; cards missing from the list follow the listed ones in the default order"
+  "config.resourceUsage.chartsOrder": "Card ids in the order the Resource Usage view renders them. Leave empty for the default order. Listed cards come first in the order given, and cards not listed follow in the default order. Unknown ids and duplicates are ignored. Affects only this view, not the status bar"
 }

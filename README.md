@@ -106,14 +106,21 @@ Each chart features:
 
 - Live 2D canvas rendering with gradient fill and Bézier curves
 - Auto-scaling Y-axis; the current scale maximum is labeled with an `↑` prefix
-- Toggle between line and bar view
-- **Per-core / per-card array view**: CPU Usage, CPU Temperature, GPU, GPU Temperature, and GPU Memory cards can switch to a grid of colored bars — one per CPU core (`C0`, `C1`, …) or per GPU (`G0`, `G1`, …) — showing each item's utilization / temperature / memory. Hovering a GPU cell reveals the card model (and used/total memory for the GPU Memory view).
+- Toggle between line and bar view; the choice is saved as that card's default in `resourceUsage.charts.<id>.view`, and only the card you touched is written
+- **Drag to reorder**: hovering a card title reveals a drag handle; hold the title area to drag the card to another position. The new order is saved to your user settings (`resourceUsage.chartsOrder`) as soon as you drop it, so it survives reopening the panel and restarting VS Code
+- **Per-core / per-card array view**: CPU Usage, CPU Temperature, GPU, GPU Temperature, and GPU Memory cards can switch to a grid of colored bars — one per CPU core (`C0`, `C1`, …) or per GPU (`G0`, `G1`, …) — showing each item's utilization / temperature / memory. Hovering a GPU cell reveals the card model (and used/total memory for the GPU Memory view). This view is never saved: reopening the panel or changing any of the panel's settings brings the card back to its saved line or bar view, and when the per-item data is not available (a single GPU, for example) the card falls back to the line view.
 - Subtitle: battery health, charge/discharge state, temperature min, speed range
 - 10–500 configurable history points
 
 GPU charts are enabled by default and automatically hidden when no GPU data source is available (NVIDIA `nvidia-smi` or the mactop backend on Apple Silicon). The per-GPU array view only appears with more than one GPU.
 
-A lower **Info** section displays uptime, OS distro, and disk space with colored progress bars. These cards are part of the `resourceUsage.charts` configuration and can be toggled via `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` (enabled by default). Hovering a disk row shows that mount point with its used, total, and free capacity.
+Uptime, OS distro, and disk space are cards in the same sequence as the charts, not a separate block pinned below them: they render last by default and can be dragged to any position. Only the disk space card draws a progress bar, one per mount point; uptime and OS distro are plain text.
+
+These cards still belong to the `resourceUsage.charts` configuration and can be toggled via `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` (enabled by default). Hovering a disk row shows that mount point with its used, total, and free capacity.
+
+Card order and status bar order are independent: `monitor-pro.metricsOrder` only reorders status bar items, while `monitor-pro.resourceUsage.chartsOrder` only reorders panel cards.
+
+Dragging requires a mouse — the panel uses the browser's native drag and drop, which touch gestures do not trigger; on a touch screen, set `resourceUsage.chartsOrder` directly.
 
 ### On-Demand Querying
 
@@ -161,21 +168,22 @@ These settings apply to the status bar and Webview alike.
 
 Settings are grouped under `monitor-pro.*` and apply instantly via hot-reload.
 
-| Setting                                     | Default       | Description                                                                                                                                   |
-| ------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `monitor-pro.metrics.*`                     | varies        | Toggle each status bar metric on/off                                                                                                          |
-| `monitor-pro.metricsOrder`                  | —             | Reorder status bar items                                                                                                                      |
-| `monitor-pro.mactop.enabled`                | `true`        | Enable the macOS mactop backend (SoC metrics) and its install prompt; while enabled, a failed start stops collection rather than falling back |
-| `monitor-pro.refresh-interval`              | `2000` ms     | Polling interval (500–30000ms)                                                                                                                |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary` (KiB/MiB) or `decimal` (kB/MB)                                                                                                       |
-| `monitor-pro.showSpace`                     | `false`       | Space between number and unit                                                                                                                 |
-| `monitor-pro.singleUnit`                    | `false`       | Abbreviate unit to first letter (K, M, G)                                                                                                     |
-| `monitor-pro.significantDigits`             | per-metric    | Significant digits (1–6) per metric                                                                                                           |
-| `monitor-pro.uptimeFormat`                  | `auto`        | Custom format with `{d}`, `{h}`, `{m}`, `{s}`                                                                                                 |
-| `monitor-pro.resourceUsage.charts`          | —             | Chart/card enable/view/color per metric (incl. `osDistro`, `uptime`, `diskSpace`)                                                             |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | Chart history length (10–500)                                                                                                                 |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space card                                                                                                              |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | Mount filter for status bar                                                                                                                   |
+| Setting                                     | Default       | Description                                                                                                                                        |
+| ------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `monitor-pro.metrics.*`                     | varies        | Toggle each status bar metric on/off                                                                                                               |
+| `monitor-pro.metricsOrder`                  | —             | Reorder status bar items only; panel cards are unaffected                                                                                          |
+| `monitor-pro.mactop.enabled`                | `true`        | Enable the macOS mactop backend (SoC metrics) and its install prompt; while enabled, a failed start stops collection rather than falling back      |
+| `monitor-pro.refresh-interval`              | `2000` ms     | Polling interval (500–30000ms)                                                                                                                     |
+| `monitor-pro.unitSystem`                    | `binary`      | `binary` (KiB/MiB) or `decimal` (kB/MB)                                                                                                            |
+| `monitor-pro.showSpace`                     | `false`       | Space between number and unit                                                                                                                      |
+| `monitor-pro.singleUnit`                    | `false`       | Abbreviate unit to first letter (K, M, G)                                                                                                          |
+| `monitor-pro.significantDigits`             | per-metric    | Significant digits (1–6) per metric                                                                                                                |
+| `monitor-pro.uptimeFormat`                  | `auto`        | Custom format with `{d}`, `{h}`, `{m}`, `{s}`                                                                                                      |
+| `monitor-pro.resourceUsage.charts`          | —             | Chart/card enable/view/color per metric (incl. `osDistro`, `uptime`, `diskSpace`)                                                                  |
+| `monitor-pro.resourceUsage.chartsOrder`     | `[]`          | Panel card order; `[]` keeps the default order, listed cards come first, and cards not listed follow in the default order; unknown ids are ignored |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | Chart history length (10–500)                                                                                                                      |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | Mount filter for disk space card                                                                                                                   |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]` | Mount filter for status bar                                                                                                                        |
 
 ## Screenshots (pre-0.6.0, still compatible with the current version)
 

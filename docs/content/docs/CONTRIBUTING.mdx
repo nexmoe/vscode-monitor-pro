@@ -135,19 +135,57 @@ pnpm run l10n:parity   # 所有语言必须暴露一致的键集合
 `l10n:check` 正是让"生成的 bundle"在评审中可信的机制：如果你忘了跑 `gen-l10n`，
 CI 会在 diff 上失败。
 
-### 8. 图表与信息卡指标（可选）
+### 8. Resource Usage 卡片（可选）
 
-若该指标还要在 Resource Usage 面板中渲染，需要额外三处注册。
-这三处目前是三份平行维护的清单，且**没有**任何一致性校验，请手工保持一致：
+若该指标还要在 Resource Usage 面板中渲染，只需在卡片注册表 `src/resourceUsageCards.ts` 里加一条记录。
+这个数组就是面板完整的卡片词汇表——身份、数据来源、渲染方式、默认值都写在这里，
+其他文件不必再认识这张卡片：
 
-| 位置                                               | 需要添加的内容                            |
-| -------------------------------------------------- | ----------------------------------------- |
-| `src/configuration.ts` 的 `DEFAULT_CHARTS`         | 该卡片的默认 `enabled` / `view` / `color` |
-| `src/extension.ts` 的 `CHART_TO_METRIC`            | 图表 id 到 `MetricsExist` section 的映射  |
-| `assets/resourceUsageView.html` 的 `ALL_CHART_IDS` | 该图表 id，前端才会渲染它                 |
+```ts
+{
+  id: "cpuSpeed",              // 配置键，也是前端使用的句柄
+  kind: "chart",               // "chart" | "text" | "disk"
+  metric: "cpuSpeed",          // 该卡片读取的 MetricsExist section
+  label: l10n.t("CPU Speed"),  // 必须保持为字面量 l10n.t(...) 调用
+  defaultEnabled: false,
+  defaultView: "line",         // 仅图表卡片使用
+  defaultColor: "--vscode-terminal-ansiBrightCyan", // 仅图表卡片使用
+}
+```
 
-Webview 是一个自带内联 CSS 与 JS 的单一 HTML 文件；
-只加其中一两处而不加全三处，表现是该卡片静默地永不出现。
+- `kind` 决定卡片画成什么：`chart` 是带折线/柱状切换的画布，`text` 是标题加数值的卡片，
+  `disk` 是按挂载点显示进度条的卡片。只有 `chart` 会读取 `defaultView` 与 `defaultColor`。
+- `metric` 指明该卡片订阅哪个状态栏 section 的数据。多张卡片可以共用同一个 section
+  （network、fileSystem、battery），因此“启用一张卡片”的含义是“采集这个 section”，
+  而不是“多采集一个 section”。
+- `label` 必须写成定义处的字面量 `l10n.t(...)`：`gen-l10n` 导出器只提取字面量参数，
+  改传变量会让标题静默地从运行时 bundle 里消失，并让 `l10n:parity` 失败。
+- `array` 可选，用于提供逐项视图（每个 CPU 核心或每张 GPU 一格）：`field` 是历史样本中存放逐项值的字段，
+  `type`（`"percent"` / `"temp"` / `"mem"`）决定单格的语义与刻度，`prefix` 是格子标签的前缀
+  （`C0`、`G0`……），当该字段存放的是对象时还需要 `valueKey` 指定取值键。
+
+面板的渲染顺序就是这个数组的声明顺序，因此 `resourceUsage.chartsOrder` 不需要任何 id 清单：
+它只保存用户覆盖的那部分顺序，由 `normalizeChartsOrder()` 依据注册表补全
+（未列出的卡片按注册表顺序跟在后面，未知 id 与重复项被忽略）。
+往注册表里加一张卡片，它就会立刻出现在面板上。
+同理，Webview 渲染的是扩展推送给它的卡片列表，`assets/resourceUsageView.html` 不必登记新 id——
+只有当卡片需要一种尚不存在的渲染方式时，才需要改动那个文件。
+
+可选地，把该卡片补进 `package.json` 中 `monitor-pro.resourceUsage.charts` 的 `default` 对象：
+
+```json5
+cpuSpeed: {
+  "enabled": false,
+  "view": "line",
+  "color": "--vscode-terminal-ansiBrightCyan"
+},
+```
+
+运行时并不依赖它：`getResourceUsageConfig()` 会用注册表条目补齐用户没有配置的卡片。
+manifest 里的 `default` 是这项设置暴露给设置编辑器的默认对象，只写在注册表里、没有写进这个对象的卡片，
+在其中也没有对应的键——这类卡片仍会按注册表的默认值正常渲染，但用户若要配置它，只能自己键入这个键。
+这是卡片的默认值唯一存在两份的地方，而且没有任何校验会比较二者：
+在注册表里改动 `defaultEnabled` / `defaultView` / `defaultColor` 时，请在同一个提交里一并更新 manifest 条目。
 
 ## 调试
 

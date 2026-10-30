@@ -25,8 +25,8 @@
   "viewContainer.monitor-pro.title": "Monitor Pro",
   "views.resourceUsage": "资源占用视图",
   "command.focusResourceUsage": "聚焦资源占用视图",
-  "config.resourceUsage.charts": "每个图表的设置：启用状态和默认视图模式（折线图/条形图）。键：cpu, memActive, memUsed, netRx, netTx, diskRx, diskWx, diskSpace, gpu, gpuTemp, gpuMem",
+  "config.resourceUsage.charts": "资源占用视图中各卡片的设置：启用状态、默认视图模式（折线图/柱状图）与线条颜色。键为该视图的卡片 id；非图表卡片不使用视图模式与颜色字段",
   "config.resourceUsage.diskSpaceMounts": "磁盘容量图表要显示的挂载点。使用 [\"all\"] 显示所有已挂载文件系统，或添加特定挂载路径进行过滤",
   "config.resourceUsage.samplingPoints": "图表上显示的采样点数量。增加可获得更长历史视图，减少可提高性能",
-  "config.resourceUsage.chartsOrder": "资源占用视图中卡片的排列顺序（卡片 id）。留空表示使用默认顺序；未列出的卡片会按默认顺序排在已列出的卡片之后"
+  "config.resourceUsage.chartsOrder": "资源占用视图中卡片的排列顺序（卡片 id）。留空表示使用默认顺序；列出的卡片按所列先后排在前面，未列出的卡片按默认顺序跟在其后。未知 id 与重复项会被忽略。只影响该视图，不影响状态栏"
 }

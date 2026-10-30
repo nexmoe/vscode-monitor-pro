@@ -106,14 +106,21 @@ l10n——中文：电量、电池健康度与功率：
 
 - 基于 Canvas 2D 的实时渲染，带渐变填充与贝塞尔曲线
 - 自适应 Y 轴缩放，当前最大刻度以 `↑` 前缀标注
-- 折线图/柱状图一键切换
-- **单核/单卡阵列视图**：CPU 使用率、CPU 温度、GPU、GPU 温度、GPU 显存卡片可切换为彩色条形网格——每个 CPU 核心（`C0`、`C1`、…）或每张显卡（`G0`、`G1`、…）对应一根条形，展示各自的使用率 / 温度 / 显存。将鼠标悬停在某个 GPU 单元上可查看显卡型号（GPU 显存视图还显示已用/总量）。
+- 折线图/柱状图一键切换，选择会作为该卡片的默认视图写入 `resourceUsage.charts.<id>.view`，且只写入你改动的那张卡片
+- **拖拽排序**：鼠标移到卡片标题区域会出现拖拽把手，按住标题区域即可把卡片拖到其他位置；松手后顺序立即写入用户设置（`resourceUsage.chartsOrder`），重开面板或重启 VS Code 后依然保持
+- **单核/单卡阵列视图**：CPU 使用率、CPU 温度、GPU、GPU 温度、GPU 显存卡片可切换为彩色条形网格——每个 CPU 核心（`C0`、`C1`、…）或每张显卡（`G0`、`G1`、…）对应一根条形，展示各自的使用率 / 温度 / 显存。将鼠标悬停在某个 GPU 单元上可查看显卡型号（GPU 显存视图还显示已用/总量）。该视图不会被保存：重开面板或修改面板相关设置后，卡片会回到已保存的折线图或柱状图；当逐项数据不可用时（例如只有一块 GPU），卡片会退回折线图。
 - 副标题：电池健康度、充放电状态、温度最低值、频率范围
 - 历史点数可配置（10~500）
 
 GPU 图表默认启用，在无 GPU 数据源（NVIDIA `nvidia-smi` 或 Apple Silicon 上的 mactop 后端）时自动隐藏。单卡阵列视图仅在两块及以上 GPU 时显示。
 
-底部**信息区**显示运行时间、系统发行版和磁盘空间，并配有彩色进度条。这些信息卡属于 `resourceUsage.charts` 配置的一部分，可通过 `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` 开关控制（默认启用）。将鼠标悬停在某一磁盘行上，可查看该挂载点的已用、总量与可用容量。
+运行时间、系统发行版和磁盘空间与图表卡处于同一条序列，不再是固定在图表下方的独立区块：它们默认排在最后，但可以被拖到任意位置。只有磁盘空间卡片绘制进度条（每个挂载点一条），运行时间与系统发行版是纯文本。
+
+这些信息卡仍属于 `resourceUsage.charts` 配置的一部分，可通过 `charts.osDistro.enabled` / `charts.uptime.enabled` / `charts.diskSpace.enabled` 开关控制（默认启用）。将鼠标悬停在某一磁盘行上，可查看该挂载点的已用、总量与可用容量。
+
+卡片顺序与状态栏顺序互不影响：`monitor-pro.metricsOrder` 只调整状态栏各项，`monitor-pro.resourceUsage.chartsOrder` 只调整面板卡片。
+
+拖拽需要鼠标——面板使用浏览器原生拖放，触摸手势不会触发；在触屏设备上请直接设置 `resourceUsage.chartsOrder`。
 
 ### 按需查询
 
@@ -161,21 +168,22 @@ Monitor Pro 以瓦特为单位，支持两种模式的实时功率监测：
 
 所有配置项都归在 `monitor-pro.*` 下，修改后即时生效（热重载）。
 
-| 配置                                        | 默认值        | 说明                                                                               |
-| ------------------------------------------- | ------------- | ---------------------------------------------------------------------------------- |
-| `monitor-pro.metrics.*`                     | 见上表        | 开关状态栏各项指标                                                                 |
-| `monitor-pro.metricsOrder`                  | —             | 调整状态栏显示顺序                                                                 |
-| `monitor-pro.mactop.enabled`                | `true`        | 启用 macOS mactop 后端（SoC 指标）及其安装提示；启用期间启动失败将停止采集而不回退 |
-| `monitor-pro.refresh-interval`              | `2000` ms     | 轮询间隔（500~30000ms）                                                            |
-| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）或 `decimal`（kB/MB）                                           |
-| `monitor-pro.showSpace`                     | `false`       | 数字与单位间是否加空格                                                             |
-| `monitor-pro.singleUnit`                    | `false`       | 单位缩写为首字母（K, M, G）                                                        |
-| `monitor-pro.significantDigits`             | 各指标不同    | 有效数字位数（1~6）                                                                |
-| `monitor-pro.uptimeFormat`                  | `auto`        | 自定义格式，支持 `{d}` `{h}` `{m}` `{s}`                                           |
-| `monitor-pro.resourceUsage.charts`          | —             | 图表/卡片启用、视图、颜色（含 `osDistro`、`uptime`、`diskSpace`）                  |
-| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 图表历史点数（10~500）                                                             |
-| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁盘空间卡片挂载点过滤                                                             |
-| `monitor-pro.diskSpace`                     | `["/", "C:"]` | 状态栏磁盘空间挂载点过滤                                                           |
+| 配置                                        | 默认值        | 说明                                                                                                              |
+| ------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `monitor-pro.metrics.*`                     | 见上表        | 开关状态栏各项指标                                                                                                |
+| `monitor-pro.metricsOrder`                  | —             | 调整状态栏显示顺序（不影响面板卡片顺序）                                                                          |
+| `monitor-pro.mactop.enabled`                | `true`        | 启用 macOS mactop 后端（SoC 指标）及其安装提示；启用期间启动失败将停止采集而不回退                                |
+| `monitor-pro.refresh-interval`              | `2000` ms     | 轮询间隔（500~30000ms）                                                                                           |
+| `monitor-pro.unitSystem`                    | `binary`      | `binary`（KiB/MiB）或 `decimal`（kB/MB）                                                                          |
+| `monitor-pro.showSpace`                     | `false`       | 数字与单位间是否加空格                                                                                            |
+| `monitor-pro.singleUnit`                    | `false`       | 单位缩写为首字母（K, M, G）                                                                                       |
+| `monitor-pro.significantDigits`             | 各指标不同    | 有效数字位数（1~6）                                                                                               |
+| `monitor-pro.uptimeFormat`                  | `auto`        | 自定义格式，支持 `{d}` `{h}` `{m}` `{s}`                                                                          |
+| `monitor-pro.resourceUsage.charts`          | —             | 图表/卡片启用、视图、颜色（含 `osDistro`、`uptime`、`diskSpace`）                                                 |
+| `monitor-pro.resourceUsage.chartsOrder`     | `[]`          | 面板卡片的排列顺序；`[]` 沿用内置顺序，列出的卡片按所列先后排在前面，未列出的按内置顺序跟在其后；未知 id 会被忽略 |
+| `monitor-pro.resourceUsage.samplingPoints`  | `60`          | 图表历史点数（10~500）                                                                                            |
+| `monitor-pro.resourceUsage.diskSpaceMounts` | `["all"]`     | 磁盘空间卡片挂载点过滤                                                                                            |
+| `monitor-pro.diskSpace`                     | `["/", "C:"]` | 状态栏磁盘空间挂载点过滤                                                                                          |
 
 ## 0.6.0 之前的截图（当前版本仍兼容）
 

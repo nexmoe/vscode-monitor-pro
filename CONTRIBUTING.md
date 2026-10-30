@@ -143,21 +143,69 @@ pnpm run l10n:parity   # all locales must expose the same key set
 `l10n:check` is what makes the generated bundle trustworthy in review: if you
 forget to run `gen-l10n`, CI fails on the diff.
 
-### 8. Chart and info-card metrics (optional)
+### 8. Resource Usage cards (optional)
 
-Metrics that also render in the Resource Usage webview need three more
-registrations. These are currently maintained as three parallel lists and are
-**not** covered by a consistency check, so keep them in sync by hand:
+A metric that also renders in the Resource Usage webview needs one entry in the
+card registry, `src/resourceUsageCards.ts`. That array is the view's whole card
+vocabulary — identity, data source, rendering, defaults — so no other file has
+to learn about the card:
 
-| Where                                           | What to add                                       |
-| ----------------------------------------------- | ------------------------------------------------- |
-| `src/configuration.ts` `DEFAULT_CHARTS`         | default `enabled` / `view` / `color` for the card |
-| `src/extension.ts` `CHART_TO_METRIC`            | chart id -> `MetricsExist` section                |
-| `assets/resourceUsageView.html` `ALL_CHART_IDS` | the chart id, so the frontend renders it          |
+```ts
+{
+  id: "cpuSpeed",              // settings key and webview handle
+  kind: "chart",               // "chart" | "text" | "disk"
+  metric: "cpuSpeed",          // MetricsExist section this card reads
+  label: l10n.t("CPU Speed"),  // must stay a literal l10n.t(...) call
+  defaultEnabled: false,
+  defaultView: "line",         // charts only
+  defaultColor: "--vscode-terminal-ansiBrightCyan", // charts only
+}
+```
 
-The webview is a single self-contained HTML file with its CSS and JS inlined;
-adding a new chart id without all three entries means the card silently never
-appears.
+- `kind` decides what the card draws: `chart` is a canvas with the line/bar
+  toggle, `text` is a label/value card, `disk` is the per-mount progress-bar
+  card. Only `chart` reads `defaultView` and `defaultColor`.
+- `metric` names the status bar section whose data the card subscribes to.
+  Several cards can share one section (network, fileSystem, battery), so an
+  enabled card means "collect this section", never "collect one more section".
+- `label` has to be a literal `l10n.t(...)` at the definition site: the
+  `gen-l10n` exporter only extracts literal call arguments, so passing a
+  variable silently drops the title from the runtime bundle and fails
+  `l10n:parity`.
+- `array` is optional and adds the per-item view (one cell per CPU core or per
+  GPU): `field` is the history-sample field holding the per-item values, `type`
+  (`"percent"` / `"temp"` / `"mem"`) picks the cell semantics and scale,
+  `prefix` labels the cells (`C0`, `G0`, …), and `valueKey` is required when
+  that field holds objects.
+
+The order the view renders cards in is the declaration order of this array, so
+the `resourceUsage.chartsOrder` setting needs no list of ids: it stores only the
+user's overrides, and `normalizeChartsOrder()` completes them against the
+registry (unlisted cards follow in registry order, unknown ids and duplicates are
+ignored). A card added to the registry shows up in the panel immediately.
+Likewise the webview renders the card list the extension pushes to it, so
+`assets/resourceUsageView.html` needs no new id — you only edit that file when
+the card needs a kind of rendering that does not exist yet.
+
+Optionally, add the card to the `default` object of
+`monitor-pro.resourceUsage.charts` in `package.json`:
+
+```json5
+cpuSpeed: {
+  "enabled": false,
+  "view": "line",
+  "color": "--vscode-terminal-ansiBrightCyan"
+},
+```
+
+Nothing at runtime depends on it: `getResourceUsageConfig()` fills any card the
+user has not configured from the registry entry. The manifest `default` is the
+default object this setting exposes to the Settings editor, and a card that exists
+only in the registry has no key inside it — such a card still renders with its
+registry defaults, but a user who wants to configure it has to type the key. This
+is the one place where a card default exists twice, and no check compares the two:
+when you change `defaultEnabled` / `defaultView` / `defaultColor` in the registry,
+update the manifest entry in the same commit.
 
 ## Debugging
 
