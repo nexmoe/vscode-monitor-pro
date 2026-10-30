@@ -35,6 +35,9 @@ const {
   getResourceUsageCard,
   getResourceUsageCardsInOrder,
   normalizeChartsOrder,
+  parseCardViewSetting,
+  parseChartsOrderSetting,
+  patchCardViewSetting,
 } = require("./resourceUsageCards") as ResourceUsageCardsModule;
 
 // The declaration order is the default render order, so it is part of the
@@ -208,6 +211,168 @@ describe("resourceUsageCards", () => {
         [...RESOURCE_USAGE_CARD_IDS].sort(),
         "no id may be lost or invented",
       );
+    });
+  });
+
+  describe("parseCardViewSetting", () => {
+    it("accepts a registered chart with a persistable view", () => {
+      assert.deepEqual(parseCardViewSetting({ id: "cpu", view: "bar" }), {
+        id: "cpu",
+        view: "bar",
+      });
+      assert.deepEqual(parseCardViewSetting({ id: "gpuMem", view: "line" }), {
+        id: "gpuMem",
+        view: "line",
+      });
+      // The message carries a type field; extra keys must not matter.
+      assert.deepEqual(
+        parseCardViewSetting({ type: "setCardView", id: "netRx", view: "bar" }),
+        { id: "netRx", view: "bar" },
+      );
+    });
+
+    it("rejects ids that are not registered charts", () => {
+      for (const id of [
+        "no-such-card",
+        "",
+        // Registered, but text and disk cards have no view dimension at all.
+        "uptime",
+        "osDistro",
+        "diskSpace",
+        "CPU",
+      ]) {
+        assert.equal(
+          parseCardViewSetting({ id, view: "bar" }),
+          undefined,
+          `id=${id}`,
+        );
+      }
+    });
+
+    it("rejects views that cannot be persisted", () => {
+      for (const view of [
+        "array",
+        "pie",
+        "Line",
+        "",
+        undefined,
+        null,
+        1,
+        true,
+        ["bar"],
+        { view: "bar" },
+      ]) {
+        assert.equal(
+          parseCardViewSetting({ id: "cpu", view }),
+          undefined,
+          `view=${JSON.stringify(view)}`,
+        );
+      }
+    });
+
+    it("rejects payloads that are not objects", () => {
+      for (const raw of [undefined, null, "cpu", 42, true, ["cpu", "bar"]]) {
+        assert.equal(
+          parseCardViewSetting(raw),
+          undefined,
+          `raw=${JSON.stringify(raw)}`,
+        );
+      }
+      assert.equal(parseCardViewSetting({ view: "bar" }), undefined);
+      assert.equal(parseCardViewSetting({ id: 7, view: "bar" }), undefined);
+    });
+  });
+
+  describe("patchCardViewSetting", () => {
+    it("creates the only entry the user needs from an absent value", () => {
+      assert.deepEqual(patchCardViewSetting(undefined, "cpu", "bar"), {
+        cpu: { view: "bar" },
+      });
+    });
+
+    it("keeps the other keys of the card and of every other card", () => {
+      const raw = {
+        cpu: { enabled: false, color: "--vscode-charts-red", view: "line" },
+        netRx: { enabled: true },
+      };
+      assert.deepEqual(patchCardViewSetting(raw, "cpu", "bar"), {
+        cpu: { enabled: false, color: "--vscode-charts-red", view: "bar" },
+        netRx: { enabled: true },
+      });
+      // The settings object handed in by the caller must not be modified: it
+      // may be the object the configuration layer still owns.
+      assert.equal(raw.cpu.view, "line");
+      assert.deepEqual(Object.keys(raw), ["cpu", "netRx"]);
+    });
+
+    it("survives raw values the user could have written by hand", () => {
+      for (const raw of [null, "cpu", 5, true, ["cpu"]]) {
+        assert.deepEqual(
+          patchCardViewSetting(raw, "cpu", "bar"),
+          { cpu: { view: "bar" } },
+          `raw=${JSON.stringify(raw)}`,
+        );
+      }
+      // A malformed entry for the very card being written is replaced, not
+      // spread: spreading a string would turn it into indexed characters.
+      assert.deepEqual(patchCardViewSetting({ cpu: "bar" }, "cpu", "line"), {
+        cpu: { view: "line" },
+      });
+      assert.deepEqual(patchCardViewSetting({ cpu: null }, "cpu", "line"), {
+        cpu: { view: "line" },
+      });
+    });
+  });
+
+  describe("parseChartsOrderSetting", () => {
+    it("rejects anything that is not an array", () => {
+      for (const raw of [
+        undefined,
+        null,
+        "cpu,memActive",
+        {},
+        { order: ["cpu"] },
+        7,
+        true,
+      ]) {
+        assert.equal(
+          parseChartsOrderSetting(raw, RESOURCE_USAGE_CARD_IDS),
+          undefined,
+          `raw=${JSON.stringify(raw)}`,
+        );
+      }
+    });
+
+    it("normalizes a dragged order into a full permutation", () => {
+      const order = parseChartsOrderSetting(
+        ["diskSpace", "cpu"],
+        RESOURCE_USAGE_CARD_IDS,
+      );
+      assert.ok(order);
+      assert.equal(order.length, RESOURCE_USAGE_CARD_IDS.length);
+      assert.equal(order[0], "diskSpace");
+      assert.equal(order[1], "cpu");
+      assert.deepEqual(
+        [...order].sort(),
+        [...RESOURCE_USAGE_CARD_IDS].sort(),
+        "every registered card must survive the round trip",
+      );
+    });
+
+    it("drops unknown ids and duplicates instead of failing the drag", () => {
+      const order = parseChartsOrderSetting(
+        ["cpu", "unknown", "cpu", 3, null, "gpu"],
+        RESOURCE_USAGE_CARD_IDS,
+      );
+      assert.ok(order);
+      assert.deepEqual(order.slice(0, 2), ["cpu", "gpu"]);
+      assert.equal(order.length, RESOURCE_USAGE_CARD_IDS.length);
+    });
+
+    it("treats an empty array as the registry order", () => {
+      assert.deepEqual(parseChartsOrderSetting([], RESOURCE_USAGE_CARD_IDS), [
+        ...RESOURCE_USAGE_CARD_IDS,
+      ]);
     });
   });
 });

@@ -1,4 +1,8 @@
-import { workspace, ConfigurationChangeEvent } from "vscode";
+import {
+  workspace,
+  ConfigurationChangeEvent,
+  ConfigurationTarget,
+} from "vscode";
 import { MetricsExist } from "./constants";
 import {
   RESOURCE_USAGE_CARDS,
@@ -169,6 +173,58 @@ export function getResourceUsageConfig(): ResourceUsageConfig {
     ]),
     samplingPoints: config.get<number>(`${CHART_SECTION}.samplingPoints`, 60),
   };
+}
+
+/**
+ * The `resourceUsage` keys the webview's config message is built from, as the
+ * user's own settings file holds them.
+ *
+ * `get()` returns the effective value (manifest default merged with every
+ * layer), so writing it back would materialize the entire 17-card default block
+ * in the user's file the first time they toggle a single view. `inspect()`'s
+ * global value is the raw object the user actually wrote, which is what a
+ * minimal patch has to start from. Any key the user never set stays undefined
+ * instead of being pinned to the manifest default.
+ */
+export interface RawResourceUsageSettings {
+  charts: unknown;
+  chartsOrder: unknown;
+  diskSpaceMounts: unknown;
+  samplingPoints: unknown;
+}
+
+function globalValueOf<T>(key: string): T | undefined {
+  return workspace.getConfiguration(CONFIG_SECTION).inspect<T>(key)
+    ?.globalValue;
+}
+
+export function getRawResourceUsageSettings(): RawResourceUsageSettings {
+  return {
+    charts: globalValueOf(`${CHART_SECTION}.charts`),
+    chartsOrder: globalValueOf(`${CHART_SECTION}.chartsOrder`),
+    diskSpaceMounts: globalValueOf(`${CHART_SECTION}.diskSpaceMounts`),
+    samplingPoints: globalValueOf(`${CHART_SECTION}.samplingPoints`),
+  };
+}
+
+/**
+ * Write one `resourceUsage` key at the user level.
+ *
+ * Global scope on purpose: these are view preferences, not project settings, and
+ * a workspace-scoped write would hand a personal choice to everyone who opens the
+ * repository. Only the addressed key is written, so the settings file keeps
+ * holding exactly what the user changed.
+ */
+/** The `resourceUsage` keys the view is allowed to write back. */
+export type ResourceUsageBackWriteKey = "charts" | "chartsOrder";
+
+export function updateResourceUsageSetting(
+  key: ResourceUsageBackWriteKey,
+  value: unknown,
+): Thenable<void> {
+  return workspace
+    .getConfiguration(CONFIG_SECTION)
+    .update(`${CHART_SECTION}.${key}`, value, ConfigurationTarget.Global);
 }
 
 export function getDiskSpaceConfig(): string[] {

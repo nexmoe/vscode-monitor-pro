@@ -8,19 +8,27 @@ import {
 } from "./resourceUsageData";
 import {
   getFormatConfig,
+  getRawResourceUsageSettings,
   getResourceUsageConfig,
-  ResourceUsageConfig,
+  RawResourceUsageSettings,
+  updateResourceUsageSetting,
 } from "./configuration";
 import { getUptimeFormat } from "./configuration";
 import byteFormat from "./byteFormat";
 import { formatEstimatedBatteryTime } from "./battery";
 import { systemData } from "./systemData";
 import { formatUptime } from "./uptime";
+import { getLogger } from "./logger";
 import {
   getResourceUsageCardsInOrder,
+  parseCardViewSetting,
+  parseChartsOrderSetting,
+  patchCardViewSetting,
+  RESOURCE_USAGE_CARD_IDS,
   type ResourceUsageCardArray,
   type ResourceUsageCardKind,
   type ResourceUsageCardView,
+  type ResourceUsageCardViewSetting,
 } from "./resourceUsageCards";
 
 /**
@@ -44,6 +52,40 @@ interface FormattedPayload {
   formatConfig: ReturnType<typeof getFormatConfig>;
   textMetrics: TextMetrics;
   formattedText: Record<string, string>;
+}
+
+/**
+ * Messages the webview may send back. Everything is `unknown` because the
+ * payload is untrusted input from a page, not a typed API contract.
+ */
+interface WebviewMessage {
+  type?: unknown;
+  id?: unknown;
+  view?: unknown;
+  order?: unknown;
+}
+
+/**
+ * Serialize a settings snapshot so two snapshots compare by content.
+ *
+ * Key order is an artifact of how the settings file was edited, not of what it
+ * holds, so a plain stringify would report a difference merely because the file
+ * was written in another order. Sorting keys leaves the only question that
+ * matters here: is the configuration the view would receive the one our own
+ * write produced?
+ */
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalJson).join(",")}]`;
+  }
+  if (typeof value === "object" && value !== null) {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
 }
 
 /**
@@ -109,6 +151,27 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "monitor-pro.resourceUsage";
   private _view?: vscode.WebviewView;
   private _collector: ResourceUsageDataCollector;
+  /**
+   * Fingerprint of the settings our own write just produced, while the
+   * configuration change it triggers has not arrived yet.
+   *
+   * Writing a view or an order is an echo of an edit the view already applied
+   * locally, so rebuilding the DOM for it costs a blank frame on every canvas
+   * until the next sample arrives. Only the first configuration push after the
+   * write can be that echo, hence a single mark instead of a queue.
+   */
+  private _selfWriteFingerprint?: string;
+  /**
+   * Tail of the settings write queue.
+   *
+   * The settings service reloads its cache only after the file write settles, so
+   * a value inspected while an earlier write is still in flight is the old one.
+   * Patching that stale snapshot would overwrite the earlier card's view, hence
+   * every write re-reads the raw value at the moment it runs rather than at the
+   * moment the message arrived.
+   */
+  private _settingsWriteTail: Promise<void> = Promise.resolve();
+  private _settingsWritesPending = 0;
 
   constructor(extensionPath: string) {
     this._collector = new ResourceUsageDataCollector();
@@ -142,10 +205,8 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
     });
     this._collector.start();
 
-    webviewView.webview.onDidReceiveMessage((msg) => {
-      if (msg.type === "ready") {
-        this._pushConfig(webviewView);
-      }
+    webviewView.webview.onDidReceiveMessage((msg: WebviewMessage) => {
+      this._handleMessage(webviewView, msg);
     });
 
     webviewView.onDidDispose(() => {
@@ -154,10 +215,174 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
   }
 
   pushConfigUpdate() {
-    if (this._view) {
-      this._collector.maxHistory = getResourceUsageConfig().samplingPoints;
-      this._pushConfig(this._view);
+    if (!this._view) {
+      return;
     }
+    if (this._selfWriteFingerprint !== undefined) {
+      // One-shot in both directions: the mark belongs to the next push only. A
+      // mismatch means the change carried something else as well (the user
+      // edited another key, or the write was rewritten), so it falls through to
+      // a normal push rather than being swallowed.
+      const isSelfWrite =
+        this._settingsFingerprint() === this._selfWriteFingerprint;
+      this._selfWriteFingerprint = undefined;
+      if (isSelfWrite) {
+        getLogger().debug(
+          vscode.l10n.t("Skipping the config push for our own settings write"),
+        );
+        return;
+      }
+    }
+    this._pushConfigNow(this._view);
+  }
+
+  private _pushConfigNow(webviewView: vscode.WebviewView): void {
+    this._collector.maxHistory = getResourceUsageConfig().samplingPoints;
+    this._pushConfig(webviewView);
+  }
+
+  /**
+   * Apply one message from the webview.
+   *
+   * Takes the view explicitly, and is split from the registration, so both the
+   * write path and the first-render path can be exercised without resolving a
+   * view (which starts the collector and its worker).
+   */
+  private _handleMessage(
+    webviewView: vscode.WebviewView,
+    message: WebviewMessage,
+  ): void {
+    try {
+      this._dispatchMessage(webviewView, message);
+    } catch (error) {
+      // Nothing may escape back into the webview's message channel: the host
+      // would report an unhandled error, and the suppression mark would stay
+      // armed for a write that never happened.
+      this._onSettingsWriteFailure(error);
+    }
+  }
+
+  private _dispatchMessage(
+    webviewView: vscode.WebviewView,
+    message: WebviewMessage,
+  ): void {
+    switch (message?.type) {
+      case "ready": {
+        // The first render cannot be the echo of a write: it is what fills a
+        // view that has no cards yet, so it never passes through the self-write
+        // guard. The mark is left in place, because the change event belonging
+        // to a write that is still in flight has not arrived yet.
+        this._pushConfig(webviewView);
+        return;
+      }
+      case "setCardView": {
+        const setting = parseCardViewSetting(message);
+        if (!setting) {
+          getLogger().debug(
+            vscode.l10n.t("Ignored an invalid card view request"),
+          );
+          return;
+        }
+        this._writeCardView(setting);
+        return;
+      }
+      case "setChartsOrder": {
+        const order = parseChartsOrderSetting(
+          message.order,
+          RESOURCE_USAGE_CARD_IDS,
+        );
+        if (!order) {
+          getLogger().debug(
+            vscode.l10n.t("Ignored an invalid charts order request"),
+          );
+          return;
+        }
+        this._writeChartsOrder(order);
+        return;
+      }
+      default:
+        getLogger().debug(vscode.l10n.t("Ignored an unknown webview message"));
+    }
+  }
+
+  /**
+   * Fingerprint of the settings the view's config is built from, optionally
+   * with the keys a write is about to replace.
+   */
+  private _settingsFingerprint(
+    override: Partial<RawResourceUsageSettings> = {},
+  ): string {
+    return canonicalJson({ ...getRawResourceUsageSettings(), ...override });
+  }
+
+  /**
+   * Run one settings write behind the previous one.
+   *
+   * A queued write waits for the write before it to settle; an idle queue starts
+   * at once so a single gesture is not delayed by a tick. Failures are absorbed
+   * here on purpose: the chain has to keep serving later writes, and the view has
+   * to be told that the value it applied optimistically never landed.
+   */
+  private _enqueueSettingsWrite(write: () => Promise<void>): void {
+    const run = (): Promise<void> => {
+      try {
+        return Promise.resolve(write());
+      } catch (error) {
+        // A synchronous throw from the settings API is the same failure as a
+        // rejected write, and must not escape into the message handler.
+        return Promise.reject(error);
+      }
+    };
+    const settled =
+      this._settingsWritesPending === 0
+        ? run()
+        : this._settingsWriteTail.then(run);
+    this._settingsWritesPending += 1;
+    this._settingsWriteTail = settled.then(
+      () => {
+        this._settingsWritesPending -= 1;
+      },
+      (error) => {
+        this._settingsWritesPending -= 1;
+        this._onSettingsWriteFailure(error);
+      },
+    );
+  }
+
+  /**
+   * A write that did not land leaves the view showing a value the settings file
+   * does not have. Push the persisted configuration so both sides agree again,
+   * and drop the mark: no echo is coming for a write that failed.
+   */
+  private _onSettingsWriteFailure(error: unknown): void {
+    this._selfWriteFingerprint = undefined;
+    getLogger().error(
+      vscode.l10n.t("Failed to save the view settings: {0}", String(error)),
+    );
+    if (this._view) {
+      this._pushConfigNow(this._view);
+    }
+  }
+
+  private _writeCardView({ id, view }: ResourceUsageCardViewSetting): void {
+    this._enqueueSettingsWrite(async () => {
+      // Read inside the queued write: another card's write may have landed since
+      // this message arrived, and patching the older snapshot would erase it.
+      const raw = getRawResourceUsageSettings();
+      const charts = patchCardViewSetting(raw.charts, id, view);
+      this._selfWriteFingerprint = this._settingsFingerprint({ charts });
+      await updateResourceUsageSetting("charts", charts);
+    });
+  }
+
+  private _writeChartsOrder(order: readonly string[]): void {
+    this._enqueueSettingsWrite(async () => {
+      const next = [...order];
+      this._selfWriteFingerprint = this._settingsFingerprint({
+        chartsOrder: next,
+      });
+      await updateResourceUsageSetting("chartsOrder", next);
+    });
   }
 
   private _pushConfig(webviewView: vscode.WebviewView) {

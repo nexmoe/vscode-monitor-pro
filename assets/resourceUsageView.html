@@ -238,6 +238,62 @@
         margin-bottom: 4px;
       }
 
+      /* The title strip is the only place a card may be dragged from. The card
+         root stays draggable so the pointer is already inside a drag source when
+         the gesture starts; the strip only has to look and behave like a handle. */
+      .card-header,
+      .info-header {
+        position: relative;
+        cursor: grab;
+      }
+
+      /* The grip is a pseudo-element pinned into the card's own padding gutter.
+         A real element would join the flex layout and shift the title, and any
+         change in card height would break the geometry the view is measured by. */
+      .card-header::before,
+      .info-header::before {
+        content: "";
+        position: absolute;
+        top: 1px;
+        width: 4px;
+        height: 9px;
+        background-image: radial-gradient(currentColor 1px, transparent 1.3px);
+        background-size: 4px 3px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 120ms linear;
+      }
+
+      .card-header::before {
+        left: -5px;
+      }
+
+      .info-header::before {
+        left: -7px;
+      }
+
+      .card-header:hover::before,
+      .info-header:hover::before {
+        opacity: 0.6;
+      }
+
+      /* Drag feedback lives outside the box: opacity and box-shadow never move a
+         card, so the pointer keeps pointing at the same pixels while ordering. */
+      .dragging {
+        opacity: 0.45;
+        cursor: grabbing;
+      }
+
+      .drop-before {
+        box-shadow: 0 -2px 0 0
+          var(--vscode-focusBorder, var(--vscode-editor-foreground));
+      }
+
+      .drop-after {
+        box-shadow: 0 2px 0 0
+          var(--vscode-focusBorder, var(--vscode-editor-foreground));
+      }
+
       .info-value {
         font-weight: 700;
         font-size: var(--font-size);
@@ -310,6 +366,12 @@
         let _capacityWords = {};
         let _diskSpaceMounts = ["all"];
         let _powerMode = "battery"; // "battery" (signed) | "soc" (mactop, always non-negative)
+
+        // The last data frame the extension sent, kept so a config-driven rebuild
+        // can repaint in the same frame instead of showing placeholders until the
+        // next sample. null until the first frame arrives: a freshly opened panel
+        // has nothing to replay and must keep its placeholders.
+        let _lastUpdate = null;
 
         let _fmtConfig = {
           unitSystem: "binary",
@@ -548,9 +610,287 @@
           return getCachedCSSVar("--vscode-editor-foreground");
         }
 
+        // -------- card ordering (drag and drop) --------
+
+        // Reordering is a pointer-only gesture: there is no button or shortcut to
+        // fall back on, so the gesture itself has to be reliable. Two rules shape
+        // the code below: a drag may only start on a title strip, and cards are
+        // moved as nodes instead of being re-rendered.
+
+        // Only direct children of the container are cards: the toggle buttons
+        // inside a chart card carry data-metric as well.
+        function cardElements() {
+          const container = document.getElementById("card-container");
+          if (!container) return [];
+          return Array.from(container.children).filter(function (el) {
+            return el.dataset && el.dataset.metric;
+          });
+        }
+
+        function isVisibleCard(el) {
+          return el.getBoundingClientRect().height > 0;
+        }
+
+        // Null whenever no drag of ours is running; every handler below and the
+        // config handler test it first.
+        let _drag = null;
+        // Card whose title strip received the last mousedown. dragstart is fired
+        // at the draggable element itself rather than at the child under the
+        // pointer, so "did this gesture start in the title area" can only be
+        // recorded on press.
+        let _dragOriginId = null;
+        let _pointerY = 0;
+        let _autoScrollRaf = null;
+        // Which card the landing marker is currently drawn on, and on which side.
+        // Remembering it keeps the marker (and the node move) off every dragover.
+        let _dropMarkerKey = null;
+        // One-shot guard for a click the browser may deliver right after a drop.
+        let _swallowClick = false;
+
+        // The panel's scrollbar is hidden entirely, so a drag that reaches the
+        // edge of the viewport has to scroll the document itself or the cards
+        // below the fold can never be passed. Scrolling continues while the
+        // pointer stands still, which is why it is driven by frames instead of by
+        // dragover.
+        const AUTO_SCROLL_EDGE = 24;
+        const AUTO_SCROLL_MAX_STEP = 18;
+
+        function autoScrollStep() {
+          _autoScrollRaf = null;
+          if (!_drag) return;
+          const height = window.innerHeight;
+          let step = 0;
+          if (_pointerY < AUTO_SCROLL_EDGE) {
+            step = -Math.max(
+              2,
+              Math.round(
+                ((AUTO_SCROLL_EDGE - _pointerY) / AUTO_SCROLL_EDGE) *
+                  AUTO_SCROLL_MAX_STEP,
+              ),
+            );
+          } else if (_pointerY > height - AUTO_SCROLL_EDGE) {
+            step = Math.max(
+              2,
+              Math.round(
+                ((_pointerY - (height - AUTO_SCROLL_EDGE)) / AUTO_SCROLL_EDGE) *
+                  AUTO_SCROLL_MAX_STEP,
+              ),
+            );
+          }
+          if (step !== 0) {
+            window.scrollBy(0, step);
+            // The cards scrolled with the document, so the landing marker has to
+            // be recomputed even though the pointer itself did not move.
+            updateDropTarget(_pointerY, null);
+          }
+          _autoScrollRaf = requestAnimationFrame(autoScrollStep);
+        }
+
+        function startAutoScroll() {
+          if (_autoScrollRaf === null) {
+            _autoScrollRaf = requestAnimationFrame(autoScrollStep);
+          }
+        }
+
+        function stopAutoScroll() {
+          if (_autoScrollRaf !== null) {
+            cancelAnimationFrame(_autoScrollRaf);
+            _autoScrollRaf = null;
+          }
+        }
+
+        // Where a release at `y` would drop the dragged card.
+        //
+        // The card under the pointer decides which side of its own vertical
+        // midline the pointer is on: above goes before it, below goes after it.
+        // The drag event's target is not always a card (a canvas, a toggle
+        // button, the empty space below the last card), so when it does not
+        // resolve to one, the same midline question is asked of every visible
+        // card rather than guessed from the target.
+        //
+        // Hidden cards are skipped for the comparison but keep their place in the
+        // document: they are only display:none, and shuffling them to match a
+        // pointer that cannot reach them would rewrite an order the user cannot
+        // see.
+        function resolveDropPlace(y, eventTarget) {
+          const container = document.getElementById("card-container");
+          const dragged = _drag ? _drag.el : null;
+          const under =
+            eventTarget && eventTarget.closest
+              ? eventTarget.closest("[data-metric]")
+              : null;
+          const target =
+            under &&
+            under !== dragged &&
+            under.parentElement === container &&
+            isVisibleCard(under)
+              ? under
+              : null;
+          if (target) {
+            const rect = target.getBoundingClientRect();
+            return { card: target, after: y >= rect.top + rect.height / 2 };
+          }
+
+          const cards = cardElements().filter(function (el) {
+            return el !== dragged && isVisibleCard(el);
+          });
+          if (cards.length === 0) return null;
+          for (const el of cards) {
+            const rect = el.getBoundingClientRect();
+            if (y < rect.top + rect.height / 2) {
+              return { card: el, after: false };
+            }
+          }
+          return { card: cards[cards.length - 1], after: true };
+        }
+
+        // Follow the pointer with the card itself: the node is moved as soon as
+        // the landing spot changes, so what the user sees while dragging is the
+        // order they end up with. Waiting for a drop event instead would lose the
+        // gesture, because the edge auto-scroll moves the page under a pointer
+        // that has stopped producing dragover events, and the browser then treats
+        // the release point as no drop target at all and fires only dragend.
+        function updateDropTarget(y, eventTarget) {
+          if (!_drag) return;
+          const place = resolveDropPlace(y, eventTarget);
+          const key = place
+            ? (place.after ? "after:" : "before:") + place.card.dataset.metric
+            : "";
+          if (key === _dropMarkerKey) return;
+          _dropMarkerKey = key;
+          moveCard(_drag.el, place);
+          for (const el of cardElements()) {
+            el.classList.remove("drop-before", "drop-after");
+          }
+          if (place) {
+            place.card.classList.add(
+              place.after ? "drop-after" : "drop-before",
+            );
+          }
+        }
+
+        function moveCard(card, place) {
+          const container = card.parentElement;
+          if (!place || !container) return;
+          // insertBefore moves the existing node, so the canvas keeps its bitmap
+          // and the handles in _canvases stay valid; a re-render would replace
+          // both and blank the chart until the next sample arrived.
+          const anchor = place.after
+            ? place.card.nextElementSibling
+            : place.card;
+          if (anchor === card) return;
+          container.insertBefore(card, anchor);
+        }
+
+        // Report the order the drag left behind, read back from the document so it
+        // also carries the cards that are currently hidden.
+        function publishOrder() {
+          // A drop can still be followed by a click on whatever the pointer was
+          // over, typically a toggle button, which would switch a view nobody
+          // asked for. The guard is armed here and disarmed by the next press.
+          _swallowClick = true;
+          vscode.postMessage({
+            type: "setChartsOrder",
+            order: cardElements().map(function (el) {
+              return el.dataset.metric;
+            }),
+          });
+        }
+
+        function endDrag() {
+          stopAutoScroll();
+          if (_drag) {
+            _drag.el.classList.remove("dragging");
+          }
+          _drag = null;
+          _dragOriginId = null;
+          _dropMarkerKey = null;
+          for (const el of cardElements()) {
+            el.classList.remove("drop-before", "drop-after");
+          }
+        }
+
+        document.addEventListener("mousedown", function (e) {
+          // A fresh press starts a new gesture, and the click guard must never
+          // outlive the drop it was armed for.
+          _swallowClick = false;
+          const handle = e.target.closest("[data-drag-handle]");
+          const card = handle ? handle.closest("[data-metric]") : null;
+          // A press on a toggle button is a view switch even though the buttons
+          // sit inside the title strip.
+          _dragOriginId =
+            card && !e.target.closest(".toggle-btn")
+              ? card.dataset.metric
+              : null;
+        });
+
+        document.addEventListener("mouseup", function () {
+          _dragOriginId = null;
+        });
+
+        document.addEventListener("dragstart", function (e) {
+          const card = e.target.closest("[data-metric]");
+          if (!card || _drag || card.dataset.metric !== _dragOriginId) {
+            // The rest of the card is draggable at the DOM level only so that a
+            // press inside the title strip already sits in a drag source; a drag
+            // that begins anywhere else means nothing to the ordering.
+            e.preventDefault();
+            return;
+          }
+          e.dataTransfer.effectAllowed = "move";
+          // Chromium aborts a drag that carries no payload before the first
+          // dragover ever fires.
+          e.dataTransfer.setData("text/plain", card.dataset.metric);
+          _drag = { el: card };
+          _pointerY = e.clientY;
+          card.classList.add("dragging");
+          startAutoScroll();
+          updateDropTarget(e.clientY, e.target);
+        });
+
+        document.addEventListener("dragover", function (e) {
+          if (!_drag) return;
+          // Every dragover has to be cancelled, otherwise the browser treats the
+          // element as a non-target and never delivers drop.
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          _pointerY = e.clientY;
+          updateDropTarget(e.clientY, e.target);
+        });
+
+        document.addEventListener("drop", function (e) {
+          if (!_drag) return;
+          // Claim the drop so the browser runs no default action of its own (the
+          // card is already where it belongs); the order is reported on dragend,
+          // which fires whether or not this event did.
+          e.preventDefault();
+        });
+
+        document.addEventListener("dragend", function () {
+          if (_drag) {
+            publishOrder();
+          }
+          endDrag();
+        });
+
+        document.addEventListener(
+          "click",
+          function (e) {
+            if (!_swallowClick) return;
+            _swallowClick = false;
+            e.preventDefault();
+            e.stopPropagation();
+          },
+          true,
+        );
+
         // -------- config handler --------
 
         function handleConfig(cfg) {
+          // A rebuild replaces every node this drag points at, so a config message
+          // that arrives mid-drag ends the gesture instead of letting it continue
+          // on detached elements.
+          endDrag();
           resetCSSCache();
           _cards = Array.isArray(cfg.cards) ? cfg.cards : [];
           _capacityWords = cfg.labels || {};
@@ -573,6 +913,18 @@
           }
 
           renderCards();
+
+          // A rebuild starts every card from its placeholder markup, so without
+          // this replay the panel shows an empty frame (and a height jump) until
+          // the next sample arrives. Replaying the last frame is not a second
+          // render path: it is the handler the data messages already go through.
+          if (_lastUpdate) {
+            handleUpdate(
+              _lastUpdate.data,
+              _lastUpdate.formattedText,
+              _lastUpdate.unavailableMetrics,
+            );
+          }
         }
 
         // -------- render --------
@@ -623,8 +975,8 @@
           return (
             '<div class="card" data-metric="' +
             id +
-            '">' +
-            '<div class="card-header">' +
+            '" draggable="true">' +
+            '<div class="card-header" data-drag-handle>' +
             '<div class="card-left">' +
             "<span>" +
             card.label +
@@ -700,13 +1052,16 @@
         // the merged sequence needs from them, so it is on the card itself.
         function infoCardHtml(card) {
           const id = card.id;
-          const header = '<div class="info-header">' + card.label + "</div>";
+          const header =
+            '<div class="info-header" data-drag-handle>' +
+            card.label +
+            "</div>";
 
           if (card.kind === "disk") {
             return (
               '<div class="info-card" data-metric="' +
               id +
-              '">' +
+              '" draggable="true">' +
               header +
               // The mount rows are rebuilt from every data frame, so they keep
               // a list of their own instead of being part of the header.
@@ -717,7 +1072,7 @@
           return (
             '<div class="info-card" data-metric="' +
             id +
-            '">' +
+            '" draggable="true">' +
             header +
             '<div class="info-value" id="val-' +
             id +
@@ -919,6 +1274,16 @@
 
           state.viewMode[metric] = view;
           setViewActive(metric, view);
+
+          // The view a user picks is a preference, so it is written back as the
+          // card's default and survives reopening the panel. The per-item view
+          // is the exception: whether it exists at all depends on the data (a
+          // single GPU has no per-item dimension), so persisting it would pin a
+          // default that some machines cannot honor. Only line and bar travel
+          // to the extension; the per-item view stays a per-session choice.
+          if (view === "line" || view === "bar") {
+            vscode.postMessage({ type: "setCardView", id: metric, view: view });
+          }
 
           const chartWrap = document.getElementById("chart-wrap-" + metric);
           const barWrap = document.getElementById("bar-wrap-" + metric);
@@ -1328,6 +1693,13 @@
           if (msg.type === "config" && msg.data) {
             handleConfig(msg.data);
           } else if (msg.type === "update" && msg.data) {
+            // Remember the parts a rebuild needs, so the config handler can
+            // replay this exact frame instead of waiting for the next one.
+            _lastUpdate = {
+              data: msg.data,
+              formattedText: msg.formattedText,
+              unavailableMetrics: msg.unavailableMetrics,
+            };
             handleUpdate(msg.data, msg.formattedText, msg.unavailableMetrics);
           }
         });

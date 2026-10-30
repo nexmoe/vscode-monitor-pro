@@ -262,6 +262,95 @@ export function getResourceUsageCardsInOrder(
   return cards;
 }
 
+/** A card view that is allowed to become a persisted default. */
+export interface ResourceUsageCardViewSetting {
+  readonly id: string;
+  readonly view: ResourceUsageCardView;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Validate an incoming "set the default view of this card" request.
+ *
+ * The payload crosses the webview boundary, so nothing in it is trustworthy: the
+ * page may be stale (an id from a registry version this build no longer has) or
+ * hand-written. Reducing unknown input to `{id, view}` or `undefined` keeps the
+ * decision "write or ignore" free of type checks in the caller, which is the part
+ * that owns side effects.
+ *
+ * Only charts qualify. The per-item view is derived from data dimensions rather
+ * than stored, and a text or disk card has no view at all, so persisting one for
+ * them would add a key nothing ever reads.
+ */
+export function parseCardViewSetting(
+  raw: unknown,
+): ResourceUsageCardViewSetting | undefined {
+  if (!isPlainObject(raw)) {
+    return undefined;
+  }
+  const { id, view } = raw;
+  if (typeof id !== "string") {
+    return undefined;
+  }
+  const card = CARDS_BY_ID.get(id);
+  if (!card || card.kind !== "chart") {
+    return undefined;
+  }
+  if (view !== "line" && view !== "bar") {
+    return undefined;
+  }
+  return { id, view };
+}
+
+/**
+ * Merge one card's view into the user's raw `resourceUsage.charts` value.
+ *
+ * Returns a new object instead of mutating the input, and only touches the
+ * addressed card's entry: the caller got that object from the settings API, so
+ * writing it back unchanged would materialize every card's settings in the
+ * user's file, including the ones they never edited. The entry itself is merged
+ * rather than replaced so its other keys (enabled, color) survive, and a missing
+ * or malformed entry is created from scratch because the raw value is user
+ * editable and can hold anything.
+ */
+export function patchCardViewSetting(
+  rawCharts: unknown,
+  id: string,
+  view: ResourceUsageCardView,
+): Record<string, unknown> {
+  const patched: Record<string, unknown> = isPlainObject(rawCharts)
+    ? { ...rawCharts }
+    : {};
+  const current = patched[id];
+  patched[id] = { ...(isPlainObject(current) ? current : {}), view };
+  return patched;
+}
+
+/**
+ * Validate an incoming "this is the new card order" request.
+ *
+ * A non-array is rejected rather than treated as an empty order: normalizing an
+ * empty array yields the registry order, so accepting it would silently reset a
+ * customized layout on a malformed message. An empty array itself is therefore
+ * accepted and does mean "registry order"; the view always reports its full card
+ * sequence, so only a hand-written message can reach that case. An array is
+ * normalized instead of rejected entry by entry, because an unknown or
+ * duplicated id costs only that entry while rejecting the whole message would
+ * throw away a valid drag the user just performed.
+ */
+export function parseChartsOrderSetting(
+  raw: unknown,
+  knownIds: readonly string[],
+): string[] | undefined {
+  if (!Array.isArray(raw)) {
+    return undefined;
+  }
+  return normalizeChartsOrder(raw, knownIds);
+}
+
 /**
  * Normalize a user-supplied card order against the known card ids.
  *
