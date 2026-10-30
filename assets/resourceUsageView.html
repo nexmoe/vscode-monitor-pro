@@ -254,11 +254,16 @@
       .info-header::before {
         content: "";
         position: absolute;
-        top: 1px;
+        top: 2px;
         width: 4px;
         height: 9px;
         background-image: radial-gradient(currentColor 1px, transparent 1.3px);
         background-size: 4px 3px;
+        /* The dots are painted on the whole-pixel grid, so moving the box can only
+           step them by a pixel and leaves them half a pixel off the title's glyph
+           center. Shifting the background instead moves the painted dots by a sub
+           pixel, which is what lands their visual center on the glyph center. */
+        background-position: 0 0.5px;
         opacity: 0;
         pointer-events: none;
         transition: opacity 120ms linear;
