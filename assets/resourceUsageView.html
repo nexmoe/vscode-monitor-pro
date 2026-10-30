@@ -254,16 +254,14 @@
       .info-header::before {
         content: "";
         position: absolute;
-        top: 2px;
+        /* Measured from the rendered title line by syncGripOffsets(): the line box
+           depends on the font, its size, the device pixel ratio and on labels that
+           mix CJK and Latin glyphs, so no fixed offset fits them all. */
+        top: var(--grip-top, 2px);
         width: 4px;
         height: 9px;
         background-image: radial-gradient(currentColor 1px, transparent 1.3px);
         background-size: 4px 3px;
-        /* The dots are painted on the whole-pixel grid, so moving the box can only
-           step them by a pixel and leaves them half a pixel off the title's glyph
-           center. Shifting the background instead moves the painted dots by a sub
-           pixel, which is what lands their visual center on the glyph center. */
-        background-position: 0 0.5px;
         opacity: 0;
         pointer-events: none;
         transition: opacity 120ms linear;
@@ -636,6 +634,51 @@
           return el.getBoundingClientRect().height > 0;
         }
 
+        // Height of the grip pseudo-element; the offset below is computed against
+        // it, so the two have to agree with the stylesheet.
+        const GRIP_HEIGHT = 9;
+
+        // The title strip's first line box, or null while the card is not rendered.
+        function titleLineRect(handle) {
+          // Chart cards keep the label in the first span of .card-left; info cards
+          // carry it as the header's own text node.
+          const host = handle.querySelector(".card-left > span");
+          const node = host ? host.firstChild : handle.firstChild;
+          if (!node || node.nodeType !== Node.TEXT_NODE) return null;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          const rects = range.getClientRects();
+          // A hidden card produces no line boxes; callers keep the previous offset
+          // rather than writing a meaningless one.
+          return rects.length > 0 ? rects[0] : null;
+        }
+
+        // Park the grip on the vertical center of the title's first line.
+        //
+        // The line box is what the text visibly sits in, and it moves with the
+        // font, the font size, the device pixel ratio, and with labels that mix CJK
+        // and Latin glyphs: a fixed offset only ever fits the single combination it
+        // was measured on. Reading the rendered line box makes the offset follow
+        // whatever the host actually draws. The offset is written on the title
+        // strip because the grip is positioned against it.
+        function syncGripOffsets() {
+          for (const handle of document.querySelectorAll(
+            "[data-drag-handle]",
+          )) {
+            const line = titleLineRect(handle);
+            if (!line) continue;
+            const top =
+              (line.height - GRIP_HEIGHT) / 2 +
+              (line.top - handle.getBoundingClientRect().top);
+            handle.style.setProperty("--grip-top", top.toFixed(2) + "px");
+          }
+        }
+
+        // Which cards were visible at the last sync. Only a change of that set can
+        // move a line box in or out of existence, so the offsets are not recomputed
+        // on every data frame.
+        let _gripVisibilityKey = "";
+
         // Null whenever no drag of ours is running; every handler below and the
         // config handler test it first.
         let _drag = null;
@@ -960,6 +1003,12 @@
             const valEl = document.getElementById("val-" + id);
             if (barFill) registerBar(id, barFill, barLabel, valEl);
           }
+
+          // The rebuilt markup has no measured offsets yet, and every card is
+          // rendered right now, so this is the one moment the line boxes are all
+          // available.
+          syncGripOffsets();
+          _gripVisibilityKey = "";
         }
 
         function enabledChartCards() {
@@ -1602,10 +1651,22 @@
           // timeout) must come back once it reports a value, or the card stays
           // hidden for the rest of the view's lifetime.
           const hidden = new Set(unavailableMetrics || []);
+          const visibleIds = [];
           for (const card of document.querySelectorAll(
             ".card[data-metric], .info-card[data-metric]",
           )) {
-            card.style.display = hidden.has(card.dataset.metric) ? "none" : "";
+            const cardHidden = hidden.has(card.dataset.metric);
+            card.style.display = cardHidden ? "none" : "";
+            if (!cardHidden) visibleIds.push(card.dataset.metric);
+          }
+
+          // Showing or hiding a card adds or removes its line box, so the grip
+          // offsets are re-measured then; a data frame that only updates numbers
+          // leaves them alone.
+          const visibilityKey = visibleIds.join(",");
+          if (visibilityKey !== _gripVisibilityKey) {
+            _gripVisibilityKey = visibilityKey;
+            syncGripOffsets();
           }
 
           // Per-card GPU metadata (model / byte-formatted memText) for
