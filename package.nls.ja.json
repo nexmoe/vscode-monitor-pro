@@ -27,5 +27,6 @@
   "command.focusResourceUsage": "リソース使用状況ビューにフォーカス",
   "config.resourceUsage.charts": "各チャートの設定：有効状態とデフォルト表示モード（折れ線/棒）。キー：cpu, memActive, memUsed, netRx, netTx, diskRx, diskWx, diskSpace, gpu, gpuTemp, gpuMem",
   "config.resourceUsage.diskSpaceMounts": "ディスク容量チャートに表示するマウントポイント。[\"all\"] ですべてのマウント済みファイルシステムを表示、または特定のパスを指定してフィルタリング",
-  "config.resourceUsage.samplingPoints": "チャートに表示するサンプリングポイントの数。増やすとより長い履歴を表示でき、減らすとパフォーマンスが向上します"
+  "config.resourceUsage.samplingPoints": "チャートに表示するサンプリングポイントの数。増やすとより長い履歴を表示でき、減らすとパフォーマンスが向上します",
+  "config.resourceUsage.chartsOrder": "リソース使用状況ビューでカードを表示する順序（カード ID）。空の場合は既定の順序を使用します。一覧にないカードは、既定の順序で一覧のカードの後に表示されます"
 }

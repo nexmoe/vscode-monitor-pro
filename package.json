@@ -226,6 +226,14 @@
           "description": "%config.resourceUsage.charts%",
           "type": "object"
         },
+        "monitor-pro.resourceUsage.chartsOrder": {
+          "default": [],
+          "description": "%config.resourceUsage.chartsOrder%",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "monitor-pro.resourceUsage.diskSpaceMounts": {
           "default": [
             "all"

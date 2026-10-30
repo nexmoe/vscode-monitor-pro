@@ -27,5 +27,6 @@
   "command.focusResourceUsage": "Focus Resource Usage View",
   "config.resourceUsage.charts": "Per-chart settings: enabled state and default view mode (line/bar). Keys: cpu, memActive, memUsed, netRx, netTx, diskRx, diskWx, diskSpace, gpu, gpuTemp, gpuMem",
   "config.resourceUsage.diskSpaceMounts": "Mount points to display for the Disk Space chart. Use [\"all\"] to show every mounted filesystem, or add specific mount paths to filter",
-  "config.resourceUsage.samplingPoints": "Number of sampling points to display on the chart. Increase for a longer history view, decrease for better performance"
+  "config.resourceUsage.samplingPoints": "Number of sampling points to display on the chart. Increase for a longer history view, decrease for better performance",
+  "config.resourceUsage.chartsOrder": "Card ids in the order the Resource Usage view renders them. Leave empty for the default order; cards missing from the list follow the listed ones in the default order"
 }

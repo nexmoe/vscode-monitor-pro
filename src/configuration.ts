@@ -1,5 +1,11 @@
 import { workspace, ConfigurationChangeEvent } from "vscode";
 import { MetricsExist } from "./constants";
+import {
+  RESOURCE_USAGE_CARDS,
+  RESOURCE_USAGE_CARD_IDS,
+  normalizeChartsOrder,
+  type ResourceUsageCard,
+} from "./resourceUsageCards";
 
 const CONFIG_SECTION = "monitor-pro";
 
@@ -96,64 +102,53 @@ export interface ResourceUsageChartConfig {
 
 export interface ResourceUsageConfig {
   charts: Record<string, ResourceUsageChartConfig>;
+  /**
+   * Card ids in render order. Always a full permutation of the registered ids,
+   * so consumers never have to fill in cards the user did not list.
+   */
+  chartsOrder: string[];
   diskSpaceMounts: string[];
   samplingPoints: number;
 }
 
-const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> = {
-  cpu: { enabled: true, view: "line", color: "--vscode-charts-blue" },
-  memActive: { enabled: true, view: "line", color: "--vscode-charts-green" },
-  memUsed: { enabled: false, view: "line", color: "--vscode-charts-green" },
-  netRx: { enabled: true, view: "line", color: "--vscode-charts-orange" },
-  netTx: { enabled: true, view: "line", color: "--vscode-charts-purple" },
-  diskRx: { enabled: true, view: "line", color: "--vscode-charts-yellow" },
-  diskWx: { enabled: true, view: "line", color: "--vscode-charts-red" },
-  battery: {
-    enabled: true,
-    view: "line",
-    color: "--vscode-textLink-foreground",
-  },
-  batteryPower: { enabled: true, view: "line", color: "--vscode-charts-green" },
-  cpuTemp: { enabled: true, view: "line", color: "--vscode-errorForeground" },
-  cpuSpeed: {
-    enabled: false,
-    view: "line",
-    color: "--vscode-terminal-ansiBrightCyan",
-  },
-  // GPU charts are enabled by default; they appear once the active data source
-  // reports live NVIDIA GPU data (no data -> charts hide via UNAVAILABLE_CHECKERS).
-  // Only the status bar GPU metrics remain opt-in.
-  gpu: {
-    enabled: true,
-    view: "line",
-    color: "--vscode-charts-green",
-  },
-  gpuTemp: {
-    enabled: true,
-    view: "line",
-    color: "--vscode-charts-orange",
-  },
-  gpuMem: {
-    enabled: true,
-    view: "line",
-    color: "--vscode-charts-purple",
-  },
-  // Info cards are also modeled as chart config items so they share the enabled
-  // switch and collection logic. They are enabled by default so the resource
-  // view always shows OS distro, uptime, and disk space.
-  osDistro: { enabled: true },
-  uptime: { enabled: true },
-  diskSpace: { enabled: true },
-};
+/** Fresh-install settings for one card, taken from its registry entry. */
+function defaultChartConfig(card: ResourceUsageCard): ResourceUsageChartConfig {
+  const chart: ResourceUsageChartConfig = { enabled: card.defaultEnabled };
+  if (card.defaultView !== undefined) {
+    chart.view = card.defaultView;
+  }
+  if (card.defaultColor !== undefined) {
+    chart.color = card.defaultColor;
+  }
+  return chart;
+}
+
+/**
+ * The per-card defaults the view falls back to when the user's
+ * `resourceUsage.charts` entry says nothing. Derived from the registry so a new
+ * card needs no second declaration here.
+ */
+const DEFAULT_CHARTS: Record<string, ResourceUsageChartConfig> =
+  Object.fromEntries(
+    RESOURCE_USAGE_CARDS.map((card) => [card.id, defaultChartConfig(card)]),
+  );
 
 const CHART_SECTION = "resourceUsage";
 
 export function getResourceUsageConfig(): ResourceUsageConfig {
   const config = workspace.getConfiguration(CONFIG_SECTION);
-  const charts = config.get<Record<string, ResourceUsageChartConfig>>(
+  const stored = config.get<Record<string, ResourceUsageChartConfig>>(
     `${CHART_SECTION}.charts`,
     {},
   );
+  // Copy before hydrating. get() returns the manifest default object itself
+  // when the user has not overridden the setting, so filling defaults in place
+  // would write into that shared instance and leak this read's hydration into
+  // every later read in the window.
+  const charts: Record<string, ResourceUsageChartConfig> = {};
+  for (const [key, value] of Object.entries(stored)) {
+    charts[key] = { ...value };
+  }
   for (const key of Object.keys(DEFAULT_CHARTS)) {
     if (!charts[key]) {
       charts[key] = { ...DEFAULT_CHARTS[key] };
@@ -165,6 +160,10 @@ export function getResourceUsageConfig(): ResourceUsageConfig {
   }
   return {
     charts,
+    chartsOrder: normalizeChartsOrder(
+      config.get<unknown>(`${CHART_SECTION}.chartsOrder`, []),
+      RESOURCE_USAGE_CARD_IDS,
+    ),
     diskSpaceMounts: config.get<string[]>(`${CHART_SECTION}.diskSpaceMounts`, [
       "all",
     ]),

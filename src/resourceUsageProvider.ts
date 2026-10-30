@@ -11,11 +11,32 @@ import {
   getResourceUsageConfig,
   ResourceUsageConfig,
 } from "./configuration";
-import { getMetricsEnabled, getUptimeFormat } from "./configuration";
+import { getUptimeFormat } from "./configuration";
 import byteFormat from "./byteFormat";
 import { formatEstimatedBatteryTime } from "./battery";
 import { systemData } from "./systemData";
 import { formatUptime } from "./uptime";
+import {
+  getResourceUsageCardsInOrder,
+  type ResourceUsageCardArray,
+  type ResourceUsageCardKind,
+  type ResourceUsageCardView,
+} from "./resourceUsageCards";
+
+/**
+ * One entry of the `cards` array in the config message: everything the webview
+ * needs to render and order a card without owning any vocabulary of its own.
+ */
+interface ResourceUsageCardMessage {
+  id: string;
+  kind: ResourceUsageCardKind;
+  label: string;
+  enabled: boolean;
+  view?: ResourceUsageCardView;
+  color?: string;
+  /** Present only for cards with a per-item view; absent means no toggle. */
+  array?: ResourceUsageCardArray;
+}
 
 interface FormattedPayload {
   history: ResourceUsagePayload["history"];
@@ -141,39 +162,44 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
 
   private _pushConfig(webviewView: vscode.WebviewView) {
     const config = getResourceUsageConfig();
-    const metricsEnabled = getMetricsEnabled();
-    const labels: Record<string, string> = {
-      cpu: vscode.l10n.t("CPU"),
-      memActive: vscode.l10n.t("Mem Active"),
-      memUsed: vscode.l10n.t("Mem Used"),
-      netRx: vscode.l10n.t("Network Down"),
-      netTx: vscode.l10n.t("Network Up"),
-      diskRx: vscode.l10n.t("Disk Read"),
-      diskWx: vscode.l10n.t("Disk Write"),
-      battery: vscode.l10n.t("Battery"),
-      batteryPower: vscode.l10n.t("Power (W)"),
-      cpuTemp: vscode.l10n.t("CPU Temp"),
-      cpuSpeed: vscode.l10n.t("CPU Speed"),
-      gpu: vscode.l10n.t("GPU"),
-      gpuTemp: vscode.l10n.t("GPU Temp"),
-      gpuMem: vscode.l10n.t("GPU Memory"),
-      diskSpace: vscode.l10n.t("Disk Space"),
-      // Capacity words for the disk card's per-mount hover text. Kept apart
-      // from the metric labels above because they describe one row's numbers,
-      // not a switchable metric.
-      used: vscode.l10n.t("Used"),
-      total: vscode.l10n.t("Total"),
-      free: vscode.l10n.t("Free"),
-      uptime: vscode.l10n.t("Uptime"),
-      osDistro: vscode.l10n.t("OS Distro"),
-    };
+    const cards = getResourceUsageCardsInOrder(config.chartsOrder).map(
+      (card) => {
+        const settings = config.charts[card.id];
+        const message: ResourceUsageCardMessage = {
+          id: card.id,
+          kind: card.kind,
+          label: card.label,
+          enabled: settings.enabled,
+        };
+        if (card.kind === "chart") {
+          // Only real charts have a view mode and a series color; text and disk
+          // cards ignore both.
+          message.view = settings.view ?? card.defaultView;
+          message.color = settings.color ?? card.defaultColor;
+          if (card.array) {
+            message.array = card.array;
+          }
+        }
+        return message;
+      },
+    );
     webviewView.webview.postMessage({
       type: "config",
       data: {
-        charts: config.charts,
+        // Disabled cards are sent too: the array is the view's whole render
+        // order, so dropping entries would shift every card below them and
+        // a re-enabled card would have no place to return to.
+        cards,
+        labels: {
+          // Capacity words for the disk card's per-mount hover text. They
+          // describe one row's numbers rather than a card, so they stay out of
+          // the card registry and its titles.
+          used: vscode.l10n.t("Used"),
+          total: vscode.l10n.t("Total"),
+          free: vscode.l10n.t("Free"),
+        },
         diskSpaceMounts: config.diskSpaceMounts,
         samplingPoints: config.samplingPoints,
-        labels,
         // The webview's chart vocabulary matches the data-source capability:
         // "soc" draws a zero-based scale, "battery" a signed one.
         powerMode: systemData.powerRateKind,

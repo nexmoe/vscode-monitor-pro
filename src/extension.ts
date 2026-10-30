@@ -17,6 +17,7 @@ import { MACTOP_SPEC, createGoSpec } from "./backend/spec";
 import { GoDataSource, SIDataSource, type DataSource } from "./dataSource";
 import { MactopDataSource } from "./mactop-backend/mactopDataSource";
 import { getMetricsEnabled, getResourceUsageConfig } from "./configuration";
+import { getResourceUsageCard } from "./resourceUsageCards";
 import { getLogger, initLogger } from "./logger";
 import sourceMapSupport from "source-map-support";
 import type { MetricsExist } from "./constants";
@@ -31,34 +32,6 @@ let unsubscribeData: (() => void) | null = null;
 let activeBackend: NativeBackendManager | null = null;
 
 const execAsync = promisify(exec);
-
-/**
- * webview chart key -> corresponding status bar metric section.
- *
- * For example, netRx/netTx share the network dimension, diskRx/diskWx share
- * the fileSystem dimension, and batteryPower/battery share the battery
- * dimension. Enabling any chart in a group means the corresponding metric must
- * be collected.
- */
-const CHART_TO_METRIC: Record<string, MetricsExist> = {
-  cpu: "cpu",
-  memActive: "memoryActive",
-  memUsed: "memoryUsed",
-  netRx: "network",
-  netTx: "network",
-  diskRx: "fileSystem",
-  diskWx: "fileSystem",
-  battery: "battery",
-  batteryPower: "battery",
-  cpuTemp: "cpuTemp",
-  cpuSpeed: "cpuSpeed",
-  gpu: "gpu",
-  gpuTemp: "gpuTemp",
-  gpuMem: "gpuMem",
-  diskSpace: "diskSpace",
-  osDistro: "osDistro",
-  uptime: "uptime",
-};
 
 /**
  * Compute the actual collection set as the union of status bar metrics.*
@@ -79,9 +52,12 @@ function computeEnabledMetrics(): Set<MetricsExist> {
     }
   }
   const charts = getResourceUsageConfig().charts;
-  for (const [chartKey, cfg] of Object.entries(charts)) {
-    if (cfg.enabled && CHART_TO_METRIC[chartKey]) {
-      enabled.add(CHART_TO_METRIC[chartKey]);
+  for (const [chartId, cfg] of Object.entries(charts)) {
+    // The card registry owns the card -> metric mapping; an id left in the
+    // user's settings by a removed card resolves to nothing and is skipped.
+    const metric = getResourceUsageCard(chartId)?.metric;
+    if (cfg.enabled && metric) {
+      enabled.add(metric);
     }
   }
   return enabled;

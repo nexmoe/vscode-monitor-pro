@@ -48,15 +48,6 @@
         display: none;
       }
 
-      .section-title {
-        font-size: calc(var(--font-size) - 1px);
-        font-weight: 600;
-        color: var(--fg-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin: 12px 0 6px 2px;
-      }
-
       .card {
         background: var(--card-bg);
         border-radius: 4px;
@@ -309,10 +300,14 @@
 
         // -------- state --------
 
-        let _charts = {};
+        // The extension's card sequence: it is both the render order and the
+        // label source, so the view keeps no card vocabulary of its own.
+        let _cards = [];
         let _chartColors = {};
-        let _show = { uptime: true, osDistro: true };
-        let _labels = {};
+        // Capacity words for the disk card's hover text (used/total/free).
+        // They describe one mount row, not a card, so they travel with the
+        // config instead of inside the card entries.
+        let _capacityWords = {};
         let _diskSpaceMounts = ["all"];
         let _powerMode = "battery"; // "battery" (signed) | "soc" (mactop, always non-negative)
 
@@ -322,66 +317,6 @@
           significantDigits: {},
         };
 
-        const ALL_CHART_IDS = [
-          "cpu",
-          "memActive",
-          "memUsed",
-          "netRx",
-          "netTx",
-          "diskRx",
-          "diskWx",
-          "battery",
-          "batteryPower",
-          "cpuTemp",
-          "cpuSpeed",
-          "gpu",
-          "gpuTemp",
-          "gpuMem",
-        ];
-
-        // Metrics exposing a per-item dimension for the array view. The
-        // value may be a plain number array (cpu cores, cpu temp cores) or
-        // an array of objects (gpuCards) from which `valueKey` selects the
-        // per-card field. `type` drives cell semantics:
-        //   percent - 0-100 bar with usageColor, "%" label
-        //   temp    - fixed 0-110 bar with tempColor, "°C" label
-        //   mem     - per-card used/total percent, tooltip shows model +
-        //             byte-formatted used/total (provided by the extension)
-        const ARRAY_FIELDS = {
-          cpu: { field: "cpuCores", type: "percent", prefix: "C", offset: 0 },
-          cpuTemp: {
-            field: "cpuTempCores",
-            type: "temp",
-            prefix: "C",
-            offset: 0,
-          },
-          gpu: {
-            field: "gpuCards",
-            type: "percent",
-            prefix: "G",
-            offset: 0,
-            valueKey: "utilization",
-          },
-          gpuTemp: {
-            field: "gpuCards",
-            type: "temp",
-            prefix: "G",
-            offset: 0,
-            valueKey: "temperature",
-          },
-          gpuMem: {
-            field: "gpuCards",
-            type: "mem",
-            prefix: "G",
-            offset: 0,
-            valueKey: "memUsed",
-          },
-        };
-
-        // Fixed upper bound for temperature arrays (both CPU and GPU). GPU
-        // cards can legitimately exceed 100°C (e.g. GDDR6X memory junction),
-        // so the bar clamps at 110 while the label always shows the real
-        // value. The big card keeps its dynamic scale like cpuTemp.
         const ARRAY_TEMP_MAX = 110;
 
         const state = {
@@ -427,9 +362,8 @@
 
         var _themeObserver = new MutationObserver(function () {
           resetCSSCache();
-          for (const id of ALL_CHART_IDS) {
-            const c = _charts[id];
-            if (!c || !c.enabled) continue;
+          for (const card of enabledChartCards()) {
+            const id = card.id;
             if (
               state.viewMode[id] === "line" &&
               state.history[id] &&
@@ -618,148 +552,49 @@
 
         function handleConfig(cfg) {
           resetCSSCache();
-          _charts = cfg.charts || {};
+          _cards = Array.isArray(cfg.cards) ? cfg.cards : [];
+          _capacityWords = cfg.labels || {};
           _diskSpaceMounts = cfg.diskSpaceMounts || ["all"];
           _powerMode = cfg.powerMode || "battery";
 
           _chartColors = {};
-          for (const id of ALL_CHART_IDS) {
-            const c = _charts[id];
-            _chartColors[id] = c && c.color ? c.color : "";
+          for (const card of _cards) {
+            _chartColors[card.id] = card.color || "";
           }
 
-          _show = {
-            uptime:
-              (cfg.charts && cfg.charts.uptime && cfg.charts.uptime.enabled) !==
-              false,
-            osDistro:
-              (cfg.charts &&
-                cfg.charts.osDistro &&
-                cfg.charts.osDistro.enabled) !== false,
-            diskSpace:
-              (cfg.charts &&
-                cfg.charts.diskSpace &&
-                cfg.charts.diskSpace.enabled) !== false,
-          };
-          _labels = cfg.labels || {};
-
-          for (const id of ALL_CHART_IDS) {
-            const c = _charts[id];
-            if (c && c.enabled) {
-              state.viewMode[id] = c.view || "line";
-              if (!state.history[id]) state.history[id] = [];
-              state.barMax[id] = state.barMax[id] || 1;
-            }
+          // Only charts carry per-card drawing state. The view mode is reset to
+          // the configured default on every config message, so a settings
+          // change reaches an already open view.
+          for (const card of enabledChartCards()) {
+            const id = card.id;
+            state.viewMode[id] = card.view || "line";
+            if (!state.history[id]) state.history[id] = [];
+            state.barMax[id] = state.barMax[id] || 1;
           }
 
-          renderAll();
+          renderCards();
         }
 
         // -------- render --------
 
-        function renderAll() {
-          renderCharts();
-          renderInfo();
-        }
-
-        function renderCharts() {
-          const container = document.getElementById("chart-container");
+        // One container, one sequence: the card array decides what exists and
+        // in which order it appears. Charts get their canvas and bar handles
+        // registered after the markup lands; text and disk cards need no
+        // registration because later messages address them by id.
+        function renderCards() {
+          const container = document.getElementById("card-container");
           if (!container) return;
 
-          const enabled = ALL_CHART_IDS.filter((id) => {
-            const c = _charts[id];
-            return c && c.enabled;
-          });
-
           let html = "";
-          for (const id of enabled) {
-            const label = _labels[id] || id;
-            const color = colorFor(id);
-            const view = state.viewMode[id] || "line";
-            const isArrayCapable = ARRAY_FIELDS[id] !== undefined;
-            // GPU arrays only make sense with more than one card; a
-            // single (e.g. Apple Silicon) GPU has no array dimension.
-            const coreCount = state.coreData[id]
-              ? state.coreData[id].length
-              : 0;
-            const hasCores =
-              isArrayCapable && coreCount > (id.startsWith("gpu") ? 1 : 0);
-
+          for (const card of _cards) {
+            if (!card.enabled) continue;
             html +=
-              '<div class="card" data-metric="' +
-              id +
-              '">' +
-              '<div class="card-header">' +
-              '<div class="card-left">' +
-              "<span>" +
-              label +
-              "</span>" +
-              '<span class="card-value" id="val-' +
-              id +
-              '">\u2014</span>' +
-              '<div class="card-sub" id="sub-' +
-              id +
-              '"></div>' +
-              "</div>" +
-              '<div class="toggle-group">' +
-              '<button class="toggle-btn' +
-              (view === "line" ? " active" : "") +
-              '" data-metric="' +
-              id +
-              '" data-view="line" title="__LINE_CHART_TITLE__">\u25E0</button>' +
-              '<button class="toggle-btn' +
-              (view === "bar" ? " active" : "") +
-              '" data-metric="' +
-              id +
-              '" data-view="bar" title="__BAR_CHART_TITLE__">\u25A4</button>' +
-              (isArrayCapable
-                ? '<button class="toggle-btn' +
-                  (view === "array" ? " active" : "") +
-                  '" data-metric="' +
-                  id +
-                  '" data-view="array" title="__ARRAY_CHART_TITLE__" style="display:' +
-                  (hasCores ? "" : "none") +
-                  '">\u25A6</button>'
-                : "") +
-              "</div>" +
-              "</div>" +
-              '<div class="chart-wrap" id="chart-wrap-' +
-              id +
-              '"' +
-              (view !== "line" ? ' style="display:none"' : "") +
-              ">" +
-              '<canvas id="canvas-' +
-              id +
-              '"></canvas>' +
-              "</div>" +
-              '<div class="bar-wrap" id="bar-wrap-' +
-              id +
-              '"' +
-              (view !== "bar" ? ' style="display:none"' : "") +
-              ">" +
-              '<div class="bar-row">' +
-              '<div class="bar-track"><div class="bar-fill" id="bar-fill-' +
-              id +
-              '" style="width:0%;background:' +
-              color +
-              '"></div></div>' +
-              '<span class="bar-label" id="bar-label-' +
-              id +
-              '">\u2014</span>' +
-              "</div>" +
-              "</div>" +
-              (isArrayCapable
-                ? '<div class="array-wrap" id="array-wrap-' +
-                  id +
-                  '"' +
-                  (view !== "array" ? ' style="display:none"' : "") +
-                  "></div>"
-                : "") +
-              "</div>";
+              card.kind === "chart" ? chartCardHtml(card) : infoCardHtml(card);
           }
           container.innerHTML = html;
 
-          for (const id of enabled) {
+          for (const card of enabledChartCards()) {
+            const id = card.id;
             const canvas = document.getElementById("canvas-" + id);
             const chartWrap = document.getElementById("chart-wrap-" + id);
             if (canvas) registerCanvas(id, canvas, chartWrap);
@@ -768,6 +603,127 @@
             const valEl = document.getElementById("val-" + id);
             if (barFill) registerBar(id, barFill, barLabel, valEl);
           }
+        }
+
+        function enabledChartCards() {
+          return _cards.filter((card) => card.kind === "chart" && card.enabled);
+        }
+
+        function chartCardHtml(card) {
+          const id = card.id;
+          const color = colorFor(id);
+          const view = state.viewMode[id] || "line";
+          const isArrayCapable = card.array !== undefined;
+          // GPU arrays only make sense with more than one card; a
+          // single (e.g. Apple Silicon) GPU has no array dimension.
+          const coreCount = state.coreData[id] ? state.coreData[id].length : 0;
+          const hasCores =
+            isArrayCapable && coreCount > (id.startsWith("gpu") ? 1 : 0);
+
+          return (
+            '<div class="card" data-metric="' +
+            id +
+            '">' +
+            '<div class="card-header">' +
+            '<div class="card-left">' +
+            "<span>" +
+            card.label +
+            "</span>" +
+            '<span class="card-value" id="val-' +
+            id +
+            '">\u2014</span>' +
+            '<div class="card-sub" id="sub-' +
+            id +
+            '"></div>' +
+            "</div>" +
+            '<div class="toggle-group">' +
+            '<button class="toggle-btn' +
+            (view === "line" ? " active" : "") +
+            '" data-metric="' +
+            id +
+            '" data-view="line" title="__LINE_CHART_TITLE__">\u25E0</button>' +
+            '<button class="toggle-btn' +
+            (view === "bar" ? " active" : "") +
+            '" data-metric="' +
+            id +
+            '" data-view="bar" title="__BAR_CHART_TITLE__">\u25A4</button>' +
+            (isArrayCapable
+              ? '<button class="toggle-btn' +
+                (view === "array" ? " active" : "") +
+                '" data-metric="' +
+                id +
+                '" data-view="array" title="__ARRAY_CHART_TITLE__" style="display:' +
+                (hasCores ? "" : "none") +
+                '">\u25A6</button>'
+              : "") +
+            "</div>" +
+            "</div>" +
+            '<div class="chart-wrap" id="chart-wrap-' +
+            id +
+            '"' +
+            (view !== "line" ? ' style="display:none"' : "") +
+            ">" +
+            '<canvas id="canvas-' +
+            id +
+            '"></canvas>' +
+            "</div>" +
+            '<div class="bar-wrap" id="bar-wrap-' +
+            id +
+            '"' +
+            (view !== "bar" ? ' style="display:none"' : "") +
+            ">" +
+            '<div class="bar-row">' +
+            '<div class="bar-track"><div class="bar-fill" id="bar-fill-' +
+            id +
+            '" style="width:0%;background:' +
+            color +
+            '"></div></div>' +
+            '<span class="bar-label" id="bar-label-' +
+            id +
+            '">\u2014</span>' +
+            "</div>" +
+            "</div>" +
+            (isArrayCapable
+              ? '<div class="array-wrap" id="array-wrap-' +
+                id +
+                '"' +
+                (view !== "array" ? ' style="display:none"' : "") +
+                "></div>"
+              : "") +
+            "</div>"
+          );
+        }
+
+        // Text and disk cards keep their own two-line shell: they print a
+        // value rather than drawing it, and the chart card's header would
+        // inherit its uppercase styling onto that value. data-metric is what
+        // the merged sequence needs from them, so it is on the card itself.
+        function infoCardHtml(card) {
+          const id = card.id;
+          const header = '<div class="info-header">' + card.label + "</div>";
+
+          if (card.kind === "disk") {
+            return (
+              '<div class="info-card" data-metric="' +
+              id +
+              '">' +
+              header +
+              // The mount rows are rebuilt from every data frame, so they keep
+              // a list of their own instead of being part of the header.
+              '<div id="disk-mount-list"></div>' +
+              "</div>"
+            );
+          }
+          return (
+            '<div class="info-card" data-metric="' +
+            id +
+            '">' +
+            header +
+            '<div class="info-value" id="val-' +
+            id +
+            '">\u2014</div>' +
+            "</div>"
+          );
         }
 
         const _canvases = {};
@@ -790,50 +746,6 @@
           _barFills[id] = fill;
           _barLabels[id] = label;
           _valueEls[id] = valEl;
-        }
-
-        // -------- info section --------
-
-        function renderInfo() {
-          const container = document.getElementById("info-container");
-          if (!container) return;
-
-          const rows = [];
-          if (_show.uptime)
-            rows.push({ id: "uptime", label: _labels.uptime || "Uptime" });
-          if (_show.osDistro)
-            rows.push({
-              id: "osDistro",
-              label: _labels.osDistro || "OS Distribution",
-            });
-
-          let html = "";
-          for (const r of rows) {
-            html +=
-              '<div class="info-card" id="info-' +
-              r.id +
-              '">' +
-              '<div class="info-header">' +
-              r.label +
-              "</div>" +
-              '<div class="info-value" id="info-val-' +
-              r.id +
-              '">\u2014</div>' +
-              "</div>";
-          }
-
-          // Disk space mounts
-          if (_show.diskSpace) {
-            html +=
-              '<div class="info-card" id="info-diskSpace">' +
-              '<div class="info-header">' +
-              (_labels.diskSpace || "Disk Space") +
-              "</div>" +
-              '<div id="disk-mount-list"></div>' +
-              "</div>";
-          }
-
-          container.innerHTML = html;
         }
 
         // -------- disk space bar helpers --------
@@ -876,7 +788,7 @@
         // Hover text for one mount row. The name cell truncates long paths
         // (max-width 30%), so the full mount point is repeated here. The
         // extension supplies the localized Used / Total / Free words; the
-        // fallbacks match how _labels.diskSpace is guarded above.
+        // fallbacks keep the row readable if an older host sends none.
         function diskMountTip(m) {
           // Literal spaces, not _fmtConfig.showSpace: that setting controls the
           // gap between a number and its unit (inside formatBytes), not how the
@@ -891,17 +803,17 @@
           return (
             m.mount +
             " \u00B7 " +
-            (_labels.used || "Used") +
+            (_capacityWords.used || "Used") +
             " " +
             diskByte(m.used) +
             " / " +
-            (_labels.total || "Total") +
+            (_capacityWords.total || "Total") +
             " " +
             diskByte(m.size) +
             " (" +
             m.use +
             "%) \u00B7 " +
-            (_labels.free || "Free") +
+            (_capacityWords.free || "Free") +
             " " +
             diskByte(free)
           );
@@ -915,6 +827,11 @@
               '<div class="info-value" style="font-size:calc(var(--font-size)-1px)">\u2014</div>';
             return;
           }
+
+          // The total row is labelled with the card's own title; the view
+          // keeps no copy of it.
+          const diskCard = _cards.find((c) => c.kind === "disk");
+          const diskLabel = diskCard ? diskCard.label : "";
 
           const isAll =
             _diskSpaceMounts.length === 1 && _diskSpaceMounts[0] === "all";
@@ -954,7 +871,7 @@
           html +=
             '<div class="info-mount-row" style="margin-top:6px;border-top:1px solid rgba(128,128,128,0.15);padding-top:4px">' +
             '<span class="info-mount-name" style="font-weight:600">' +
-            (_labels.diskSpace || "Disk Space") +
+            diskLabel +
             "</span>" +
             '<span class="info-bar-label" style="font-weight:600;color:var(--fg)">' +
             diskByte(totalUsed) +
@@ -1030,10 +947,9 @@
         // usage), or [] when the metric has no per-item dimension or the
         // active data source does not provide one. Platform support is
         // therefore expressed by data presence, never by a platform check.
-        function extractArray(history, id) {
-          const cfg = ARRAY_FIELDS[id];
-          if (!cfg || !history || !history.length) return [];
-          const arr = history[history.length - 1][cfg.field];
+        function extractArray(history, array) {
+          if (!array || !history || !history.length) return [];
+          const arr = history[history.length - 1][array.field];
           return Array.isArray(arr) ? arr : [];
         }
 
@@ -1204,9 +1120,17 @@
           if (btn) btn.style.display = show ? "" : "none";
         }
 
+        // The array metadata arrives with each card entry, so callers that only
+        // know a card id (click handler, theme and resize redraws) resolve it
+        // through the sequence instead of a second table.
+        function arrayMeta(id) {
+          const card = _cards.find((c) => c.id === id);
+          return card ? card.array : undefined;
+        }
+
         // Renders the array view: a responsive grid of per-item horizontal
         // bars (CSS auto-fill grows the column count with the card width).
-        // Three cell types are supported via ARRAY_FIELDS[].type:
+        // Three cell types are supported via the card's array metadata:
         //   percent - value is 0-100; width = value, label = "%"
         //   temp    - fixed 0-110 scale; width clamps, label always shows
         //             the real °C value (never lies even above the bound)
@@ -1217,7 +1141,7 @@
           const wrap = document.getElementById("array-wrap-" + id);
           if (!wrap || cores.length === 0) return;
 
-          const cfg = ARRAY_FIELDS[id] || {};
+          const cfg = arrayMeta(id) || {};
           const meta = state.cardMeta[id] || [];
           const isObj = cfg.valueKey !== undefined;
 
@@ -1246,7 +1170,7 @@
                   : meta[i]?.model || ""
                 : "";
             }
-            const name = cfg.prefix + (i + (cfg.offset || 0));
+            const name = cfg.prefix + i;
             return (
               '<div class="core-cell"' +
               (tooltip ? ' title="' + escHtml(tooltip) + '"' : "") +
@@ -1308,7 +1232,9 @@
           // timeout) must come back once it reports a value, or the card stays
           // hidden for the rest of the view's lifetime.
           const hidden = new Set(unavailableMetrics || []);
-          for (const card of document.querySelectorAll(".card[data-metric]")) {
+          for (const card of document.querySelectorAll(
+            ".card[data-metric], .info-card[data-metric]",
+          )) {
             card.style.display = hidden.has(card.dataset.metric) ? "none" : "";
           }
 
@@ -1323,15 +1249,14 @@
             /* ignore malformed metadata */
           }
 
-          for (const id of ALL_CHART_IDS) {
-            const c = _charts[id];
-            if (!c || !c.enabled) continue;
+          for (const card of enabledChartCards()) {
+            const id = card.id;
             if (hidden.has(id)) continue;
 
             state.history[id] = extractHistory(h, id);
             state.barMax[id] = computeScaleMax(id, state.history[id]);
 
-            const cores = extractArray(h, id);
+            const cores = extractArray(h, card.array);
             state.coreData[id] = cores;
             // GPU arrays (gpu/gpuTemp/gpuMem) only make sense with more
             // than one card: a single (e.g. Apple Silicon) GPU would
@@ -1383,11 +1308,11 @@
         function updateTextMetrics(tm, formattedText) {
           const ft = formattedText || {};
 
-          const uptimeVal = document.getElementById("info-val-uptime");
+          const uptimeVal = document.getElementById("val-uptime");
           if (uptimeVal)
             uptimeVal.textContent = ft.uptime || formatUptimeSimple(tm.uptime);
 
-          const distroVal = document.getElementById("info-val-osDistro");
+          const distroVal = document.getElementById("val-osDistro");
           if (distroVal)
             distroVal.textContent = ft.osDistro || tm.osDistro || "N/A";
 
@@ -1419,9 +1344,8 @@
           }
           _rafId = requestAnimationFrame(function () {
             _rafId = null;
-            for (const id of ALL_CHART_IDS) {
-              const c = _charts[id];
-              if (!c || !c.enabled) continue;
+            for (const card of enabledChartCards()) {
+              const id = card.id;
               if (
                 state.viewMode[id] === "line" &&
                 state.history[id] &&
@@ -1436,9 +1360,10 @@
         // -------- initial render --------
 
         const app = document.getElementById("app");
-        app.innerHTML =
-          '<div id="chart-container"></div>' +
-          '<div id="info-container"></div>';
+        // Nothing renders synchronously here: renderCards is only reached
+        // from message handlers, which run after this script finishes and
+        // therefore after the resize observer below is initialized.
+        app.innerHTML = '<div id="card-container"></div>';
 
         vscode.postMessage({ type: "ready" });
       })();

@@ -27,5 +27,6 @@
   "command.focusResourceUsage": "聚焦資源佔用視圖",
   "config.resourceUsage.charts": "每個圖表的設定：啟用狀態和預設檢視模式（折線圖/長條圖）。鍵：cpu, memActive, memUsed, netRx, netTx, diskRx, diskWx, diskSpace, gpu, gpuTemp, gpuMem",
   "config.resourceUsage.diskSpaceMounts": "磁碟容量圖表要顯示的掛載點。使用 [\"all\"] 顯示所有已掛載檔案系統，或新增特定掛載路徑進行過濾",
-  "config.resourceUsage.samplingPoints": "圖表上顯示的採樣點數量。增加可獲得更長歷史檢視，減少可提高效能"
+  "config.resourceUsage.samplingPoints": "圖表上顯示的採樣點數量。增加可獲得更長歷史檢視，減少可提高效能",
+  "config.resourceUsage.chartsOrder": "資源佔用視圖中卡片的排列順序（卡片 id）。留空表示使用預設順序；未列出的卡片會依預設順序排在已列出的卡片之後"
 }
