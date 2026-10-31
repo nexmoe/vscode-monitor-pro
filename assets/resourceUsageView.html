@@ -262,6 +262,10 @@
         height: 9px;
         background-image: radial-gradient(currentColor 1px, transparent 1.3px);
         background-size: 4px 3px;
+        /* The dots land on the whole-pixel grid, so the box can only step them by
+           a pixel: syncGripOffsets() parks the box with the integer part and hands
+           the remainder to the background, which does move by sub-pixels. */
+        background-position: 0 var(--grip-bg, 0px);
         opacity: 0;
         pointer-events: none;
         transition: opacity 120ms linear;
@@ -638,8 +642,8 @@
         // it, so the two have to agree with the stylesheet.
         const GRIP_HEIGHT = 9;
 
-        // The title strip's first line box, or null while the card is not rendered.
-        function titleLineRect(handle) {
+        // The title strip's first line, or null while the card is not rendered.
+        function titleFirstLine(handle) {
           // Chart cards keep the label in the first span of .card-left; info cards
           // carry it as the header's own text node.
           const host = handle.querySelector(".card-left > span");
@@ -650,27 +654,85 @@
           const rects = range.getClientRects();
           // A hidden card produces no line boxes; callers keep the previous offset
           // rather than writing a meaningless one.
-          return rects.length > 0 ? rects[0] : null;
+          if (rects.length === 0) return null;
+          return {
+            host: host ?? handle,
+            rect: rects[0],
+            lineCount: rects.length,
+          };
         }
 
-        // Park the grip on the vertical center of the title's first line.
+        // A shared measurement context: creating one per card per sync would only
+        // churn garbage for identical results.
+        const _inkMeasure = document.createElement("canvas").getContext("2d");
+
+        // Vertical center of the label's glyph ink, as drawn on the first line.
         //
-        // The line box is what the text visibly sits in, and it moves with the
-        // font, the font size, the device pixel ratio, and with labels that mix CJK
-        // and Latin glyphs: a fixed offset only ever fits the single combination it
-        // was measured on. Reading the rendered line box makes the offset follow
-        // whatever the host actually draws. The offset is written on the title
-        // strip because the grip is positioned against it.
+        // The line box is a layout construct: with line-height: normal the ink sits
+        // wherever the baseline falls inside it, so a Latin label's ink rides above
+        // the box center while a CJK label's fills it evenly. The eye judges the
+        // grip against the ink, and only the ink keeps both scripts consistent.
+        function titleInkCenter(line) {
+          const style = getComputedStyle(line.host);
+          _inkMeasure.font =
+            style.fontStyle +
+            " " +
+            style.fontWeight +
+            " " +
+            style.fontSize +
+            " " +
+            style.fontFamily;
+          // The header renders the label in uppercase; measuring the source text
+          // instead would let a Latin descender pull the ink box down. CJK text is
+          // unaffected either way.
+          const rendered =
+            style.textTransform === "uppercase"
+              ? line.host.textContent.toUpperCase()
+              : line.host.textContent;
+          const metrics = _inkMeasure.measureText(rendered);
+          // Where the baseline sits inside the line box, by the CSS half-leading
+          // rule. This holds while line-height: normal resolves to the same font
+          // metrics the canvas reports; that equivalence is verified by
+          // measurement rather than assumed.
+          const halfLeading =
+            (line.rect.height -
+              (metrics.fontBoundingBoxAscent +
+                metrics.fontBoundingBoxDescent)) /
+            2;
+          const baseline =
+            line.rect.top + halfLeading + metrics.fontBoundingBoxAscent;
+          return (
+            baseline +
+            (metrics.actualBoundingBoxDescent -
+              metrics.actualBoundingBoxAscent) /
+              2
+          );
+        }
+
+        // Park the grip on the title's first line.
+        //
+        // The ink of a single line is the thing the grip has to sit on. A wrapped
+        // label cannot be measured that way (the canvas measures the whole string,
+        // so the first line's ink cannot be separated), and multi-line titles fall
+        // back to the line box instead of guessing.
         function syncGripOffsets() {
           for (const handle of document.querySelectorAll(
             "[data-drag-handle]",
           )) {
-            const line = titleLineRect(handle);
+            const line = titleFirstLine(handle);
             if (!line) continue;
-            const top =
-              (line.height - GRIP_HEIGHT) / 2 +
-              (line.top - handle.getBoundingClientRect().top);
-            handle.style.setProperty("--grip-top", top.toFixed(2) + "px");
+            const handleTop = handle.getBoundingClientRect().top;
+            const center =
+              line.lineCount === 1
+                ? titleInkCenter(line)
+                : line.rect.top + line.rect.height / 2;
+            const top = center - GRIP_HEIGHT / 2 - handleTop;
+            const box = Math.floor(top);
+            handle.style.setProperty("--grip-top", box + "px");
+            handle.style.setProperty(
+              "--grip-bg",
+              (top - box).toFixed(2) + "px",
+            );
           }
         }
 
