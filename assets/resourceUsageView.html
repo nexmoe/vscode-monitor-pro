@@ -247,31 +247,30 @@
         cursor: grab;
       }
 
-      /* The grip is a pseudo-element pinned into the card's own padding gutter.
-         A real element would join the flex layout and shift the title, and any
-         change in card height would break the geometry the view is measured by. */
-      .card-header::before,
+      /* The grip hangs on the label's own box. A block box paints its
+         pseudo-element against itself, so the dots follow the text box wherever
+         the font puts it: no measured offset, no per-frame bookkeeping. */
+      .card-header .card-left > span:first-child,
+      .info-header {
+        position: relative;
+      }
+
+      .card-header .card-left > span:first-child::before,
       .info-header::before {
         content: "";
         position: absolute;
-        /* Measured from the rendered title line by syncGripOffsets(): the line box
-           depends on the font, its size, the device pixel ratio and on labels that
-           mix CJK and Latin glyphs, so no fixed offset fits them all. */
-        top: var(--grip-top, 2px);
+        top: 50%;
+        transform: translateY(-50%);
         width: 4px;
         height: 9px;
         background-image: radial-gradient(currentColor 1px, transparent 1.3px);
         background-size: 4px 3px;
-        /* The dots land on the whole-pixel grid, so the box can only step them by
-           a pixel: syncGripOffsets() parks the box with the integer part and hands
-           the remainder to the background, which does move by sub-pixels. */
-        background-position: 0 var(--grip-bg, 0px);
         opacity: 0;
         pointer-events: none;
         transition: opacity 120ms linear;
       }
 
-      .card-header::before {
+      .card-header .card-left > span:first-child::before {
         left: -5px;
       }
 
@@ -279,7 +278,9 @@
         left: -7px;
       }
 
-      .card-header:hover::before,
+      /* The whole title strip starts a drag, so the dots show whenever the pointer
+         is anywhere over it rather than only over the text. */
+      .card-header:hover .card-left > span:first-child::before,
       .info-header:hover::before {
         opacity: 0.6;
       }
@@ -638,109 +639,6 @@
           return el.getBoundingClientRect().height > 0;
         }
 
-        // Height of the grip pseudo-element; the offset below is computed against
-        // it, so the two have to agree with the stylesheet.
-        const GRIP_HEIGHT = 9;
-
-        // The title strip's first line, or null while the card is not rendered.
-        function titleFirstLine(handle) {
-          // Chart cards keep the label in the first span of .card-left; info cards
-          // carry it as the header's own text node.
-          const host = handle.querySelector(".card-left > span");
-          const node = host ? host.firstChild : handle.firstChild;
-          if (!node || node.nodeType !== Node.TEXT_NODE) return null;
-          const range = document.createRange();
-          range.selectNodeContents(node);
-          const rects = range.getClientRects();
-          // A hidden card produces no line boxes; callers keep the previous offset
-          // rather than writing a meaningless one.
-          if (rects.length === 0) return null;
-          return {
-            host: host ?? handle,
-            rect: rects[0],
-            lineCount: rects.length,
-          };
-        }
-
-        // A shared measurement context: creating one per card per sync would only
-        // churn garbage for identical results.
-        const _inkMeasure = document.createElement("canvas").getContext("2d");
-
-        // Vertical center of the label's glyph ink, as drawn on the first line.
-        //
-        // The line box is a layout construct: with line-height: normal the ink sits
-        // wherever the baseline falls inside it, so a Latin label's ink rides above
-        // the box center while a CJK label's fills it evenly. The eye judges the
-        // grip against the ink, and only the ink keeps both scripts consistent.
-        function titleInkCenter(line) {
-          const style = getComputedStyle(line.host);
-          _inkMeasure.font =
-            style.fontStyle +
-            " " +
-            style.fontWeight +
-            " " +
-            style.fontSize +
-            " " +
-            style.fontFamily;
-          // The header renders the label in uppercase; measuring the source text
-          // instead would let a Latin descender pull the ink box down. CJK text is
-          // unaffected either way.
-          const rendered =
-            style.textTransform === "uppercase"
-              ? line.host.textContent.toUpperCase()
-              : line.host.textContent;
-          const metrics = _inkMeasure.measureText(rendered);
-          // Where the baseline sits inside the line box, by the CSS half-leading
-          // rule. This holds while line-height: normal resolves to the same font
-          // metrics the canvas reports; that equivalence is verified by
-          // measurement rather than assumed.
-          const halfLeading =
-            (line.rect.height -
-              (metrics.fontBoundingBoxAscent +
-                metrics.fontBoundingBoxDescent)) /
-            2;
-          const baseline =
-            line.rect.top + halfLeading + metrics.fontBoundingBoxAscent;
-          return (
-            baseline +
-            (metrics.actualBoundingBoxDescent -
-              metrics.actualBoundingBoxAscent) /
-              2
-          );
-        }
-
-        // Park the grip on the title's first line.
-        //
-        // The ink of a single line is the thing the grip has to sit on. A wrapped
-        // label cannot be measured that way (the canvas measures the whole string,
-        // so the first line's ink cannot be separated), and multi-line titles fall
-        // back to the line box instead of guessing.
-        function syncGripOffsets() {
-          for (const handle of document.querySelectorAll(
-            "[data-drag-handle]",
-          )) {
-            const line = titleFirstLine(handle);
-            if (!line) continue;
-            const handleTop = handle.getBoundingClientRect().top;
-            const center =
-              line.lineCount === 1
-                ? titleInkCenter(line)
-                : line.rect.top + line.rect.height / 2;
-            const top = center - GRIP_HEIGHT / 2 - handleTop;
-            const box = Math.floor(top);
-            handle.style.setProperty("--grip-top", box + "px");
-            handle.style.setProperty(
-              "--grip-bg",
-              (top - box).toFixed(2) + "px",
-            );
-          }
-        }
-
-        // Which cards were visible at the last sync. Only a change of that set can
-        // move a line box in or out of existence, so the offsets are not recomputed
-        // on every data frame.
-        let _gripVisibilityKey = "";
-
         // Null whenever no drag of ours is running; every handler below and the
         // config handler test it first.
         let _drag = null;
@@ -1065,12 +963,6 @@
             const valEl = document.getElementById("val-" + id);
             if (barFill) registerBar(id, barFill, barLabel, valEl);
           }
-
-          // The rebuilt markup has no measured offsets yet, and every card is
-          // rendered right now, so this is the one moment the line boxes are all
-          // available.
-          syncGripOffsets();
-          _gripVisibilityKey = "";
         }
 
         function enabledChartCards() {
@@ -1713,22 +1605,10 @@
           // timeout) must come back once it reports a value, or the card stays
           // hidden for the rest of the view's lifetime.
           const hidden = new Set(unavailableMetrics || []);
-          const visibleIds = [];
           for (const card of document.querySelectorAll(
             ".card[data-metric], .info-card[data-metric]",
           )) {
-            const cardHidden = hidden.has(card.dataset.metric);
-            card.style.display = cardHidden ? "none" : "";
-            if (!cardHidden) visibleIds.push(card.dataset.metric);
-          }
-
-          // Showing or hiding a card adds or removes its line box, so the grip
-          // offsets are re-measured then; a data frame that only updates numbers
-          // leaves them alone.
-          const visibilityKey = visibleIds.join(",");
-          if (visibilityKey !== _gripVisibilityKey) {
-            _gripVisibilityKey = visibilityKey;
-            syncGripOffsets();
+            card.style.display = hidden.has(card.dataset.metric) ? "none" : "";
           }
 
           // Per-card GPU metadata (model / byte-formatted memText) for
