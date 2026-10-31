@@ -243,13 +243,14 @@
          the gesture starts; the strip only has to look and behave like a handle. */
       .card-header,
       .info-header {
-        position: relative;
         cursor: grab;
       }
 
-      /* The grip hangs on the label's own box. A block box paints its
-         pseudo-element against itself, so the dots follow the text box wherever
-         the font puts it: no measured offset, no per-frame bookkeeping. */
+      /* The grip hangs on the label's own box, so that box is the positioning
+         context for the pseudo-element below: for info cards the title is the
+         header itself, for charts it is the label's own span. A block box paints
+         its pseudo-element against itself, which is why the dots then follow the
+         text box wherever the font puts it — no measured offset, no bookkeeping. */
       .card-header .card-left > span:first-child,
       .info-header {
         position: relative;
