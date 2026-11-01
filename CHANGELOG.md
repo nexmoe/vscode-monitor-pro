@@ -4,6 +4,16 @@ All notable changes to the "Monitor Pro" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **Linux battery health was far below the real value**: `systeminformation` builds the design capacity on Linux with a bitwise OR (`energy_full_design | energy_full`), so on machines that expose only the `ENERGY_*` nodes the design capacity comes out as a bitwise union of the design and full-charge capacities instead of the design value alone. On one Fedora laptop the 72.012 Wh design capacity was reported as 121.8 Wh, so the card showed 46.1% at 100% charge while `upower` reported 78.0662%. Battery data on Linux is now read directly from `/sys/class/power_supply`, and health is full-charge capacity over design capacity converted on the same basis. The figure depends on the hardware; it moves toward what the machine reports rather than to a fixed percentage.
+- **Linux battery power was always 0 W**: `systeminformation` returns no power on Linux, and the extension stored `powerRate` as a constant 0, so the battery card and its chart showed `+0.00W` whether the laptop was charging or discharging. Power now comes from `POWER_NOW`, or `CURRENT_NOW × VOLTAGE_NOW` when that reading is missing or zero, and keeps the same sign convention as Windows: positive while charging, negative while discharging, and 0 otherwise, which is shown without a plus sign. Machines whose battery node reports no power still show 0.
+- **Linux charging state was misreported**: The state was decided by "is charging" alone, so a laptop plugged in and fully charged (kernel `STATUS` `Full`), or one held at a charge limit (`Not charging`), was shown as discharging. AC detection also required the node to be named `AC` or `AC0`, which missed machines whose mains node is `ACAD`. The state now follows the kernel `STATUS` together with the online state of any power supply node, and a new "Full" state covers a plugged-in battery that has finished charging.
+- **A plugged-in Mac was shown as discharging**: macOS reaches the battery card through `systeminformation`, which only reports whether the pack is charging, so a Mac that had finished charging (or was held at a charge limit by the OS) read as "Discharging". Battery state is now derived the same way on every platform: charging and discharging first, then the driver's full-charge flag where there is one, then the adapter state together with the percentage. The Windows backend reports a full pack as its own state, so it now shows "Full" where it used to show "Idle".
+- **A peripheral battery could replace the system one on Linux**: a wireless mouse or gamepad shows up in the same `power_supply` class as a system battery, and every `TYPE=Battery` node was aggregated, so one of them could drag the percentage, the health and the state of the whole card. A system pack is either named `BATn` or reports a design capacity; a machine left with only nodes that are neither is treated as having no battery.
+
 ## [0.10.0] - 2026-10-02
 
 ### Changed

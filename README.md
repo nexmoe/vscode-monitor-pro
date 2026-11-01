@@ -136,12 +136,13 @@ Monitor Pro reports real-time power consumption in watts across two modes:
 
 - **Windows**: Battery net power (positive for charging, negative for discharging) via the native Go backend.
 - **macOS Apple Silicon**: Total SoC power (CPU + GPU + ANE) via the mactop backend, shown as a non-negative value. Also includes battery health and time remaining from `pmset`.
+- **Linux**: Battery data comes directly from `/sys/class/power_supply` instead of `systeminformation`. Health is full-charge capacity over design capacity, both converted on the same basis, and power comes from `POWER_NOW`, or `CURRENT_NOW × VOLTAGE_NOW` when it is absent or zero. On machines whose battery node does not report power, the reading is 0.
 
 - **Signed values**: positive for charging, negative for discharging
 - **Zero reference**: a dashed guideline always marks 0W
-- **5-sample moving average** for stable readings
+- **5-sample moving average** for stable readings on the Windows backend
 - **Health percentage**: ratio of current full capacity to design capacity
-- **State detection**: Charging / Discharging / Idle
+- **State detection**: Charging / Discharging / Full / Idle
 
 ### Formatting Consistency
 
