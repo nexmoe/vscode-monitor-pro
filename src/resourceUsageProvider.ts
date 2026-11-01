@@ -111,13 +111,15 @@ function formatBatterySubtitle(
       ? vscode.l10n.t("Charging")
       : battery.powerState === "discharging"
         ? vscode.l10n.t("Discharging")
-        : vscode.l10n.t("Idle");
+        : battery.powerState === "full"
+          ? vscode.l10n.t("Full")
+          : vscode.l10n.t("Idle");
 
   if (isSocPower) {
-    // timeRemaining comes from SI.battery(), which on macOS is provided by
-    // IOPMPowerSources. When the device is plugged in but not charging (e.g. a
-    // charge limit is set), this value may return stale cached data, so it
-    // should not be shown in idle or full states.
+    // On macOS timeRemaining comes from SI.battery() via IOPMPowerSources.
+    // When the device is plugged in but not charging (e.g. a charge limit is
+    // set), that value may return stale cached data, so it should not be shown
+    // in idle or full states.
     if (
       (battery.powerState === "charging" ||
         battery.powerState === "discharging") &&
@@ -514,13 +516,19 @@ export class ResourceUsageProvider implements vscode.WebviewViewProvider {
               ? fmtNum(t.battery.powerRate, sigDigits.battery) + sp + "W"
               : vscode.l10n.t("N/A");
           }
-          // Battery net power, shown with +/- prefix when a battery exists
-          return t.battery.hasBattery
-            ? (t.battery.powerRate >= 0 ? "+" : "-") +
-                fmtNum(Math.abs(t.battery.powerRate), sigDigits.battery) +
-                sp +
-                "W"
-            : vscode.l10n.t("N/A");
+          // Battery net power, shown with a +/- prefix when a battery exists. A
+          // zero flow has no direction, so it carries no sign.
+          if (!t.battery.hasBattery) {
+            return vscode.l10n.t("N/A");
+          }
+          const sign =
+            t.battery.powerRate > 0 ? "+" : t.battery.powerRate < 0 ? "-" : "";
+          return (
+            sign +
+            fmtNum(Math.abs(t.battery.powerRate), sigDigits.battery) +
+            sp +
+            "W"
+          );
         })(),
         cpuTemp:
           t.cpuTemp > 0

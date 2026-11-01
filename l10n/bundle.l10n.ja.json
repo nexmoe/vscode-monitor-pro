@@ -38,6 +38,7 @@
   "File System (Read/Write)": "ファイルシステムの使用状況 (読み取り/書き込み)",
   "Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms": "ファイルシステム - 読み取り: {0}/s, 書き込み: {1}/s, 総読み取り: {2}, 総書き込み: {3}, 間隔: {4}ms",
   "Free": "空き",
+  "Full": "満充電",
   "GPU": "GPU使用率",
   "GPU - Max temperature: {0}°C": "GPU - 最高温度: {0}°C",
   "GPU - Memory used: {0} bytes, total: {1} bytes": "GPU - メモリ使用量: {0} バイト, 合計: {1} バイト",

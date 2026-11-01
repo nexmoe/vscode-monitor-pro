@@ -38,6 +38,7 @@
   "File System (Read/Write)": "文件系统使用情况（读取/写入）",
   "Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms": "文件系统 - 读取: {0}/s, 写入: {1}/s, 总读取: {2}, 总写入: {3}, 间隔: {4}ms",
   "Free": "可用",
+  "Full": "已充满",
   "GPU": "GPU 使用率",
   "GPU - Max temperature: {0}°C": "GPU - 最高温度: {0}°C",
   "GPU - Memory used: {0} bytes, total: {1} bytes": "GPU - 显存已用: {0} 字节, 总容量: {1} 字节",

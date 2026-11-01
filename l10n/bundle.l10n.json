@@ -38,6 +38,7 @@
   "File System (Read/Write)": "File System (Read/Write)",
   "Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms": "Filesystem - RX: {0}/s, WX: {1}/s, Total RX: {2}, Total WX: {3}, Interval: {4}ms",
   "Free": "Free",
+  "Full": "Full",
   "GPU": "GPU",
   "GPU - Max temperature: {0}°C": "GPU - Max temperature: {0}°C",
   "GPU - Memory used: {0} bytes, total: {1} bytes": "GPU - Memory used: {0} bytes, total: {1} bytes",

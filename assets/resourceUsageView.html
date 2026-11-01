@@ -585,7 +585,9 @@
         function formatChartValue(id, v) {
           const sep = _fmtConfig.showSpace ? " " : "";
           if (isPowerId(id)) {
-            const sign = hasSymmetricScale(id) && v >= 0 ? "+" : "";
+            // The zero line of a symmetric scale is not a positive value, so it
+            // must not read as "+0.0W".
+            const sign = hasSymmetricScale(id) && v > 0 ? "+" : "";
             return sign + v.toFixed(1) + sep + "W";
           }
           if (id === "cpuTemp" || id === "gpuTemp")
