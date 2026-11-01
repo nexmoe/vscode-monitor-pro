@@ -1,4 +1,5 @@
 import type { SystemSnapshot } from "./systemData";
+import { deriveBatteryPowerState } from "./batteryDisplay";
 import { dedupeFsSize } from "./diskSpace";
 import type {
   GoAllResponse,
@@ -174,12 +175,16 @@ export class RawDataAdapter {
             percent: raw.battery.percent,
             health: raw.battery.health,
             powerRate: raw.battery.powerRate,
-            powerState:
-              raw.battery.state === "Charging" ||
-              raw.battery.state === "Discharging"
-                ? (raw.battery.state.toLowerCase() as
-                    "charging" | "discharging")
-                : "idle",
+            powerState: deriveBatteryPowerState({
+              charging: raw.battery.state === "Charging",
+              discharging: raw.battery.state === "Discharging",
+              // The Go backend reports a full pack as its own state.
+              full: raw.battery.state === "Full",
+              // It exposes no adapter flag either, so an unrecognized state
+              // stays idle instead of being guessed full from the percentage.
+              acConnected: false,
+              percent: raw.battery.percent,
+            }),
             timeRemaining: 0,
             acConnected: raw.battery.state === "Charging",
             type: "",

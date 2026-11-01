@@ -42,6 +42,7 @@ import type { DataSource } from "../dataSource";
 import type { SystemSnapshot } from "../systemData";
 import type { MetricsExist } from "../constants";
 import { dedupeFsSize } from "../diskSpace";
+import { deriveBatteryPowerState } from "../batteryDisplay";
 import type { NativeBackendManager } from "../backend/nativeBackendManager";
 import {
   findMetricValue,
@@ -294,11 +295,18 @@ export class MactopDataSource implements DataSource {
         // Total SoC power reuses this field; always non-negative
         powerRate: powerTotal,
         powerState: hasBattery
-          ? batteryCharging === 1
-            ? "charging"
-            : siBat?.acConnected
-              ? "idle"
-              : "discharging"
+          ? deriveBatteryPowerState({
+              charging: batteryCharging === 1,
+              // pmset reports no discharge flag: a pack that is neither
+              // charging nor on AC is the one that is draining.
+              discharging:
+                batteryCharging === 0 && !(siBat?.acConnected ?? false),
+              // Nor does it report a full-charge flag, so the adapter flag and
+              // the percentage decide between full and idle.
+              full: false,
+              acConnected: siBat?.acConnected ?? false,
+              percent: batteryPercent,
+            })
           : "none",
         // Use pmset -g batt time estimate (works for both charging and
         // discharging). SI.battery().timeRemaining returns -1 during charging

@@ -5,6 +5,7 @@ import { dimensionsForEnabled, type CollectDimension } from "./metricMap";
 import { dedupeFsSize } from "./diskSpace";
 import { resolveGpuCards } from "./gpuUtil";
 import { readSysfsBatteries, toSnapshotBattery } from "./linuxBattery";
+import { deriveBatteryPowerState } from "./batteryDisplay";
 
 /**
  * Linux takes its battery data from the kernel's power_supply class instead of
@@ -166,10 +167,13 @@ function collectBattery(
 /**
  * Map systeminformation's battery data for the platforms that still use it.
  *
- * SI reports no power on these platforms, so powerRate stays 0; powerState is
- * derived from isCharging because SI never reports the state itself; health is
+ * SI reports no power on these platforms, so powerRate stays 0; health is
  * derived from the two capacities here so every platform carries the same
- * definition of it.
+ * definition of it. For the flow SI offers only isCharging and acConnected, so
+ * running off the battery is the one reading that counts as discharging; on AC
+ * but not charging the pack is idle below the full threshold and full at it.
+ * Trusting isCharging alone labelled a full, plugged-in Mac as discharging,
+ * because a pack held at the top stops charging.
  */
 function fromSIBattery(
   bat: SI.Systeminformation.BatteryData,
@@ -189,11 +193,18 @@ function fromSIBattery(
         ? (bat.maxCapacity / bat.designedCapacity) * 100
         : 0,
     powerRate: 0,
-    powerState: bat.isCharging
-      ? "charging"
-      : bat.hasBattery
-        ? "discharging"
-        : "none",
+    powerState: bat.hasBattery
+      ? deriveBatteryPowerState({
+          charging: bat.isCharging ?? false,
+          discharging:
+            !(bat.isCharging ?? false) && !(bat.acConnected ?? false),
+          // systeminformation exposes no full-charge flag; on these platforms
+          // only the adapter flag and the percentage are available.
+          full: false,
+          acConnected: bat.acConnected ?? false,
+          percent: bat.percent ?? 0,
+        })
+      : "none",
     timeRemaining: bat.timeRemaining ?? 0,
     acConnected: bat.acConnected ?? false,
     type: bat.type ?? "",

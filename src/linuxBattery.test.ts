@@ -509,6 +509,91 @@ describe("parseSysfsBattery: AC state", () => {
   });
 });
 
+describe("parseSysfsBattery: peripheral packs", () => {
+  /** A wireless mouse or gamepad: a battery node with no design capacity. */
+  function peripheral(...lines: string[]): SysfsSupply {
+    return node(
+      "hidpp_battery_0",
+      "POWER_SUPPLY_TYPE=Battery",
+      "POWER_SUPPLY_STATUS=Discharging",
+      "POWER_SUPPLY_CAPACITY=50",
+      "POWER_SUPPLY_POWER_NOW=2000000",
+      ...lines,
+    );
+  }
+
+  it("keeps a peripheral out of the totals of the system battery", () => {
+    const reading = parseSysfsBattery([
+      energyPack(
+        "POWER_SUPPLY_STATUS=Not charging",
+        "POWER_SUPPLY_CAPACITY=100",
+      ),
+      peripheral(),
+      node("AC", "POWER_SUPPLY_TYPE=Mains", "POWER_SUPPLY_ONLINE=1"),
+    ]);
+    assert.ok(reading);
+
+    // The mouse is discharging at half charge while the laptop sits full on the
+    // adapter; every one of those figures has to stay out of the aggregate.
+    assert.equal(reading.status, "not-charging");
+    assert.equal(reading.percent, 100);
+    assert.equal(reading.maxCapacity, 50000);
+    assert.equal(reading.acConnected, true);
+    assert.equal(toSnapshotBattery(reading).powerState, "full");
+  });
+
+  it("returns null when only a peripheral pack exists", () => {
+    assert.equal(parseSysfsBattery([peripheral()]), null);
+  });
+
+  it("accepts a pack that reports a design capacity under another name", () => {
+    const reading = parseSysfsBattery([
+      node(
+        "CMB0",
+        "POWER_SUPPLY_TYPE=Battery",
+        "POWER_SUPPLY_STATUS=Discharging",
+        "POWER_SUPPLY_CHARGE_FULL=4000000",
+        "POWER_SUPPLY_CHARGE_FULL_DESIGN=5000000",
+        "POWER_SUPPLY_CHARGE_NOW=2000000",
+        "POWER_SUPPLY_VOLTAGE_MAX_DESIGN=11000000",
+      ),
+    ]);
+    assert.ok(reading);
+
+    assertClose(reading.health, 80);
+    assert.equal(reading.percent, 50);
+  });
+
+  it("drops a device-scoped pack even when it reports a design capacity", () => {
+    const deviceScoped = peripheral(
+      "POWER_SUPPLY_SCOPE=Device",
+      "POWER_SUPPLY_ENERGY_FULL=1000000",
+      "POWER_SUPPLY_ENERGY_FULL_DESIGN=2000000",
+      "POWER_SUPPLY_ENERGY_NOW=1000000",
+    );
+    const reading = parseSysfsBattery([deviceScoped, energyPack()]);
+    assert.ok(reading);
+
+    assert.equal(reading.maxCapacity, 50000);
+    // With the system pack gone, the node the kernel scoped to one device must
+    // not take over as the machine's battery.
+    assert.equal(parseSysfsBattery([deviceScoped]), null);
+  });
+
+  it("keeps a BATn pack even when the driver scoped it to a device", () => {
+    // The scope is a hint, not a veto. A system pack filed under the device
+    // scope would otherwise disappear from the card entirely, which is worse
+    // than trusting the conventional name.
+    const reading = parseSysfsBattery([
+      energyPack("POWER_SUPPLY_SCOPE=Device"),
+    ]);
+    assert.ok(reading);
+
+    assert.equal(reading.maxCapacity, 50000);
+    assert.equal(reading.health, (100 * 50000) / 60000);
+  });
+});
+
 describe("parseSysfsBattery: time remaining", () => {
   it("estimates minutes from stored energy over the discharge rate", () => {
     const reading = parseSysfsBattery([
@@ -790,7 +875,23 @@ describe("toSnapshotBattery", () => {
     assert.equal(battery.isCharging, false);
   });
 
-  it("falls back to the capacity ratio when the reading has no percentage", () => {
+  it("reports full from the kernel status without an adapter or a high percentage", () => {
+    // Charge-limited machines stop short of 100 and some export no adapter node
+    // at all; the driver's own status is the only signal left, so it has to be
+    // enough on its own.
+    const reading = parseSysfsBattery([
+      energyPack("POWER_SUPPLY_STATUS=Full", "POWER_SUPPLY_CAPACITY=90"),
+    ]);
+    assert.ok(reading);
+
+    const battery = toSnapshotBattery(reading);
+
+    assert.equal(battery.acConnected, false);
+    assert.equal(battery.isCharging, false);
+    assert.equal(battery.powerState, "full");
+  });
+
+  it("shows no percentage when the reading has none", () => {
     const reading = parseSysfsBattery([
       energyPack("POWER_SUPPLY_STATUS=Discharging"),
       node(
@@ -805,11 +906,15 @@ describe("toSnapshotBattery", () => {
 
     const battery = toSnapshotBattery(reading);
 
-    // Two packs with one unknown stored energy: percent is -1, and the ratio of
-    // the partial totals is what remains. That ratio is 25000 of 70000 mWh, so
-    // it is the documented fallback rather than a figure to trust.
+    // One pack never reported its stored energy, so the kernel percentage
+    // cannot be formed for the set and the parse layer returns -1. The snapshot
+    // contract has no "unknown", so it degrades to 0: the ratio of the partial
+    // totals (25000 of 70000 mWh) would read as a plausible 35.7% and hide the
+    // hole instead of showing an empty battery.
     assert.equal(reading.percent, -1);
-    assertClose(battery.percent, (100 * 25000) / 70000);
+    assert.equal(battery.percent, 0);
+    // Health still describes the packs, so it stays computable from the sums.
+    assertClose(battery.health, (100 * 70000) / 80000);
   });
 
   it("reports 0 percent when neither a percentage nor a capacity exists", () => {

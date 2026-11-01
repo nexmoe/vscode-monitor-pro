@@ -4,7 +4,7 @@ import { l10n } from "vscode";
 import type { DataSource } from "./dataSource";
 import { SIDataSource } from "./dataSource";
 import { getLogger } from "./logger";
-import { normalizeBatteryPercentages } from "./batteryPercent";
+import { normalizeBatteryPercentages } from "./batteryDisplay";
 import type { MetricsExist } from "./constants";
 import type { GpuCard } from "./gpuUtil";
 

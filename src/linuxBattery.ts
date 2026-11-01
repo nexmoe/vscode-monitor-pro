@@ -3,6 +3,7 @@ import { join } from "node:path";
 // Type-only: the import is erased at compile time, so this module never pulls
 // in systemData.ts and the `vscode` module it loads at runtime.
 import type { SystemSnapshot } from "./systemData";
+import { deriveBatteryPowerState } from "./batteryDisplay";
 
 /**
  * Battery state read straight from the Linux power_supply class.
@@ -32,15 +33,6 @@ const MICRO_TO_MILLI = 1e3;
 const MAX_TIME_REMAINING_MINUTES = 48 * 60;
 
 /**
- * Percentage from which a plugged-in, idle pack counts as full.
- *
- * Not exactly 100: charge limits and drivers stop a fraction short of the
- * nominal maximum, and a pack held at 99.6% is full for every practical
- * purpose.
- */
-const FULL_PERCENT_THRESHOLD = 99.5;
-
-/**
  * Attribute names follow the kernel uevent format documented in
  * drivers/power/supply/power_supply_sysfs.c: every property is exported as
  * POWER_SUPPLY_<PROPERTY>.
@@ -66,9 +58,16 @@ const KEY_TECHNOLOGY = "POWER_SUPPLY_TECHNOLOGY";
 const KEY_MODEL_NAME = "POWER_SUPPLY_MODEL_NAME";
 const KEY_MANUFACTURER = "POWER_SUPPLY_MANUFACTURER";
 const KEY_SERIAL_NUMBER = "POWER_SUPPLY_SERIAL_NUMBER";
+const KEY_SCOPE = "POWER_SUPPLY_SCOPE";
 
 /** A Mains/USB node also exposes `online` as a plain attribute file. */
 const ONLINE_FILE_KEY = "online";
+
+/**
+ * The names the kernel and the udev rules give the packs that power the machine:
+ * BAT0, BAT1, ...
+ */
+const SYSTEM_BATTERY_NAME = /^BAT\d+$/i;
 
 export type LinuxBatteryStatus =
   "charging" | "discharging" | "full" | "not-charging" | "unknown";
@@ -125,17 +124,17 @@ interface PackCapacity {
 /**
  * Aggregate the sysfs nodes into one reading.
  *
- * Returns null when no node is a battery, or when the battery set yields
- * neither a convertible capacity nor a kernel percentage: such a reading would
- * carry only placeholder numbers.
+ * Returns null when no node is a battery, when the only battery nodes belong to
+ * peripherals, or when the battery set yields neither a convertible capacity
+ * nor a kernel percentage: such a reading would carry only placeholder numbers.
  */
 export function parseSysfsBattery(
   supplies: SysfsSupply[],
 ): LinuxBatteryReading | null {
   // An empty bay still exports TYPE=Battery, so a second slot would otherwise
   // pull the totals down and hand its "Unknown" status to the aggregate.
-  const batteries = supplies.filter(
-    (supply) => isBatterySupply(supply) && isPresent(supply),
+  const batteries = selectSystemBatteries(
+    supplies.filter((supply) => isBatterySupply(supply) && isPresent(supply)),
   );
   if (batteries.length === 0) {
     return null;
@@ -287,7 +286,12 @@ export function toSnapshotBattery(
     };
   }
 
-  const percent = displayPercent(reading);
+  // The snapshot contract has no "unknown percentage", so a reading without one
+  // degrades to 0. Deriving it from currentCapacity/maxCapacity here would guess
+  // from a total that is only complete when every pack reported its stored
+  // energy; the parse layer already takes the ratio in that case, and the hole
+  // is a hole the mapping layer must not paper over.
+  const percent = reading.percent >= 0 ? reading.percent : 0;
   return {
     hasBattery: true,
     cycleCount: reading.cycleCount,
@@ -300,7 +304,13 @@ export function toSnapshotBattery(
     percent,
     health: reading.health,
     powerRate: reading.powerW,
-    powerState: displayPowerState(reading, percent),
+    powerState: deriveBatteryPowerState({
+      charging: reading.status === "charging",
+      discharging: reading.status === "discharging",
+      full: reading.status === "full",
+      acConnected: reading.acConnected,
+      percent,
+    }),
     timeRemaining: reading.timeRemaining,
     acConnected: reading.acConnected,
     type: reading.technology,
@@ -308,38 +318,6 @@ export function toSnapshotBattery(
     manufacturer: reading.manufacturer,
     serial: reading.serial,
   };
-}
-
-/** Percentage to show, falling back to the capacity ratio. */
-function displayPercent(reading: LinuxBatteryReading): number {
-  if (reading.percent >= 0) {
-    return reading.percent;
-  }
-  return reading.maxCapacity > 0
-    ? (100 * reading.currentCapacity) / reading.maxCapacity
-    : 0;
-}
-
-/**
- * Charging state for the display.
- *
- * A plugged-in pack that is neither charging nor discharging reports no flow at
- * all, so whether it is full can only be read from the percentage. This is the
- * only place "full" is produced; the collector never sees it from a driver.
- */
-function displayPowerState(
-  reading: LinuxBatteryReading,
-  percent: number,
-): SystemSnapshot["battery"]["powerState"] {
-  if (reading.status === "charging") {
-    return "charging";
-  }
-  if (reading.status === "discharging") {
-    return "discharging";
-  }
-  return reading.acConnected && percent >= FULL_PERCENT_THRESHOLD
-    ? "full"
-    : "idle";
 }
 
 function isBatterySupply(supply: SysfsSupply): boolean {
@@ -358,6 +336,61 @@ function isBatterySupply(supply: SysfsSupply): boolean {
 function isPresent(supply: SysfsSupply): boolean {
   const present = readNumber(supply, KEY_PRESENT);
   return present === null || present !== 0;
+}
+
+/** A node the kernel attributes to one device instead of the machine. */
+function isDeviceScoped(supply: SysfsSupply): boolean {
+  const scope = supply.attributes[KEY_SCOPE];
+  return scope !== undefined && scope.trim().toLowerCase() === "device";
+}
+
+/**
+ * Whether the node reports the design capacity a system pack always has.
+ *
+ * The design figure is what separates a real pack from a peripheral one: a
+ * mouse may report charge and energy, but it has no meaningful design capacity.
+ */
+function hasDesignCapacity(supply: SysfsSupply): boolean {
+  const energyDesign = readNumber(supply, KEY_ENERGY_FULL_DESIGN);
+  const chargeDesign = readNumber(supply, KEY_CHARGE_FULL_DESIGN);
+  return (
+    (energyDesign !== null && energyDesign > 0) ||
+    (chargeDesign !== null && chargeDesign > 0)
+  );
+}
+
+/**
+ * Keep the nodes that make up the system battery.
+ *
+ * Peripherals export TYPE=Battery too, and folding one in corrupts three values
+ * at once: its capacity joins the totals, a "Discharging" status wins the
+ * aggregate, and its power joins the sum, so a plugged-in laptop reports a
+ * discharge that is not happening. A system pack is either named BATn by
+ * convention or reports a design capacity, and a node the kernel scopes to a
+ * single device is a peripheral unless it carries the BATn name. A node that is
+ * none of those is treated as a peripheral. When nothing but peripheral
+ * candidates exist, the machine has no usable system battery and the caller gets
+ * no reading rather than their summed numbers.
+ *
+ * The best populated tier wins as a whole: mixing tiers would sum a peripheral
+ * alongside the pack the tier was chosen for.
+ */
+function selectSystemBatteries(batteries: SysfsSupply[]): SysfsSupply[] {
+  // A BATn name outranks the scope attribute. The two rules catch different
+  // cases: the name keeps a peripheral out when its driver reports no scope,
+  // and trusting the name over the scope keeps a whole system pack from
+  // vanishing from the card when a driver files it under the device scope.
+  const candidates = batteries.filter(
+    (supply) =>
+      SYSTEM_BATTERY_NAME.test(supply.name) || !isDeviceScoped(supply),
+  );
+  const named = candidates.filter((supply) =>
+    SYSTEM_BATTERY_NAME.test(supply.name),
+  );
+  if (named.length > 0) {
+    return named;
+  }
+  return candidates.filter(hasDesignCapacity);
 }
 
 /**
